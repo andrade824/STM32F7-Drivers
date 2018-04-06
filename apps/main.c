@@ -11,17 +11,19 @@ void SysTick_Handlerfsddfs();
 
 status_t run(void)
 {
-    ABORT_IF_NOT(init_system(), fail);
+    ABORT_IF_NOT(init_system());
 
     dbprintf("System Initialized\n");
 
-    ABORT_IF_NOT(gpio_request_input(GPIO_B_USER, GPIO_NO_PULL), fail);
-    ABORT_IF_NOT(gpio_request_output(GPIO_ARD_D13, low), fail);
-    ABORT_IF_NOT(gpio_request_output(GPIO_LCD_BL_CTRL, low), fail);
+    ABORT_IF_NOT(gpio_request_input(GPIO_B_USER, GPIO_NO_PULL));
+    ABORT_IF_NOT(gpio_request_output(GPIO_ARD_D13, low));
+    ABORT_IF_NOT(gpio_request_output(GPIO_LCD_BL_CTRL, low));
     gpio_set_otype(GPIO_LCD_BL_CTRL, GPIO_OPEN_DRAIN);
     
-    ABORT_IF_NOT(SysTick_Config(16000000) == 0, fail);
-    ABORT_IF_NOT(request_interrupt(SysTick_IRQn, &SysTick_Handlerfsddfs), fail);
+    ABORT_IF_NOT(SysTick_Config(16000000) == 0);
+    ABORT_IF_NOT(request_interrupt(SysTick_IRQn, &SysTick_Handlerfsddfs));
+
+    dbprintf("I'm doing things for once!!!\n");
 
     while(1)
     {

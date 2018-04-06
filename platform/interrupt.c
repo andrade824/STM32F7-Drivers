@@ -25,7 +25,9 @@
  * the IRQ numbers as indices into the vector table, the vector table needs to
  * point to whatever interrupt has IRQ "0" (WWDG_IRQn in this case).
  */
-static ISR_Type *vector_table = (ISR_Type *)(VECTOR_TABLE_ADDR + (16 * 4));
+#define EXCEPTION_VECTORS_OFFSET (16 * 4)
+static ISR_Type *vector_table = (ISR_Type *)(VECTOR_TABLE_ADDR +
+                                             EXCEPTION_VECTORS_OFFSET);
 
 /**
  * Copy the vector table from flash into RAM and change the Vector Table Offset
@@ -39,7 +41,8 @@ static ISR_Type *vector_table = (ISR_Type *)(VECTOR_TABLE_ADDR + (16 * 4));
 status_t init_interrupts(void)
 {
     /**
-     * Linker script symbols defining where the vector table starts and ends.
+     * Linker script symbols defining where the default vector table located in
+     * flash starts and ends.
      */
     extern uint32_t _start_vector;
     extern uint32_t _end_vector;
@@ -81,16 +84,17 @@ status_t init_interrupts(void)
  */
 status_t request_interrupt(IRQn_Type irq, ISR_Type isr)
 {
-    if(irq <= IRQ_START || irq >= IRQ_END)
-        return fail;
+#ifdef DEBUG_ON
+    ABORT_IF(irq <= IRQ_START || irq >= IRQ_END);
 
     /**
      * Keep track of which interrupts have already been requested. This method
      * will fail if the same interrupt is requested twice.
      */
     static bool requested_interrupts[IRQ_END - IRQ_START];
-    ABORT_IF(requested_interrupts[irq + 15] == true, fail);
+    ABORT_IF(requested_interrupts[irq + 15] == true);
     requested_interrupts[irq + 15] = true;
+#endif
 
     vector_table[irq] = isr;
 

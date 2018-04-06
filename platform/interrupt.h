@@ -29,8 +29,8 @@ typedef void (*ISR_Type) (void);
  * and that the STM32 specific interrupts are positive (starting at zero).
  *
  * To use the IRQ values as indices into the vector table, the vector table
- * will need to point to the vector for "WWDG_IRQn". This way, the negative
- * indices will correctly be evaluated
+ * will need to point to vector 0 (the vector for "WWDG_IRQn"). This way, the
+ * negative indices will correctly be evaluated.
  */
 typedef enum
 {
@@ -151,5 +151,7 @@ typedef enum
 status_t init_interrupts(void);
 
 status_t request_interrupt(IRQn_Type irq, ISR_Type isr);
+
+/* TODO: Add methods for setting priorities and enabling/disabling ISRs */
 
 #endif

@@ -38,7 +38,7 @@
 /**
  * Memory Map definitions.
  */
-#define RAMITCM_BASE	  0x00000000U /*!< Base address of : 16KB RAM reserved for CPU execution/instruction accessible over ITCM  */
+#define RAMITCM_BASE    0x00000000U /*!< Base address of : 16KB RAM reserved for CPU execution/instruction accessible over ITCM  */
 #define FLASHITCM_BASE  0x00200000U /*!< Base address of : (up to 1 MB) embedded FLASH memory  accessible over ITCM              */
 #define FLASHAXI_BASE   0x08000000U /*!< Base address of : (up to 1 MB) embedded FLASH memory accessible over AXI                */
 #define RAMDTCM_BASE    0x20000000U /*!< Base address of : 64KB system data RAM accessible over DTCM                             */
@@ -51,11 +51,11 @@
 #define SRAM2_BASE      0x2004C000U /*!< Base address of : 16KB RAM2 accessible over AXI/AHB                                     */
 #define FLASH_END       0x080FFFFFU /*!< FLASH end address */
 
-#define FLASH_BASE     	FLASHAXI_BASE
+#define FLASH_BASE      FLASHAXI_BASE
 
-#define APB1PERIPH_BASE	 PERIPH_BASE
-#define APB2PERIPH_BASE	(PERIPH_BASE + 0x00010000U)
-#define AHB1PERIPH_BASE	(PERIPH_BASE + 0x00020000U)
-#define AHB2PERIPH_BASE	(PERIPH_BASE + 0x10000000U)
+#define APB1PERIPH_BASE PERIPH_BASE
+#define APB2PERIPH_BASE (PERIPH_BASE + 0x00010000U)
+#define AHB1PERIPH_BASE (PERIPH_BASE + 0x00020000U)
+#define AHB2PERIPH_BASE (PERIPH_BASE + 0x10000000U)
 
 #endif

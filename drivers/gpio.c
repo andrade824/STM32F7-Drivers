@@ -14,11 +14,39 @@
 
 #include <stdbool.h>
 
-/**
- * Keeps track of which pins have already been requested. The request_*
- * functions will fail if a pin has was already requested.
+/*
+ * Check if a pin is already in use, and enable it's port clock if not.
+ *
+ * @param pin The pin to check.
+ *
+ * @return fail if the pin was already requested, success if configured
+ *         correctly.
  */
-static bool requested_gpios[NUM_GPIO_PINS];
+static inline status_t gpio_setup_pin(GpioPin pin)
+{
+#ifdef DEBUG_ON
+    /**
+     * Keeps track of which pins have already been requested.
+     */
+    static bool requested_gpios[NUM_GPIO_PINS];
+
+    /**
+     * Fail if a pin was already requested.
+     */
+    ABORT_IF(requested_gpios[pin] == true);
+    requested_gpios[pin] = true;
+#endif
+
+    /**
+     * Enable the GPIO port's clock if it isn't already enabled. This utilizes
+     * the property that the GPIO port enable bits are contiguous starting from
+     * bit 0 of RCC->AHB1ENR for PORTA and going up to bit 10 for PORTK.
+     */
+    SET_FIELD(RCC->AHB1ENR, (1 << GPIO_GET_PORT(pin)));
+    __asm("dsb");
+
+    return success;
+}
 
 /**
  * Request a GPIO pin to be set as an input.
@@ -32,19 +60,7 @@ static bool requested_gpios[NUM_GPIO_PINS];
  */
 status_t gpio_request_input(GpioReg *reg, GpioPin pin, GpioPull pull)
 {
-    /**
-     * Fail if a pin was already requested.
-     */
-    ABORT_IF(requested_gpios[pin] == true, fail);
-    requested_gpios[pin] = true;
-
-    /**
-     * Enable the GPIO port's clock if it isn't already enabled. This utilizes
-     * the property that the GPIO port enable bits are contiguous starting from
-     * bit 0 of RCC->AHB1ENR for PORTA and going up to bit 10 for PORTK.
-     */
-    SET_FIELD(RCC->AHB1ENR, (1 << GPIO_GET_PORT(pin)));
-    __asm("dsb");
+    ABORT_IF_NOT(gpio_setup_pin(pin));
 
     /**
      * Set GPIO mode to input (MODE = 0x0).
@@ -69,19 +85,7 @@ status_t gpio_request_input(GpioReg *reg, GpioPin pin, GpioPull pull)
 status_t gpio_request_output(GpioReg *reg, GpioPin pin,
                              DigitalState default_state)
 {
-    /**
-     * Fail if a pin was already requested.
-     */
-    ABORT_IF(requested_gpios[pin] == true, fail);
-    requested_gpios[pin] = true;
-
-    /**
-     * Enable the GPIO port's clock if it isn't already enabled. This utilizes
-     * the property that the GPIO port enable bits are contiguous starting from
-     * bit 0 of RCC->AHB1ENR for PORTA and going up to bit 10 for PORTK.
-     */
-    SET_FIELD(RCC->AHB1ENR, (1 << GPIO_GET_PORT(pin)));
-    __asm("dsb");
+    ABORT_IF_NOT(gpio_setup_pin(pin));
 
     /**
      * Set GPIO mode to output (MODE = 0x1).
@@ -107,19 +111,7 @@ status_t gpio_request_output(GpioReg *reg, GpioPin pin,
  */
 status_t gpio_request_alt(GpioReg *reg, GpioPin pin)
 {
-    /**
-     * Fail if a pin was already requested.
-     */
-    ABORT_IF(requested_gpios[pin] == true, fail);
-    requested_gpios[pin] = true;
-
-    /**
-     * Enable the GPIO port's clock if it isn't already enabled. This utilizes
-     * the property that the GPIO port enable bits are contiguous starting from
-     * bit 0 of RCC->AHB1ENR for PORTA and going up to bit 10 for PORTK.
-     */
-    SET_FIELD(RCC->AHB1ENR, (1 << GPIO_GET_PORT(pin)));
-    __asm("dsb");
+    ABORT_IF_NOT(gpio_setup_pin(pin));
 
     /**
      * Set GPIO mode to alternate function (MODE = 0x2).

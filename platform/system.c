@@ -42,7 +42,7 @@ static status_t init_flash(void)
                           FLASH_ACR_PRFTEN() |
                           FLASH_ACR_ARTEN());
 
-    ABORT_IF_NOT(GET_FLASH_ACR_LATENCY(FLASH->ACR) == FLASH_WAIT_STATES, fail);
+    ABORT_IF_NOT(GET_FLASH_ACR_LATENCY(FLASH->ACR) == FLASH_WAIT_STATES);
 
     return success;
 }
@@ -116,7 +116,7 @@ static status_t init_clocks(void)
     /**
      * Ensure the system clock was switched to the main PLL successfully.
      */
-    ABORT_IF_NOT(GET_RCC_CFGR_SWS(RCC->CFGR) == 0x2, fail);
+    ABORT_IF_NOT(GET_RCC_CFGR_SWS(RCC->CFGR) == 0x2);
 
     return success;
 }
@@ -140,10 +140,10 @@ status_t init_system(void)
         SCB->CPACR |= ((3UL << 10*2)|(3UL << 11*2));
     #endif
 
-    ABORT_IF_NOT(init_caches(), fail);
-    ABORT_IF_NOT(init_flash(), fail);
-    ABORT_IF_NOT(init_clocks(), fail);
-    ABORT_IF_NOT(init_interrupts(), fail);
+    ABORT_IF_NOT(init_caches());
+    ABORT_IF_NOT(init_flash());
+    ABORT_IF_NOT(init_clocks());
+    ABORT_IF_NOT(init_interrupts());
 
     return success;
 }
