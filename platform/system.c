@@ -12,6 +12,7 @@
 #include "registers/pwr_reg.h"
 #include "registers/rcc_reg.h"
 #include "status.h"
+#include "system_timer.h"
 
 /**
  * Enable the caches using the CMSIS-provided methods.
@@ -144,6 +145,7 @@ status_t init_system(void)
     ABORT_IF_NOT(init_flash());
     ABORT_IF_NOT(init_clocks());
     ABORT_IF_NOT(init_interrupts());
+    ABORT_IF_NOT(init_system_timer());
 
     return success;
 }
