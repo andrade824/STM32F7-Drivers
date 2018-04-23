@@ -15,12 +15,12 @@
 /**
  * Converts between ticks and seconds.
  * 
- * Example usage:
- * start_timer(25 MSECS);
+ * Example usage (delay for 25ms):
+ * start_timer(MSECS(25));
  */
-#define SECS    * (CPU_HZ)
-#define MSECS   * (CPU_HZ / 1000)
-#define USECS   * (CPU_HZ / 1000000)
+#define SECS(x)  (x * (CPU_HZ))
+#define MSECS(x) (x * (CPU_HZ / 1000))
+#define USECS(x) (x * (CPU_HZ / 1000000))
 
 /**
  * The maximum number of CPU cycles the SysTick timer can count to.
