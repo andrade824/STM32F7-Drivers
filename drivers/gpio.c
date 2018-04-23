@@ -19,7 +19,7 @@
  *
  * @param pin The pin to check.
  *
- * @return fail if the pin was already requested, success if configured
+ * @return Fail if the pin was already requested, Success if configured
  *         correctly.
  */
 static inline status_t gpio_setup_pin(GpioPin pin)
@@ -45,7 +45,7 @@ static inline status_t gpio_setup_pin(GpioPin pin)
     SET_FIELD(RCC->AHB1ENR, (1 << GPIO_GET_PORT(pin)));
     __asm("dsb");
 
-    return success;
+    return Success;
 }
 
 /**
@@ -55,7 +55,7 @@ static inline status_t gpio_setup_pin(GpioPin pin)
  * @param pin The pin to set as an input.
  * @param pull The pull state for this pin.
  *
- * @return fail if the pin was already requested, success if the pin was
+ * @return Fail if the pin was already requested, Success if the pin was
  *         configured correctly.
  */
 status_t gpio_request_input(GpioReg *reg, GpioPin pin, GpioPull pull)
@@ -69,7 +69,7 @@ status_t gpio_request_input(GpioReg *reg, GpioPin pin, GpioPull pull)
 
     gpio_set_pullstate(reg, pin, pull);
 
-    return success;
+    return Success;
 }
 
 /**
@@ -79,7 +79,7 @@ status_t gpio_request_input(GpioReg *reg, GpioPin pin, GpioPull pull)
  * @param pin The pin to set as an output.
  * @param default_state Default state of the pin (high or low).
  *
- * @return fail if the pin was already requested, success if the pin was
+ * @return Fail if the pin was already requested, Success if the pin was
  *         configured correctly.
  */
 status_t gpio_request_output(GpioReg *reg, GpioPin pin,
@@ -97,7 +97,7 @@ status_t gpio_request_output(GpioReg *reg, GpioPin pin,
     gpio_set_pullstate(reg, pin, GPIO_NO_PULL);
     gpio_set_output(reg, pin, default_state);
 
-    return success;
+    return Success;
 }
 
 /**
@@ -106,7 +106,7 @@ status_t gpio_request_output(GpioReg *reg, GpioPin pin,
  * @param reg The port register to use.
  * @param pin The pin to set as an alternate function.
  *
- * @return fail if the pin was already requested, success if the pin was
+ * @return Fail if the pin was already requested, Success if the pin was
  *         configured correctly.
  */
 status_t gpio_request_alt(GpioReg *reg, GpioPin pin)
@@ -122,7 +122,7 @@ status_t gpio_request_alt(GpioReg *reg, GpioPin pin)
     gpio_set_ospeed(reg, pin, GPIO_OSPEED_4MHZ);
     gpio_set_pullstate(reg, pin, GPIO_NO_PULL);
 
-    return success;
+    return Success;
 }
 
 /**

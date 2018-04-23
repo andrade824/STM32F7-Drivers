@@ -16,15 +16,13 @@
 
 /**
  * Enable the caches using the CMSIS-provided methods.
- *
- * @return success or fail.
  */
 static status_t init_caches(void)
 {
     SCB_EnableICache();
     SCB_EnableDCache();
 
-    return success;
+    return Success;
 }
 
 /**
@@ -33,8 +31,6 @@ static status_t init_caches(void)
  *
  * You MUST call this function before setting up the clocks. This ensures that
  * the wait states are properly initialized before boosting the clock up.
- *
- * @return success or fail.
  */
 static status_t init_flash(void)
 {
@@ -45,13 +41,11 @@ static status_t init_flash(void)
 
     ABORT_IF_NOT(GET_FLASH_ACR_LATENCY(FLASH->ACR) == FLASH_WAIT_STATES);
 
-    return success;
+    return Success;
 }
 
 /**
  * Initialize the clock generator to utilize the external clock and PLL.
- *
- * @return success or fail.
  */
 static status_t init_clocks(void)
 {
@@ -119,14 +113,12 @@ static status_t init_clocks(void)
      */
     ABORT_IF_NOT(GET_RCC_CFGR_SWS(RCC->CFGR) == 0x2);
 
-    return success;
+    return Success;
 }
 
 /**
   * Setup the clocks, caches, memory protection unit (MPU), and other low-level
   * systems.
-  *
-  * @return success or fail.
   */
 status_t init_system(void)
 {
@@ -147,5 +139,5 @@ status_t init_system(void)
     ABORT_IF_NOT(init_interrupts());
     ABORT_IF_NOT(init_system_timer());
 
-    return success;
+    return Success;
 }

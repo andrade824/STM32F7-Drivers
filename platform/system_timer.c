@@ -38,7 +38,7 @@ status_t init_system_timer(void)
      */
     SYSTICK->VAL = 0;
 
-    return success;
+    return Success;
 }
 
 /**
@@ -70,7 +70,7 @@ status_t start_timer(uint32_t ticks)
 
     SET_FIELD(SYSTICK->CTRL, SYSTICK_CTRL_ENABLE());
 
-    return success;
+    return Success;
 }
 
 /**
@@ -89,7 +89,7 @@ status_t sleep(uint32_t ticks)
 
     while(!timer_complete);
 
-    return success;
+    return Success;
 }
 
 /**

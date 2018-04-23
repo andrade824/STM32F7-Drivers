@@ -32,7 +32,7 @@
         ABORT_IF_NOT(start_timer(timeout));                         \
         while(!(expr) && !is_timer_complete());                     \
         if(is_timer_complete()) {                                   \
-            return fail;                                            \
+            return Fail;                                            \
         }                                                           \
     } while(0)
 
@@ -59,9 +59,9 @@
  *
  * @param expr The expression to break on.
  *
- * @return fail if the expression is true.
+ * @return Fail if the expression is true.
  */
-#define ABORT_IF(expr) ABORT_IF_VAL(expr,fail)
+#define ABORT_IF(expr) ABORT_IF_VAL(expr,Fail)
 
 /**
  * Aborts the current method early if the expression evaluates to false and
@@ -77,7 +77,7 @@
  *
  * @param expr The expression to break on.
  *
- * @return fail if the expression is false.
+ * @return Fail if the expression is false.
  */
 #define ABORT_IF_NOT(expr) ABORT_IF(!(expr))
 

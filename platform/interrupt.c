@@ -35,8 +35,6 @@ static ISR_Type *vector_table = (ISR_Type *)(VECTOR_TABLE_ADDR +
  *
  * @note This method must be called before any of the interrupt methods,
  *       otherwise undefined behavior may occur.
- *
- * @return success or fail.
  */
 status_t init_interrupts(void)
 {
@@ -70,7 +68,7 @@ status_t init_interrupts(void)
      */
     SCB->VTOR = VECTOR_TABLE_ADDR;
 
-    return success;
+    return Success;
 }
 
 /**
@@ -79,8 +77,6 @@ status_t init_interrupts(void)
  *
  * @param irq The interrupt request number for the ISR to set.
  * @param isr A pointer to a function to act as the interrupt service routine.
- *
- * @return success or fail.
  */
 status_t request_interrupt(IRQn_Type irq, ISR_Type isr)
 {
@@ -89,7 +85,7 @@ status_t request_interrupt(IRQn_Type irq, ISR_Type isr)
 
     /**
      * Keep track of which interrupts have already been requested. This method
-     * will fail if the same interrupt is requested twice.
+     * will Fail if the same interrupt is requested twice.
      */
     static bool requested_interrupts[IRQ_END - IRQ_START];
     ABORT_IF(requested_interrupts[irq + 15] == true);
@@ -98,5 +94,5 @@ status_t request_interrupt(IRQn_Type irq, ISR_Type isr)
 
     vector_table[irq] = isr;
 
-    return success;
+    return Success;
 }

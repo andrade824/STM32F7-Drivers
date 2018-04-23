@@ -35,7 +35,7 @@ status_t run(void)
         gpio_set_output(GPIO_LCD_BL_CTRL, btn);
     }
 
-    return success;
+    return Success;
 }
 
 int main(void)

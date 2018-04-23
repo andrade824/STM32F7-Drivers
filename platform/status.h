@@ -11,12 +11,11 @@
 
 /**
  * Status code that most functions should return. Proper design is to assert
- * that every function returns 'success'.
+ * that every function returns 'Success'.
  */
-// TODO: Capatilize these values so it's more obvious they're custom types.
 typedef enum status {
-	fail = 0,
-	success = 1
+	Fail = 0,
+	Success = 1
 } status_t;
 
 #endif
