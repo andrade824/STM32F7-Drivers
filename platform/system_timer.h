@@ -12,6 +12,8 @@
 #include "platform.h"
 #include "status.h"
 
+#include <stdbool.h>
+
 /**
  * Converts between ticks and seconds.
  * 

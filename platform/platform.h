@@ -49,7 +49,6 @@
 #define QSPI_R_BASE     0xA0001000U /*!< Base address of : QSPI Control  registers                                               */
 #define SRAM1_BASE      0x20010000U /*!< Base address of : 240KB RAM1 accessible over AXI/AHB                                    */
 #define SRAM2_BASE      0x2004C000U /*!< Base address of : 16KB RAM2 accessible over AXI/AHB                                     */
-#define SCS_BASE        0xE000E000U /*!< Base Address of : System Control Space                                                  */
 #define FLASH_END       0x080FFFFFU /*!< FLASH end address */
 
 #define FLASH_BASE      FLASHAXI_BASE

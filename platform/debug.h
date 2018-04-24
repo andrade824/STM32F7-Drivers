@@ -32,6 +32,8 @@
         ABORT_IF_NOT(start_timer(timeout));                         \
         while(!(expr) && !is_timer_complete());                     \
         if(is_timer_complete()) {                                   \
+            dbprintf("[ABORT] %s:%s():%d -- %s,\n",                 \
+                     __FILE__, __func__, __LINE__, #expr);          \
             return Fail;                                            \
         }                                                           \
     } while(0)

@@ -19,11 +19,9 @@ status_t run(void)
     ABORT_IF_NOT(gpio_request_output(GPIO_ARD_D13, low));
     ABORT_IF_NOT(gpio_request_output(GPIO_LCD_BL_CTRL, low));
     gpio_set_otype(GPIO_LCD_BL_CTRL, GPIO_OPEN_DRAIN);
-    
-    ABORT_IF_NOT(SysTick_Config(16000000) == 0);
-    ABORT_IF_NOT(request_interrupt(SysTick_IRQn, &SysTick_Handlerfsddfs));
 
-    dbprintf("I'm doing things for once!!!\n");
+    dbprintf("I'm doing things for twice!!!\n");
+    DigitalState led_ctrl = low;
 
     while(1)
     {
@@ -33,6 +31,15 @@ status_t run(void)
          * Set LCD backlight enable to the button input.
          */
         gpio_set_output(GPIO_LCD_BL_CTRL, btn);
+
+        sleep(MSECS(200));
+
+        if(led_ctrl == low)
+            led_ctrl = high;
+        else
+            led_ctrl = low;
+
+        gpio_set_output(GPIO_ARD_D13, led_ctrl);
     }
 
     return Success;
@@ -47,16 +54,4 @@ int main(void)
     }
 
     return 0;
-}
-
-volatile DigitalState led_ctrl = low;
-
-void SysTick_Handlerfsddfs()
-{
-    if(led_ctrl == low)
-        led_ctrl = high;
-    else
-        led_ctrl = low;
-    
-    gpio_set_output(GPIO_ARD_D13, led_ctrl);
 }
