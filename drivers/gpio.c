@@ -82,7 +82,8 @@ status_t gpio_request_input(GpioReg *reg, GpioPin pin, GpioPull pull)
  * @return Fail if the pin was already requested, Success if the pin was
  *         configured correctly.
  */
-status_t gpio_request_output(GpioReg *reg, GpioPin pin,
+status_t gpio_request_output(GpioReg *reg,
+                             GpioPin pin,
                              DigitalState default_state)
 {
     ABORT_IF_NOT(gpio_setup_pin(pin));
@@ -105,22 +106,38 @@ status_t gpio_request_output(GpioReg *reg, GpioPin pin,
  *
  * @param reg The port register to use.
  * @param pin The pin to set as an alternate function.
+ * @param alt The alternate function to set this pin to.
+ * @param speed The wanted output speed.
  *
  * @return Fail if the pin was already requested, Success if the pin was
  *         configured correctly.
  */
-status_t gpio_request_alt(GpioReg *reg, GpioPin pin)
+status_t gpio_request_alt(GpioReg *reg,
+                          GpioPin pin,
+                          GpioAlternateFunction alt,
+                          GpioOSpeed speed)
 {
     ABORT_IF_NOT(gpio_setup_pin(pin));
+
+    /**
+     * Set the alternate function for the requested pin. The alternate functions
+     * are split between two different registers. Pins 0-7 on the first register
+     * and pins 8-15 on the second.
+     */
+    if(GPIO_GET_PIN(pin) < 8) {
+        reg->AFR[0] |= alt << (GPIO_GET_PIN(pin) * 4);
+    } else {
+        reg->AFR[1] |= alt << (GPIO_GET_PIN(pin) * 4);
+    }
+
+    gpio_set_otype(reg, pin, GPIO_PUSH_PULL);
+    gpio_set_ospeed(reg, pin, speed);
+    gpio_set_pullstate(reg, pin, GPIO_NO_PULL);
 
     /**
      * Set GPIO mode to alternate function (MODE = 0x2).
      */
     reg->MODER |= (GPIO_ALT_FUNC << (GPIO_GET_PIN(pin) * 2));
-
-    gpio_set_otype(reg, pin, GPIO_PUSH_PULL);
-    gpio_set_ospeed(reg, pin, GPIO_OSPEED_4MHZ);
-    gpio_set_pullstate(reg, pin, GPIO_NO_PULL);
 
     return Success;
 }
@@ -143,7 +160,7 @@ void gpio_set_otype(GpioReg *reg, GpioPin pin, GpioOType type)
  *
  * @param reg The port register to use.
  * @param pin The pin whose output speed to set.
- * @param type The wanted output speed.
+ * @param speed The wanted output speed.
  */
 void gpio_set_ospeed(GpioReg *reg, GpioPin pin, GpioOSpeed speed)
 {
@@ -156,7 +173,7 @@ void gpio_set_ospeed(GpioReg *reg, GpioPin pin, GpioOSpeed speed)
  *
  * @param reg The port register to use.
  * @param pin The pin whose pull state to set.
- * @param type The wanted pull state.
+ * @param pull The wanted pull state.
  */
 void gpio_set_pullstate(GpioReg *reg, GpioPin pin, GpioPull pull)
 {
@@ -173,10 +190,11 @@ void gpio_set_pullstate(GpioReg *reg, GpioPin pin, GpioPull pull)
  */
 void gpio_set_output(GpioReg *reg, GpioPin pin, DigitalState state)
 {
-    if(state == high)
+    if(state == high) {
         reg->BSRR |= 1 << GPIO_GET_PIN(pin);
-    else
+    } else {
         reg->BSRR |= 1 << (GPIO_GET_PIN(pin) + 16);
+    }
 }
 
 /**

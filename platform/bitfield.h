@@ -4,6 +4,8 @@
  *
  * Macros for manipulating and creating bitfields.
  */
+#ifndef BITFIELD_H
+#define BITFIELD_H
 
 #include <stdint.h>
 
@@ -37,3 +39,5 @@
  * 				by the BIT_FIELD() macro for each defined field.
  */
 #define SET_FIELD(reg,values) (reg |= (values))
+
+#endif

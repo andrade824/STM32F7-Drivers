@@ -61,6 +61,31 @@ typedef enum
 } GpioPull;
 
 /**
+ * Each pin has up to 16 different alternate functions it can take on.
+ *
+ * Check the datasheet for the exact pin to alternate function mapping.
+ */
+typedef enum
+{
+    AF0 = 0x0,
+    AF1,
+    AF2,
+    AF3,
+    AF4,
+    AF5,
+    AF6,
+    AF7,
+    AF8,
+    AF9,
+    AF10,
+    AF11,
+    AF12,
+    AF13,
+    AF14,
+    AF15,
+} GpioAlternateFunction;
+
+/**
  * Every available GPIO pin (all 168 of them).The 4 LSBs represent the pin
  * number. The 4 MSBs represent the port.
  *
@@ -634,7 +659,7 @@ typedef enum
 status_t gpio_request_input(GpioReg *reg, GpioPin pin, GpioPull pull);
 status_t gpio_request_output(GpioReg *reg, GpioPin pin,
                              DigitalState default_state);
-status_t gpio_request_alt(GpioReg *reg, GpioPin pin);
+status_t gpio_request_alt(GpioReg *reg, GpioPin pin, GpioAlternateFunction alt);
 
 void gpio_set_otype(GpioReg *reg, GpioPin pin, GpioOType type);
 void gpio_set_ospeed(GpioReg *reg, GpioPin pin, GpioOSpeed speed);
