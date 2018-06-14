@@ -4,6 +4,9 @@ SRCS += platform/*.c
 SRCS += drivers/*.c
 SRCS += apps/*.c
 
+# Include the drivers you want enabled
+DRIVERS = -DINCLUDE_SDRAM_DRIVER
+
 # Binaries will be generated with this name (.elf, .bin, .hex, etc)
 PROJ_NAME = hello_world
 
@@ -26,6 +29,9 @@ CFLAGS += -Iplatform/ -Idrivers/ -Iapps/
 
 # Include files from CMSIS
 CFLAGS += -Iplatform/CMSIS/Include
+
+# Include any needed drivers
+CFLAGS += $(DRIVERS)
 
 # Use semihosting and debug features when in debug mode. Only perform
 # optimizations that don't disturb debugging.
