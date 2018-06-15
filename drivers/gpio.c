@@ -125,7 +125,7 @@ status_t gpio_request_alt(GpioReg *reg,
      * and pins 8-15 on the second.
      */
     if(GPIO_GET_PIN(pin) < 8) {
-        reg->AFR[0] |= alt << (GPIO_GET_PIN(pin) * 4);
+        reg->AFR[0] |= alt << (((GPIO_GET_PIN(pin) - 8) * 4);
     } else {
         reg->AFR[1] |= alt << (GPIO_GET_PIN(pin) * 4);
     }
