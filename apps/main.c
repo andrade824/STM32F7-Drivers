@@ -1,13 +1,14 @@
 #include "debug.h"
+#include "fmc_sdram.h"
 #include "gpio.h"
 #include "interrupt.h"
 #include "platform.h"
 #include "status.h"
 #include "system.h"
 
-#include <stdint.h>
+#include "registers/fmc_sdram_reg.h"
 
-void SysTick_Handlerfsddfs();
+#include <stdint.h>
 
 status_t run(void)
 {
@@ -15,6 +16,34 @@ status_t run(void)
 
     dbprintf("System Initialized\n");
 
+    ABORT_IF_NOT(init_fmc_sdram());
+
+    for(int i = 0; i < 1; i++) {
+        dbprintf("Beginning Memcheck...\n");
+        for (uint32_t uwIndex = 0; uwIndex < 0x00800000; uwIndex += 4)
+        {
+            *(volatile uint32_t*) (SDRAM_BASE + uwIndex) = uwIndex;
+        }
+
+        for (uint32_t uwIndex = 0; uwIndex < 0x00800000; uwIndex += 4)
+        {
+            uint32_t value = *(volatile uint32_t*) (SDRAM_BASE + uwIndex);
+
+            if(value != uwIndex)
+            {
+                dbprintf("Memcheck failure: value 0x%lx != index 0x%lx\n", value, uwIndex);
+                gpio_set_output(GPIO_ARD_D13, high);
+                while(1) { }
+            }
+
+            if(uwIndex % 0x1000 == 0) {
+                dbprintf("Checkpoint... value 0x%lx -- index 0x%lx\n", value, uwIndex);
+            }
+            
+        }
+        dbprintf("Memcheck complete!!\n");
+    }
+    
     ABORT_IF_NOT(gpio_request_input(GPIO_B_USER, GPIO_NO_PULL));
     ABORT_IF_NOT(gpio_request_output(GPIO_ARD_D13, low));
     ABORT_IF_NOT(gpio_request_output(GPIO_LCD_BL_CTRL, low));

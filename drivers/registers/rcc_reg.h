@@ -150,6 +150,17 @@ BIT_FIELD(RCC_AHB1ENR_OTGHSULPIEN,  30, 0x40000000);
  */
 
 /**
+ * RCC AHB3 Peripheral Clock Register Bit Definitions [5.3.12].
+ *
+ * @{
+ */
+BIT_FIELD(RCC_AHB3ENR_FMCEN,    0, 0x00000001);
+BIT_FIELD(RCC_AHB3ENR_QSPIBEN,  1, 0x00000002);
+/**
+ * @}
+ */
+
+/**
  * RCC APB1 Peripheral Clock Register Bit Definitions [5.3.13].
  *
  * @{

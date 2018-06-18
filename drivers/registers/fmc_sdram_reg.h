@@ -5,8 +5,9 @@
  * Definitions and functions used to manipulate the SDRAM Controller (located
  * within the Flexible Memory Controller peripheral) [13.7.5].
  */
-#ifndef FMC_SDRAM_REG
-#define FMC_SDRAM_REG
+#ifdef INCLUDE_SDRAM_DRIVER
+#ifndef FMC_SDRAM_REG_H
+#define FMC_SDRAM_REG_H
 
 #include "bitfield.h"
 #include "platform.h"
@@ -28,8 +29,8 @@ typedef struct
 /**
  * Define the FMC SDRAM Controller register map accessor.
  */
-#define SDRAM_BASE (FMC_R_BASE + 0x0140U)
-#define SDRAM ((FmcSdramReg *) SDRAM_BASE)
+#define SDRAM_REG_BASE (FMC_R_BASE + 0x0140U)
+#define SDRAM ((FmcSdramReg *) SDRAM_REG_BASE)
 
 /**
  * SDRAM Control Register Bit Definitions.
@@ -75,6 +76,20 @@ BIT_FIELD(SDRAM_SDCMR_CTB2, 3, 0x00000008);
 BIT_FIELD(SDRAM_SDCMR_CTB1, 4, 0x00000010);
 BIT_FIELD(SDRAM_SDCMR_NRFS, 5, 0x000001E0);
 BIT_FIELD(SDRAM_SDCMR_MRD,  9, 0x003FFE00);
+
+/**
+ * Definitions for the different modes supported in the SDCMR register.
+ */
+typedef enum
+{
+    SDCMR_NORMAL = 0x0,
+    SDCMR_CLOCK_CFG = 0x1,
+    SDCMR_PALL = 0x2,
+    SDCMR_AUTO_REFRESH = 0x3,
+    SDCMR_LOAD_MODE_REG = 0x4,
+    SDCMR_SELF_REFRESH = 0x5,
+    SDCMR_POWER_DOWN = 0x6
+} SDCMR_MODE;
 /**
  * @}
  */
@@ -84,9 +99,9 @@ BIT_FIELD(SDRAM_SDCMR_MRD,  9, 0x003FFE00);
  *
  * @{
  */
-BIT_FIELD(SDRAM_SDRTR_MODE,  0, 0x00000001);
-BIT_FIELD(SDRAM_SDRTR_CTB2,  2, 0x00003FFE);
-BIT_FIELD(SDRAM_SDRTR_CTB1, 14, 0x00004000);
+BIT_FIELD(SDRAM_SDRTR_CRE,      0, 0x00000001);
+BIT_FIELD(SDRAM_SDRTR_COUNT,    2, 0x00003FFE);
+BIT_FIELD(SDRAM_SDRTR_REIE,     14, 0x00004000);
 /**
  * @}
  */
@@ -100,8 +115,18 @@ BIT_FIELD(SDRAM_SDSR_RE,        0, 0x00000001);
 BIT_FIELD(SDRAM_SDSR_MODES1,    1, 0x00000006);
 BIT_FIELD(SDRAM_SDSR_MODES2,    3, 0x00000018);
 BIT_FIELD(SDRAM_SDSR_BUSY,      5, 0x00000020);
+
+/**
+ * Definitions for the BUSY bit.
+ */
+typedef enum
+{
+    SDSR_READY = 0x0,
+    SDSR_BUSY = 0x1
+} SDSR_BUSY_BIT;
 /**
  * @}
  */
 
+#endif
 #endif

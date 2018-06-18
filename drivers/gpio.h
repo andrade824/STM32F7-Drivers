@@ -657,9 +657,13 @@ typedef enum
 #define GPIO_LCD_DE                 GPIO_PK7
 
 status_t gpio_request_input(GpioReg *reg, GpioPin pin, GpioPull pull);
-status_t gpio_request_output(GpioReg *reg, GpioPin pin,
+status_t gpio_request_output(GpioReg *reg,
+                             GpioPin pin,
                              DigitalState default_state);
-status_t gpio_request_alt(GpioReg *reg, GpioPin pin, GpioAlternateFunction alt);
+status_t gpio_request_alt(GpioReg *reg,
+                          GpioPin pin,
+                          GpioAlternateFunction alt,
+                          GpioOSpeed speed);
 
 void gpio_set_otype(GpioReg *reg, GpioPin pin, GpioOType type);
 void gpio_set_ospeed(GpioReg *reg, GpioPin pin, GpioOSpeed speed);

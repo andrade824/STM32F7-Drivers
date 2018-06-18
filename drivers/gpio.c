@@ -125,9 +125,9 @@ status_t gpio_request_alt(GpioReg *reg,
      * and pins 8-15 on the second.
      */
     if(GPIO_GET_PIN(pin) < 8) {
-        reg->AFR[0] |= alt << (((GPIO_GET_PIN(pin) - 8) * 4);
+        reg->AFR[0] |= alt << (GPIO_GET_PIN(pin) * 4);
     } else {
-        reg->AFR[1] |= alt << (GPIO_GET_PIN(pin) * 4);
+        reg->AFR[1] |= alt << (((GPIO_GET_PIN(pin) - 8) * 4));
     }
 
     gpio_set_otype(reg, pin, GPIO_PUSH_PULL);
@@ -164,8 +164,8 @@ void gpio_set_otype(GpioReg *reg, GpioPin pin, GpioOType type)
  */
 void gpio_set_ospeed(GpioReg *reg, GpioPin pin, GpioOSpeed speed)
 {
-    reg->OTYPER &= ~(3 << (GPIO_GET_PIN(pin) * 2));
-    reg->OTYPER |= speed << (GPIO_GET_PIN(pin) * 2);
+    reg->OSPEEDR &= ~(3 << (GPIO_GET_PIN(pin) * 2));
+    reg->OSPEEDR |= speed << (GPIO_GET_PIN(pin) * 2);
 }
 
 /**
