@@ -74,6 +74,18 @@ status_t start_timer(uint32_t ticks)
 }
 
 /**
+ * Stop the timer prematurely and reset the internal context to a safe state.
+ */
+void stop_timer(void)
+{
+    CLEAR_FIELD(SYSTICK->CTRL, SYSTICK_CTRL_ENABLE());
+    SYSTICK->VAL = 0;
+
+    timer_complete = true;
+    ticks_left = 0;
+}
+
+/**
  * Sleep for at least `ticks` number of CPU cycles.
  *
  * @note This is not meant for cycle-accurate timing. There will be overhead

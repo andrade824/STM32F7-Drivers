@@ -32,6 +32,7 @@
 status_t init_system_timer(void);
 
 status_t start_timer(uint32_t ticks);
+void stop_timer(void);
 status_t sleep(uint32_t ticks);
 
 bool is_timer_complete(void);

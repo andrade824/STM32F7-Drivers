@@ -36,6 +36,7 @@
                      __FILE__, __func__, __LINE__, #expr);          \
             return Fail;                                            \
         }                                                           \
+        stop_timer();                                               \
     } while(0)
 
 /**
