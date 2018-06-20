@@ -99,9 +99,7 @@ status_t init_fmc_sdram(void)
     SET_FIELD(SDRAM->SDCMR, SET_SDRAM_SDCMR_MODE(SDCMR_CLOCK_CFG) |
                             SET_SDRAM_SDCMR_CTB2(SDCMR_CTB2) |
                             SET_SDRAM_SDCMR_CTB1(SDCMR_CTB1));
-    // ABORT_TIMEOUT(GET_SDRAM_SDSR_BUSY(SDRAM->SDSR) == SDSR_READY,
-    //               SDRAM_TIMEOUT);
-    while(GET_SDRAM_SDSR_BUSY(SDRAM->SDSR) != SDSR_READY) { }
+    ABORT_TIMEOUT(GET_SDRAM_SDSR_BUSY(SDRAM->SDSR) == SDSR_READY, SDRAM_TIMEOUT);
 
     /**
      * Wait for the SDRAM to power up (usually 100us).
@@ -114,9 +112,7 @@ status_t init_fmc_sdram(void)
     SET_FIELD(SDRAM->SDCMR, SET_SDRAM_SDCMR_MODE(SDCMR_PALL) |
                             SET_SDRAM_SDCMR_CTB2(SDCMR_CTB2) |
                             SET_SDRAM_SDCMR_CTB1(SDCMR_CTB1));
-    // ABORT_TIMEOUT(GET_SDRAM_SDSR_BUSY(SDRAM->SDSR) == SDSR_READY,
-    //               SDRAM_TIMEOUT);
-    while(GET_SDRAM_SDSR_BUSY(SDRAM->SDSR) != SDSR_READY) { }
+    ABORT_TIMEOUT(GET_SDRAM_SDSR_BUSY(SDRAM->SDSR) == SDSR_READY, SDRAM_TIMEOUT);
 
     /**
      * Send the Auto-Refresh command.
@@ -125,9 +121,7 @@ status_t init_fmc_sdram(void)
                             SET_SDRAM_SDCMR_CTB2(SDCMR_CTB2) |
                             SET_SDRAM_SDCMR_CTB1(SDCMR_CTB1) |
                             SET_SDRAM_SDCMR_NRFS(SDCMR_NRFS));
-    // ABORT_TIMEOUT(GET_SDRAM_SDSR_BUSY(SDRAM->SDSR) == SDSR_READY,
-    //               SDRAM_TIMEOUT);
-    while(GET_SDRAM_SDSR_BUSY(SDRAM->SDSR) != SDSR_READY) { }
+    ABORT_TIMEOUT(GET_SDRAM_SDSR_BUSY(SDRAM->SDSR) == SDSR_READY, SDRAM_TIMEOUT);
 
     /**
      * Send the Load Mode Register command.
@@ -136,9 +130,7 @@ status_t init_fmc_sdram(void)
                             SET_SDRAM_SDCMR_CTB2(SDCMR_CTB2) |
                             SET_SDRAM_SDCMR_CTB1(SDCMR_CTB1) |
                             SET_SDRAM_SDCMR_MRD(SDCMR_MRD));
-    // ABORT_TIMEOUT(GET_SDRAM_SDSR_BUSY(SDRAM->SDSR) == SDSR_READY,
-    //               SDRAM_TIMEOUT);
-    while(GET_SDRAM_SDSR_BUSY(SDRAM->SDSR) != SDSR_READY) { }
+    ABORT_TIMEOUT(GET_SDRAM_SDSR_BUSY(SDRAM->SDSR) == SDSR_READY, SDRAM_TIMEOUT);
 
     /**
      * Set the refresh rate.

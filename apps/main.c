@@ -18,7 +18,7 @@ status_t run(void)
 
     ABORT_IF_NOT(init_fmc_sdram());
 
-    for(int i = 0; i < 1; i++) {
+    for(int i = 0; i < 3; i++) {
         dbprintf("Beginning Memcheck...\n");
         for (uint32_t uwIndex = 0; uwIndex < 0x00800000; uwIndex += 4)
         {
@@ -36,7 +36,7 @@ status_t run(void)
                 while(1) { }
             }
 
-            if(uwIndex % 0x1000 == 0) {
+            if(uwIndex % 0x10000 == 0) {
                 dbprintf("Checkpoint... value 0x%lx -- index 0x%lx\n", value, uwIndex);
             }
             
