@@ -20,6 +20,9 @@
  */
 #define SDRAM_TIMEOUT MSECS(1)
 
+/**
+ * Initialize the SDRAM Controller.
+ */
 status_t init_fmc_sdram(void)
 {
     /**

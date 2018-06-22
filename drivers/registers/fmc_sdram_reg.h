@@ -2,8 +2,7 @@
  * @author Devon Andrade
  * @created 6/14/2018
  *
- * Definitions and functions used to manipulate the SDRAM Controller (located
- * within the Flexible Memory Controller peripheral) [13.7.5].
+ * SDRAM Controller Register Map [13.7].
  */
 #ifdef INCLUDE_SDRAM_DRIVER
 #ifndef FMC_SDRAM_REG_H

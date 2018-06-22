@@ -36,6 +36,33 @@
 #define FLASH_WAIT_STATES 7
 
 /**
+ * PLL and bus divider settings used to get the clock values above.
+ *
+ * CPU_HZ = (fInput * (PLLN / PLLM)) / PLLP
+ * AHB_HZ = CPU_HZ
+ * APB2_HZ = AHB_HZ / APB2_DIV
+ * APB1_HZ = AHB_HZ / APB1_DIV
+ */
+#define CLK_PLLM 25
+#define CLK_PLLN 432
+#define CLK_PLLP 0        /* Divide by 2 */
+
+#define CLK_APB1_DIV 5    /* Divide by 4 */
+#define CLK_APB2_DIV 4    /* Divide by 2 */
+
+/**
+ * Clock settings used for the LCD pixel clock.
+ *
+ * PLLSAI = fInput * (PLLSAIN / PLLM)
+ * PLLSAIR = PLLSAI / PLLSAIR
+ * Pixel Clock = PLLSAIR / PLLSAIDIVR
+ *
+ * Pixel Clock = ((25MHz * (192 / 25)) / 5) / 4 = 9.6MHz
+ */
+#define CLK_PLLSAI_PLLN     192
+#define CLK_PLLSAIR         5
+#define CLK_PLLSAIDIVR      4
+/**
  * Memory Map definitions.
  */
 #define RAMITCM_BASE    0x00000000U /*!< Base address of : 16KB RAM reserved for CPU execution/instruction accessible over ITCM  */

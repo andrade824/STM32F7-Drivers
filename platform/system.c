@@ -68,9 +68,9 @@ static status_t init_clocks(void)
      * fInput is 25MHz on the STM32F7 discovery board.
      */
     SET_FIELD(RCC->PLLCFGR, RCC_PLLCFGR_PLLSRC() |
-                            SET_RCC_PLLCFGR_PLLM(25) |
-                            SET_RCC_PLLCFGR_PLLN(432) |
-                            SET_RCC_PLLCFGR_PLLP(0));
+                            SET_RCC_PLLCFGR_PLLM(CLK_PLLM) |
+                            SET_RCC_PLLCFGR_PLLN(CLK_PLLN) |
+                            SET_RCC_PLLCFGR_PLLP(CLK_PLLP));
 
     SET_FIELD(RCC->CR, RCC_CR_PLLON());
 
@@ -90,8 +90,8 @@ static status_t init_clocks(void)
     /**
      * Configure the bus clocks.
      */
-    SET_FIELD(RCC->CFGR, SET_RCC_CFGR_PPRE1(0x5) |
-                         SET_RCC_CFGR_PPRE2(0x4));
+    SET_FIELD(RCC->CFGR, SET_RCC_CFGR_PPRE1(CLK_APB1_DIV) |
+                         SET_RCC_CFGR_PPRE2(CLK_APB2_DIV));
 
     /**
      * Wait for the PLL to lock.
@@ -112,6 +112,23 @@ static status_t init_clocks(void)
      * Ensure the system clock was switched to the main PLL successfully.
      */
     ABORT_IF_NOT(GET_RCC_CFGR_SWS(RCC->CFGR) == 0x2);
+
+#ifdef INCLUDE_LCD_CTRL_DRIVER
+    /**
+     * Configure and enable PLLSAI (used to drive the LCD pixel clock).
+     */
+    SET_FIELD(RCC->PLLSAICFGR, SET_RCC_PLLSAICFGR_PLLN(CLK_PLLSAI_PLLN) |
+                               SET_RCC_PLLSAICFGR_PLLSAIR(CLK_PLLSAIR));
+
+    SET_FIELD(RCC->DCKCFGR1, SET_RCC_DKCFGR1_PLLSAIDIVR(CLK_PLLSAIDIVR));
+
+    SET_FIELD(RCC->CR, RCC_CR_PLLSAION());
+
+    /**
+     * Wait for PLLSAI to lock.
+     */
+    while(GET_RCC_CR_PLLSAIRDY(RCC->CR) == 0);
+#endif /* INCLUDE_LCD_CTRL_DRIVER */
 
     return Success;
 }
