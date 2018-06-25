@@ -4,7 +4,7 @@
  *
  * Definitions and functions used to manipulate the LCD Controller [18].
  */
-#ifdef INCLUDE_SDRAM_DRIVER
+#ifdef INCLUDE_LCD_CTRL_DRIVER
 
 #include "debug.h"
 #include "gpio.h"
