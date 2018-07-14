@@ -34,7 +34,7 @@ typedef struct
   volatile uint32_t ICR;       /*!< LTDC Interrupt Clear Register,                       Address offset: 0x3C */
   volatile uint32_t LIPCR;     /*!< LTDC Line Interrupt Position Configuration Register, Address offset: 0x40 */
   volatile uint32_t CPSR;      /*!< LTDC Current Position Status Register,               Address offset: 0x44 */
-  volatile uint32_t CDSR;      /*!< LTDC Current Display Status Register,                 Address offset: 0x48 */
+  volatile uint32_t CDSR;      /*!< LTDC Current Display Status Register,                Address offset: 0x48 */
 } LtdcReg;
 
 /**
@@ -70,23 +70,125 @@ typedef struct
 #define LTDC_LAYER1         ((LtdcLayerReg *) LTDC_LAYER1_BASE)
 #define LTDC_LAYER2         ((LtdcLayerReg *) LTDC_LAYER2_BASE)
 
+typedef enum {
+	LAYER1 = 0,
+	LAYER2 = 1
+} LtdcLayer;
+
 /**
- * SDRAM Control Register Bit Definitions.
+ * Useful macro for getting the register map for a particular LTDC layer.
  *
- * @{
+ * “0” for the first layer, “1” for the second layer registers.
+ *
+ * Use the LtdcLayer enum definitions to keep the code clear.
  */
-BIT_FIELD(SDRAM_SDCR_NC,         0, 0x00000003);
-BIT_FIELD(SDRAM_SDCR_NR,         2, 0x0000000C);
-BIT_FIELD(SDRAM_SDCR_MWID,       4, 0x00000030);
-BIT_FIELD(SDRAM_SDCR_NB,         6, 0x00000040);
-BIT_FIELD(SDRAM_SDCR_CAS,        7, 0x00000180);
-BIT_FIELD(SDRAM_SDCR_WP,         9, 0x00000200);
-BIT_FIELD(SDRAM_SDCR_SDCLK,     10, 0x00000C00);
-BIT_FIELD(SDRAM_SDCR_RBURST,    12, 0x00001000);
-BIT_FIELD(SDRAM_SDCR_RPIPE,     13, 0x00006000);
+LTDC_LAYER_REG(x) ((LtdcLayerReg *) LTDC_BASE + 0x84U + (x * 0x80U))
+
 /**
- * @}
+ * LTDC Synchronization Size Configuration Register Bit Definitions.
  */
+BIT_FIELD(LTDC_SSCR_VSH,    0, 0x000007FF);
+BIT_FIELD(LTDC_SSCR_HSW,   16, 0x0FFF0000);
+
+/**
+ * LTDC Back Porch Configuration Register Bit Definitions.
+ */
+BIT_FIELD(LTDC_BPCR_AVBP,   0, 0x000007FF);
+BIT_FIELD(LTDC_BPCR_AHBP,  16, 0x0FFF0000);
+
+/**
+ * LTDC Active Width Configuration Register Bit Definitions.
+ */
+BIT_FIELD(LTDC_AWCR_AAH,    0, 0x000007FF);
+BIT_FIELD(LTDC_AWCR_AAW,   16, 0x0FFF0000);
+
+/**
+ * LTDC Total Width Configuration Register Bit Definitions.
+ */
+BIT_FIELD(LTDC_TWCR_TOTALH,     0, 0x000007FF);
+BIT_FIELD(LTDC_TWCR_TOTALW,    16, 0x0FFF0000);
+
+/**
+ * LTDC Global Control Register Register Bit Definitions.
+ */
+BIT_FIELD(LTDC_GCR_LTDCEN,  0, 0x00000001);
+BIT_FIELD(LTDC_GCR_DBW,     4, 0x00000070);
+BIT_FIELD(LTDC_GCR_DGW,     8, 0x00000700);
+BIT_FIELD(LTDC_GCR_DRW,    12, 0x00007000);
+BIT_FIELD(LTDC_GCR_DEN,    16, 0x00010000);
+BIT_FIELD(LTDC_GCR_PCPOL,  28, 0x10000000);
+BIT_FIELD(LTDC_GCR_DEPOL,  29, 0x20000000);
+BIT_FIELD(LTDC_GCR_VSPOL,  30, 0x40000000);
+BIT_FIELD(LTDC_GCR_HSPOL,  31, 0x80000000);
+
+/**
+ * LTDC Shadow Reload Configuration Register Bit Definitions.
+ */
+BIT_FIELD(LTDC_SRCR_IMR,    0, 0x00000001);
+BIT_FIELD(LTDC_SRCR_VBR,    1, 0x00000002);
+
+/**
+ * LTDC Background Color Configuration Register Bit Definitions.
+ */
+BIT_FIELD(LTDC_BCCR_BCBLUE,     0, 0x000000FF);
+BIT_FIELD(LTDC_BCCR_BCGREEN,    8, 0x0000FF00);
+BIT_FIELD(LTDC_BCCR_BCRED,     16, 0x00FF0000);
+
+/**
+ * LTDC Interrupt Enable Register Bit Definitions.
+ */
+BIT_FIELD(LTDC_IER_LIE,     0, 0x00000001);
+BIT_FIELD(LTDC_IER_FUIE,    1, 0x00000002);
+BIT_FIELD(LTDC_IER_TERRIE,  2, 0x00000004);
+BIT_FIELD(LTDC_IER_RRIE,    3, 0x00000008);
+
+/**
+ * LTDC Interrupt Status Register Bit Definitions.
+ */
+BIT_FIELD(LTDC_ISR_LIF,     0, 0x00000001);
+BIT_FIELD(LTDC_ISR_FUIF,    1, 0x00000002);
+BIT_FIELD(LTDC_ISR_TERRIF,  2, 0x00000004);
+BIT_FIELD(LTDC_ISR_RRIF,    3, 0x00000008);
+
+/**
+ * LTDC Interrupt Clear Register Bit Definitions.
+ */
+BIT_FIELD(LTDC_ISR_CLIF,    0, 0x00000001);
+BIT_FIELD(LTDC_ISR_CFUIF,   1, 0x00000002);
+BIT_FIELD(LTDC_ISR_CTERRIF, 2, 0x00000004);
+BIT_FIELD(LTDC_ISR_CRRIF,   3, 0x00000008);
+
+/**
+ * LTDC Line Interrupt Position Configuration Register Bit Definitions.
+ */
+BIT_FIELD(LTDC_LIPCR_LIPOS, 0, 0x000007FF);
+
+/**
+ * LTDC Current Position Status Register Bit Definitions.
+ */
+BIT_FIELD(LTDC_CPSR_CYPOS,  0, 0x0000FFFF);
+BIT_FIELD(LTDC_CPSR_CXPOS,  0, 0xFFFF0000);
+
+/**
+ * LTDC Current Display Status Register Bit Definitions.
+ */
+BIT_FIELD(LTDC_CDSR_VDES,   0, 0x00000001);
+BIT_FIELD(LTDC_CDSR_HDES,   1, 0x00000002);
+BIT_FIELD(LTDC_CDSR_VSYNCS, 2, 0x00000004);
+BIT_FIELD(LTDC_CDSR_HSYNCS, 3, 0x00000008);
+
+/**
+ * LTDC Layer Control Register Bit Definitions.
+ */
+BIT_FIELD(LTDC_LCR_LEN,     0, 0x00000001);
+BIT_FIELD(LTDC_LCR_COLKEN,  1, 0x00000002);
+BIT_FIELD(LTDC_LCR_CLUTEN,  4, 0x00000010);
+
+/**
+ * LTDC Layer Window Horizontal Position Configuration Register Bit Definitions.
+ */
+BIT_FIELD(LTDC_LWHPCR_WHSTPOS,  0, 0x00000FFF);
+BIT_FIELD(LTDC_LWHPCR_WHSPPOS, 16, 0x0FFF0000);
 
 #endif
 #endif
