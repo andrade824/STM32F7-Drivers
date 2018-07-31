@@ -59,9 +59,10 @@
  *
  * Pixel Clock = ((25MHz * (192 / 25)) / 5) / 4 = 9.6MHz
  */
-#define CLK_PLLSAI_PLLN     192
-#define CLK_PLLSAIR         5
-#define CLK_PLLSAIDIVR      4
+#define CLK_PLLSAI_PLLN 192
+#define CLK_PLLSAIR     5
+#define CLK_PLLSAIDIVR  4
+
 /**
  * Memory Map definitions.
  */
