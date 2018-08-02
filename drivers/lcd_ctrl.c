@@ -112,9 +112,39 @@ status_t init_lcd_ctrl(struct LcdSettings lcd, uint32_t *framebuffer);
               SET_LTDC_LVHPCR_WVSTPOS(accumulated_vbp + 1) |
               SET_LTDC_LVHPCR_WVSPPOS(accumulated_active_height));
 
-    SET_FIELD(LTDC_LAYER_REG(LAYER1)->PFCR, LTDC_LPFCR_PF(PF_RGB8888));
+    SET_FIELD(LTDC_LAYER_REG(LAYER1)->PFCR, SET_LTDC_LPFCR_PF(PF_ARGB8888));
 
-    /* Enable backlight and set LCD_DISP high */
+    SET_FIELD(LTDC_LAYER_REG(LAYER1)->CFBAR, SET_LTDC_LCFBAR_CFBADD(framebuffer)):
+
+    /**
+     * The screen width is multiplied by the sizeof a single pixel. If you
+     * change pixel formats, you'll need to update this value as well.
+     */
+    SET_FIELD(LTDC_LAYER_REG(LAYER1)->CFBLR,
+              SET_LTDC_LCFBLR_CFBLL((lcd.active_width * 4) + 3) |
+              SET_LTDC_LCFBLR_CFBP(lcd.active_width * 4));
+
+    SET_FIELD(LTDC_LAYER_REG(LAYER1)->CFBLNR,
+              SET_LTDC_LCFBLNR_CFBLNBR(lcd.active_height));
+
+    SET_FIELD(LTDC_LAYER_REG(LAYER1)->CR, SET_LTDC_LCR_LEN(1));
+
+    /**
+     * Reload the LTDC registers immediately instead of waiting for vblank.
+     */
+    SET_FIELD(LTDC->SRCR, SET_LTDC_SRCR_IMR(1));
+
+    /**
+     * Enable the LTDC controller.
+     */
+    SET_FIELD(LTDC->GCR, SET_LTDC_GCR_LTDCEN(1));
+
+    /**
+     * Enable backlight and set the LCD_DISP pin high (which tells the LCD
+     * module to start displaying data).
+     */
+    gpio_set_output(GPIO_LCD_BL_CTRL, high);
+    gpio_set_output(GPIO_LCD_DISP, high);
 
     return Success;
 }

@@ -10,6 +10,9 @@
 
 #include "drivers/lcd_ctrl.h"
 
+/**
+ * Settings used to initialize the LCD used on the STM32F7 Discovery board.
+ */
 LcdSettings default_lcd_settings = {
     .hsync = 1,
     .vsync = 1,
