@@ -8,12 +8,12 @@
 #ifndef LCD_TIMINGS_H
 #define LCD_TIMINGS_H
 
-#include "drivers/lcd_ctrl.h"
+#include "lcd_ctrl.h"
 
 /**
  * Settings used to initialize the LCD used on the STM32F7 Discovery board.
  */
-LcdSettings default_lcd_settings = {
+const LcdSettings default_lcd_settings = {
     .hsync = 1,
     .vsync = 1,
     .horiz_back_porch = 43,

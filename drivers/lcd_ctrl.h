@@ -17,8 +17,8 @@
  * Polarity settings used for HSPOL, VSPOL, DEPOL, and PCPOL in LTDC_GCR.
  */
 typedef enum {
-    ACTIVE_LOW = 0;
-    ACTIVE_HIGH = 1;
+    ACTIVE_LOW = 0,
+    ACTIVE_HIGH = 1
 } LcdPolarity;
 
 /**

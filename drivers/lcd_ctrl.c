@@ -18,7 +18,7 @@
  *
  * Default to one layer enabled that fills up the entire screen.
  */
-status_t init_lcd_ctrl(struct LcdSettings lcd, uint32_t *framebuffer);
+status_t init_lcd_ctrl(LcdSettings lcd, uint32_t *framebuffer)
 {
     /**
      * Request all of the required GPIOs.
@@ -84,8 +84,8 @@ status_t init_lcd_ctrl(struct LcdSettings lcd, uint32_t *framebuffer);
 
     const uint16_t total_height = accumulated_active_height + lcd.vert_front_porch;
     const uint16_t total_width = accumulated_active_width + lcd.horiz_front_porch;
-    SET_FIELD(LTDC->AWCR, SET_LTDC_AWCR_AAH(accumulated_active_height) |
-                          SET_LTDC_AWCR_AAW(accumulated_active_width));
+    SET_FIELD(LTDC->TWCR, SET_LTDC_TWCR_TOTALH(total_height) |
+                          SET_LTDC_TWCR_TOTALW(total_width));
 
     /**
      * Set signal polarities.
@@ -98,7 +98,13 @@ status_t init_lcd_ctrl(struct LcdSettings lcd, uint32_t *framebuffer);
     /**
      * Green default background color.
      */
-    SET_FIELD(LTDC->BCCR, SET_LTDC_BCCR_BCGREEN(0xFF));
+    SET_FIELD(LTDC->BCCR, SET_LTDC_BCCR_BCGREEN(0) | SET_LTDC_BCCR_BCBLUE(0) | SET_LTDC_BCCR_BCRED(0));
+
+    /**
+     * Setup vertical blanking interrupt.
+     */
+    SET_FIELD(LTDC->LIPCR, SET_LTDC_LIPCR_LIPOS(accumulated_active_height));
+    SET_FIELD(LTDC->IER, LTDC_IER_LIE());
 
     /**
      * Set the default layer settings (one layer that spans the entire active
@@ -109,35 +115,35 @@ status_t init_lcd_ctrl(struct LcdSettings lcd, uint32_t *framebuffer);
               SET_LTDC_LWHPCR_WHSPPOS(accumulated_active_width));
 
     SET_FIELD(LTDC_LAYER_REG(LAYER1)->WVPCR,
-              SET_LTDC_LVHPCR_WVSTPOS(accumulated_vbp + 1) |
-              SET_LTDC_LVHPCR_WVSPPOS(accumulated_active_height));
+              SET_LTDC_LWVPCR_WVSTPOS(accumulated_vbp + 1) |
+              SET_LTDC_LWVPCR_WVSPPOS(accumulated_active_height));
 
-    SET_FIELD(LTDC_LAYER_REG(LAYER1)->PFCR, SET_LTDC_LPFCR_PF(PF_ARGB8888));
+    SET_FIELD(LTDC_LAYER_REG(LAYER1)->PFCR, SET_LTDC_LPFCR_PF(PF_RGB565));
 
-    SET_FIELD(LTDC_LAYER_REG(LAYER1)->CFBAR, SET_LTDC_LCFBAR_CFBADD(framebuffer)):
+    SET_FIELD(LTDC_LAYER_REG(LAYER1)->CFBAR, SET_LTDC_LCFBAR_CFBADD((uintptr_t)framebuffer));
 
     /**
      * The screen width is multiplied by the sizeof a single pixel. If you
      * change pixel formats, you'll need to update this value as well.
      */
     SET_FIELD(LTDC_LAYER_REG(LAYER1)->CFBLR,
-              SET_LTDC_LCFBLR_CFBLL((lcd.active_width * 4) + 3) |
-              SET_LTDC_LCFBLR_CFBP(lcd.active_width * 4));
+              SET_LTDC_LCFBLR_CFBLL((lcd.active_width * 2) + 3) |
+              SET_LTDC_LCFBLR_CFBP(lcd.active_width * 2));
 
     SET_FIELD(LTDC_LAYER_REG(LAYER1)->CFBLNR,
               SET_LTDC_LCFBLNR_CFBLNBR(lcd.active_height));
 
-    SET_FIELD(LTDC_LAYER_REG(LAYER1)->CR, SET_LTDC_LCR_LEN(1));
+    SET_FIELD(LTDC_LAYER_REG(LAYER1)->CR, LTDC_LCR_LEN());
 
     /**
      * Reload the LTDC registers immediately instead of waiting for vblank.
      */
-    SET_FIELD(LTDC->SRCR, SET_LTDC_SRCR_IMR(1));
+    SET_FIELD(LTDC->SRCR, LTDC_SRCR_IMR());
 
     /**
      * Enable the LTDC controller.
      */
-    SET_FIELD(LTDC->GCR, SET_LTDC_GCR_LTDCEN(1));
+    SET_FIELD(LTDC->GCR, LTDC_GCR_LTDCEN());
 
     /**
      * Enable backlight and set the LCD_DISP pin high (which tells the LCD

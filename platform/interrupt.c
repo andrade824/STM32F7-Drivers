@@ -94,5 +94,12 @@ status_t request_interrupt(IRQn_Type irq, ISR_Type isr)
 
     vector_table[irq] = isr;
 
+    /**
+     * Exceptions are enabled through a System Control Block register.
+     */
+    if(irq >= 0) {
+        NVIC_EnableIRQ(irq);
+    }
+
     return Success;
 }

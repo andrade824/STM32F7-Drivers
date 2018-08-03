@@ -82,7 +82,7 @@ typedef enum {
  *
  * Use the LtdcLayer enum definitions to keep the code clear.
  */
-LTDC_LAYER_REG(x) ((LtdcLayerReg *)(LTDC_BASE + 0x84U + (x * 0x80U)))
+#define LTDC_LAYER_REG(x) ((LtdcLayerReg *)(LTDC_BASE + 0x84U + (x * 0x80U)))
 
 /**
  * LTDC Synchronization Size Configuration Register Bit Definitions.
@@ -153,10 +153,10 @@ BIT_FIELD(LTDC_ISR_RRIF,    3, 0x00000008);
 /**
  * LTDC Interrupt Clear Register Bit Definitions.
  */
-BIT_FIELD(LTDC_ISR_CLIF,    0, 0x00000001);
-BIT_FIELD(LTDC_ISR_CFUIF,   1, 0x00000002);
-BIT_FIELD(LTDC_ISR_CTERRIF, 2, 0x00000004);
-BIT_FIELD(LTDC_ISR_CRRIF,   3, 0x00000008);
+BIT_FIELD(LTDC_ICR_CLIF,    0, 0x00000001);
+BIT_FIELD(LTDC_ICR_CFUIF,   1, 0x00000002);
+BIT_FIELD(LTDC_ICR_CTERRIF, 2, 0x00000004);
+BIT_FIELD(LTDC_ICR_CRRIF,   3, 0x00000008);
 
 /**
  * LTDC Line Interrupt Position Configuration Register Bit Definitions.
@@ -208,7 +208,7 @@ BIT_FIELD(LTDC_LCKCR_CKRED,   16, 0x00FF0000);
 /**
  * LTDC Layer Pixel Format Configuration Register Bit Definitions.
  */
-BIT_FIELD(LTDC_LPFCR_PF, 0, 0x00000003);
+BIT_FIELD(LTDC_LPFCR_PF, 0, 0x00000007);
 
 /**
  * Definitions for the different supported pixel formats.
@@ -244,7 +244,7 @@ BIT_FIELD(LTDC_LBFCR_BF2, 0, 0x00000003);
 BIT_FIELD(LTDC_LBFCR_BF1, 8, 0x00000300);
 
 /**
- * LTDC Layer Blending Factors Configuration Register Bit Definitions.
+ * LTDC Layer Color Frame Buffer Address Register Bit Definitions.
  */
 BIT_FIELD(LTDC_LCFBAR_CFBADD, 0, 0xFFFFFFFF);
 
