@@ -43,6 +43,7 @@
  * APB2_HZ = AHB_HZ / APB2_DIV
  * APB1_HZ = AHB_HZ / APB1_DIV
  */
+#define CLK_PLLQ 4
 #define CLK_PLLM 25
 #define CLK_PLLN 432
 #define CLK_PLLP 0        /* Divide by 2 */
@@ -61,7 +62,7 @@
  */
 #define CLK_PLLSAI_PLLN 192
 #define CLK_PLLSAIR     5
-#define CLK_PLLSAIDIVR  4
+#define CLK_PLLSAIDIVR  1 /* Divide by 4 */
 
 /**
  * Memory Map definitions.

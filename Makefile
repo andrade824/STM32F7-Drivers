@@ -16,6 +16,9 @@ OUTPUT_DIR = output
 # Path where the project files will be built
 PROJ_PATH =  $(OUTPUT_DIR)/$(PROJ_NAME)
 
+# Do you want semihosting in debug builds? "yes"/"no"
+SEMIHOSTING_SUPPORT = yes
+
 ###############################################################################
 #TOOLCHAIN=/home/devon/toolchains/gcc-arm-none-eabi-6_2-2016q4/bin
 CC=arm-none-eabi-gcc
@@ -33,9 +36,16 @@ CFLAGS += -Iplatform/CMSIS/Include
 # Include any needed drivers
 CFLAGS += $(DRIVERS)
 
+# Conditionally enable semihosting. Disable if your debugger doesn't support it.
+ifeq ($(SEMIHOSTING_SUPPORT), yes)
+CFLAGS_SEMIHOSTING = --specs=rdimon.specs -lc -lrdimon
+else
+CFLAGS_SEMIHOSTING = --specs=nosys.specs
+endif
+
 # Use semihosting and debug features when in debug mode. Only perform
 # optimizations that don't disturb debugging.
-CFLAGS_DEBUG = -Og -g3 --specs=rdimon.specs -lc -lrdimon -DDEBUG_ON
+CFLAGS_DEBUG = -Og -g3 $(CFLAGS_SEMIHOSTING) -DDEBUG_ON
 
 # No semihosting or debug features in release mode. Use better optimizations.
 CFLAGS_RELEASE = -O2 --specs=nosys.specs -Wl,-Map,$(PROJ_PATH).map

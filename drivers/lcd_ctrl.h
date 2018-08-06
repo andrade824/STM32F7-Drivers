@@ -50,7 +50,7 @@ typedef struct {
 #define LCD_ALT14_FUNC AF14
 #define LCD_ALT9_FUNC AF9
 
-status_t init_lcd_ctrl(LcdSettings lcd, uint32_t *framebuffer);
+status_t init_lcd_ctrl(LcdSettings lcd, uint32_t framebuffer);
 
 #endif
 #endif

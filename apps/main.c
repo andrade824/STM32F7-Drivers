@@ -17,7 +17,9 @@
 const uint16_t height = default_lcd_settings.active_height - 1;
 const uint16_t width = default_lcd_settings.active_width - 1;
 
-#define PIXEL(r,g,b) (((r & 0x1F) << 11) | ((g & 0x3F) << 5) | (b & 0x1F))
+#define PIXEL(r,g,b) PIXEL_8888(r,g,b)
+#define PIXEL_8888(r,g,b) (0xFF000000 | ((r & 0xFF) << 16) | ((g & 0xFF) << 8) | (b & 0xFF))
+#define PIXEL_565(r,g,b) (((r & 0x1F) << 11) | ((g & 0x3F) << 5) | (b & 0x1F))
 #define CLEAR_SCREEN() (draw_rect(0, 0, width, height, PIXEL(0xFF, 0, 0xFF)))
 
 // (x0, y0) is top left, (x1, y1) is bottom right
@@ -27,10 +29,10 @@ status_t draw_rect(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint32_t 
     ABORT_IF(x1 >= default_lcd_settings.active_width);
     ABORT_IF(y1 >= default_lcd_settings.active_height);
 
-    const uint16_t width = default_lcd_settings.active_width;
+    const uint16_t total_width = default_lcd_settings.active_width;
     for(int row = y0; row <= y1; row++) {
         for (int col = x0; col <= x1; col++) {
-            *(uint16_t*)(SDRAM_BASE + ((row * width + col) * 2)) = color;
+            *(uint32_t*)(SDRAM_BASE + ((row * total_width + col) * 4)) = color;
         }
     }
 
@@ -38,9 +40,9 @@ status_t draw_rect(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint32_t 
 }
 
 status_t draw_random_rect(void) {
-    uint8_t red = rand() % 0x1F;
-    uint8_t blue = rand() % 0x3F;
-    uint8_t green = rand() % 0x1F;
+    uint8_t red = rand() % 256;
+    uint8_t blue = rand() % 256;
+    uint8_t green = rand() % 256;
 
     uint16_t x0 = rand() % (width / 2);
     uint16_t y0 = rand() % (height / 2);
@@ -59,14 +61,27 @@ const uint16_t rect_height = 50;
 
 void vblank_isr(void) {
     if(GET_LTDC_ISR_LIF(LTDC->ISR)) {
+        SET_FIELD(LTDC->ICR, LTDC_ICR_CLIF());
         CLEAR_SCREEN();
-        draw_rect(0, 30, 479, 100, PIXEL(0, 0, 0x1f));
-        draw_rect(100, 170, 150, 220, PIXEL(0, 0x3F, 0));
-        draw_rect(x, y, x + rect_width, y + rect_height, PIXEL(0x1F, 30, 0xA));
+        draw_rect(0, 0, 50, 50, PIXEL(0, 0, 255));
+        draw_rect(100, 170, 150, 220, PIXEL(0, 255, 0));
+        draw_rect(x, y, x + rect_width, y + rect_height, PIXEL(255, 0, 0));
 
         x = ((x + rect_width + 1) > width) ? 0 : x + 1;
+    }
+}
 
-        SET_FIELD(LTDC->ICR, LTDC_ICR_CLIF());
+void error_isr(void) {
+    if(GET_LTDC_ISR_FUIF(LTDC->ISR)) {
+        dbprintf("FIFO Underrun error\n");
+
+        SET_FIELD(LTDC->ICR, LTDC_ICR_CFUIF());
+    }
+
+    if(GET_LTDC_ISR_TERRIF(LTDC->ISR)) {
+        dbprintf("Transfer error\n");
+
+        SET_FIELD(LTDC->ICR, LTDC_ICR_CTERRIF());
     }
 }
 
@@ -103,12 +118,20 @@ status_t run(void)
     //     }
     //     dbprintf("Memcheck complete!!\n");
     // }
-
+    srand(37); // Number chosen randomly through multiple dice throws.
     CLEAR_SCREEN();
     draw_rect(100, 170, 150, 220, PIXEL(100, 0, 0x1F));
     draw_random_rect();
     draw_random_rect();
     draw_random_rect();
+
+    draw_rect(0, 0 + 20, 50, 50 + 20, PIXEL(0, 0, 255));
+    draw_rect(0, 51 + 20, 50, 100 + 20, PIXEL(0, 255, 0));
+    draw_rect(0, 101 + 20, 50, 150 + 20, PIXEL(255, 0, 0));
+
+    draw_rect(430, 0 + 20, 479, 50 + 20, PIXEL(0, 0, 255));
+    draw_rect(430, 51 + 20, 479, 100 + 20, PIXEL(0, 255, 0));
+    draw_rect(430, 101 + 20, 479, 150 + 20, PIXEL(255, 0, 0));
 
     // for(int row = 0; row < default_lcd_settings.active_height; row++) {
     //     *(uint32_t*)(SDRAM_BASE + ((row * default_lcd_settings.active_width) * 4)) = PIXEL(0xFF, 0xFF, 0xFF);
@@ -116,15 +139,14 @@ status_t run(void)
     // }
 
     ABORT_IF_NOT(request_interrupt(LTDC_IRQn, vblank_isr));
+    ABORT_IF_NOT(request_interrupt(LTDC_ER_IRQn, error_isr));
 
-    ABORT_IF_NOT(init_lcd_ctrl(default_lcd_settings, (uint32_t*)SDRAM_BASE));
+    ABORT_IF_NOT(init_lcd_ctrl(default_lcd_settings, (uint32_t)SDRAM_BASE));
     
     ABORT_IF_NOT(gpio_request_input(GPIO_B_USER, GPIO_NO_PULL));
     ABORT_IF_NOT(gpio_request_output(GPIO_ARD_D13, low));
 
     DigitalState led_ctrl = low;
-
-    srand(37); // Number chosen randomly through multiple dice throws.
 
     while(1)
     {

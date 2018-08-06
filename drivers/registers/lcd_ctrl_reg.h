@@ -195,8 +195,8 @@ BIT_FIELD(LTDC_LWHPCR_WHSPPOS, 16, 0x0FFF0000);
 /**
  * LTDC Layer Window Vertical Position Configuration Register Bit Definitions.
  */
-BIT_FIELD(LTDC_LWVPCR_WVSTPOS,  0, 0x00000FFF);
-BIT_FIELD(LTDC_LWVPCR_WVSPPOS, 16, 0x0FFF0000);
+BIT_FIELD(LTDC_LWVPCR_WVSTPOS,  0, 0x000007FF);
+BIT_FIELD(LTDC_LWVPCR_WVSPPOS, 16, 0x07FF0000);
 
 /**
  * LTDC Layer Color Keying Configuration Register Bit Definitions.
@@ -240,8 +240,8 @@ BIT_FIELD(LTDC_LDCCR_DCALPHA, 24, 0xFF000000);
 /**
  * LTDC Layer Blending Factors Configuration Register Bit Definitions.
  */
-BIT_FIELD(LTDC_LBFCR_BF2, 0, 0x00000003);
-BIT_FIELD(LTDC_LBFCR_BF1, 8, 0x00000300);
+BIT_FIELD(LTDC_LBFCR_BF2, 0, 0x00000007);
+BIT_FIELD(LTDC_LBFCR_BF1, 8, 0x00000700);
 
 /**
  * LTDC Layer Color Frame Buffer Address Register Bit Definitions.
