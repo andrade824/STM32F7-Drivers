@@ -92,8 +92,7 @@ static status_t init_clocks(void)
      * Configure the bus clocks.
      */
     SET_FIELD(RCC->CFGR, SET_RCC_CFGR_PPRE1(CLK_APB1_DIV) |
-                         SET_RCC_CFGR_PPRE2(CLK_APB2_DIV) |
-                         SET_RCC_CFGR_HPRE(8));
+                         SET_RCC_CFGR_PPRE2(CLK_APB2_DIV));
 
     /**
      * Wait for the PLL to lock.
@@ -132,9 +131,6 @@ static status_t init_clocks(void)
      * Wait for PLLSAI to lock.
      */
     while(GET_RCC_CR_PLLSAIRDY(RCC->CR) == 0);
-    dbprintf("PLLSAICFGR: 0x%x\n", (unsigned int)RCC->PLLSAICFGR);
-    dbprintf("DCKCFGR1: 0x%x\n", (unsigned int)RCC->DCKCFGR1);
-    dbprintf("PLLCFGR: 0x%x\n", (unsigned int)RCC->PLLCFGR);
 #endif /* INCLUDE_LCD_CTRL_DRIVER */
 
     return Success;

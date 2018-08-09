@@ -72,32 +72,20 @@ status_t init_lcd_ctrl(LcdSettings lcd, uint32_t framebuffer)
     SET_FIELD(LTDC->SSCR, SET_LTDC_SSCR_VSH(vsync) |
                           SET_LTDC_SSCR_HSW(hsync));
 
-    // SET_FIELD(LTDC->SSCR, SET_LTDC_SSCR_VSH(9) |
-    //                       SET_LTDC_SSCR_HSW(40));
-
     const uint16_t accumulated_vbp = vsync + lcd.vert_back_porch;
     const uint16_t accumulated_hbp = hsync + lcd.horiz_back_porch;
     SET_FIELD(LTDC->BPCR, SET_LTDC_BPCR_AVBP(accumulated_vbp) |
                           SET_LTDC_BPCR_AHBP(accumulated_hbp));
-    
-    // SET_FIELD(LTDC->BPCR, SET_LTDC_BPCR_AVBP(11) |
-    //                       SET_LTDC_BPCR_AHBP(53));
 
     const uint16_t accumulated_active_height = accumulated_vbp + lcd.active_height;
     const uint16_t accumulated_active_width = accumulated_hbp + lcd.active_width;
     SET_FIELD(LTDC->AWCR, SET_LTDC_AWCR_AAH(accumulated_active_height) |
                           SET_LTDC_AWCR_AAW(accumulated_active_width));
 
-    // SET_FIELD(LTDC->AWCR, SET_LTDC_AWCR_AAH(283) |
-    //                       SET_LTDC_AWCR_AAW(565));
-
     const uint16_t total_height = accumulated_active_height + lcd.vert_front_porch;
     const uint16_t total_width = accumulated_active_width + lcd.horiz_front_porch;
     SET_FIELD(LTDC->TWCR, SET_LTDC_TWCR_TOTALH(total_height) |
                           SET_LTDC_TWCR_TOTALW(total_width));
-
-    // SET_FIELD(LTDC->TWCR, SET_LTDC_TWCR_TOTALH(285) |
-    // SET_LTDC_TWCR_TOTALW(565));
 
     /**
      * Set signal polarities.
@@ -109,16 +97,16 @@ status_t init_lcd_ctrl(LcdSettings lcd, uint32_t framebuffer)
                          LTDC_GCR_DEN());
 
     /**
-     * Green default background color.
+     * Set default background color.
      */
-    SET_FIELD(LTDC->BCCR, SET_LTDC_BCCR_BCGREEN(0xdF) |
-                          SET_LTDC_BCCR_BCBLUE(0xFF) |
-                          SET_LTDC_BCCR_BCRED(0xFF));
+    SET_FIELD(LTDC->BCCR, SET_LTDC_BCCR_BCGREEN(0xFF) |
+                          SET_LTDC_BCCR_BCBLUE(0) |
+                          SET_LTDC_BCCR_BCRED(0));
 
     /**
      * Setup vertical blanking interrupt.
      */
-    SET_FIELD(LTDC->LIPCR, SET_LTDC_LIPCR_LIPOS(272));
+    SET_FIELD(LTDC->LIPCR, SET_LTDC_LIPCR_LIPOS(lcd.active_height));
     // SET_FIELD(LTDC->IER, LTDC_IER_LIE());
     SET_FIELD(LTDC->IER, LTDC_IER_FUIE() | LTDC_IER_TERRIE());
 
@@ -133,14 +121,6 @@ status_t init_lcd_ctrl(LcdSettings lcd, uint32_t framebuffer)
     SET_FIELD(LTDC_LAYER_REG(LAYER1)->WVPCR,
               SET_LTDC_LWVPCR_WVSTPOS(accumulated_vbp + 1) |
               SET_LTDC_LWVPCR_WVSPPOS(accumulated_active_height));
-    
-    // SET_FIELD(LTDC_LAYER_REG(LAYER1)->WHPCR,
-    //           SET_LTDC_LWHPCR_WHSTPOS(54) |
-    //           SET_LTDC_LWHPCR_WHSPPOS(533));
-
-    // SET_FIELD(LTDC_LAYER_REG(LAYER1)->WVPCR,
-    //           SET_LTDC_LWVPCR_WVSTPOS(12) |
-    //           SET_LTDC_LWVPCR_WVSPPOS(283));
 
     SET_FIELD(LTDC_LAYER_REG(LAYER1)->PFCR, SET_LTDC_LPFCR_PF(PF_ARGB8888));
 

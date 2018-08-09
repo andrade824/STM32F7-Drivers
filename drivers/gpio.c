@@ -94,7 +94,7 @@ status_t gpio_request_output(GpioReg *reg,
     reg->MODER |= (GPIO_OUTPUT << (GPIO_GET_PIN(pin) * 2));
 
     gpio_set_otype(reg, pin, GPIO_PUSH_PULL);
-    gpio_set_ospeed(reg, pin, GPIO_OSPEED_50MHZ);
+    gpio_set_ospeed(reg, pin, GPIO_OSPEED_4MHZ);
     gpio_set_pullstate(reg, pin, GPIO_NO_PULL);
     gpio_set_output(reg, pin, default_state);
 
