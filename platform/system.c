@@ -75,45 +75,6 @@ static status_t init_clocks(void)
 
     SET_FIELD(RCC->CR, RCC_CR_PLLON());
 
-    /**
-     * Enable overdrive mode on the voltage regulator to allow the chip to
-     * reach its highest frequencies. To access the power controller registers
-     * you first need to enable the peripheral clock to the power controller.
-     */
-    SET_FIELD(RCC->APB1ENR, RCC_APB1ENR_PWREN());
-
-    SET_FIELD(PWR->CR1, PWR_CR1_ODEN());
-    while(GET_PWR_CSR1_ODRDY(PWR->CR1) == 0) { }
-
-    SET_FIELD(PWR->CR1, PWR_CR1_ODSWEN());
-    while(GET_PWR_CSR1_ODSWRDY(PWR->CSR1) == 0) { }
-
-    /**
-     * Configure the bus clocks.
-     */
-    SET_FIELD(RCC->CFGR, SET_RCC_CFGR_PPRE1(CLK_APB1_DIV) |
-                         SET_RCC_CFGR_PPRE2(CLK_APB2_DIV));
-
-    /**
-     * Wait for the PLL to lock.
-     */
-    while(GET_RCC_CR_PLLRDY(RCC->CR) == 0);
-
-    /**
-     * Switch the system clock to use the main PLL.
-     */
-    SET_FIELD(RCC->CFGR, SET_RCC_CFGR_SW(0x2));
-
-    /**
-     * Disable the high-speed internal (HSI) clock.
-     */
-    CLEAR_FIELD(RCC->CR, RCC_CR_HSION());
-
-    /**
-     * Ensure the system clock was switched to the main PLL successfully.
-     */
-    ABORT_IF_NOT(GET_RCC_CFGR_SWS(RCC->CFGR) == 0x2);
-
 #ifdef INCLUDE_LCD_CTRL_DRIVER
     /**
      * Configure and enable PLLSAI (used to drive the LCD pixel clock).
@@ -130,8 +91,48 @@ static status_t init_clocks(void)
     /**
      * Wait for PLLSAI to lock.
      */
-    while(GET_RCC_CR_PLLSAIRDY(RCC->CR) == 0);
+    while(GET_RCC_CR_PLLSAIRDY(RCC->CR) == 0) { }
 #endif /* INCLUDE_LCD_CTRL_DRIVER */
+
+    /**
+     * Enable overdrive mode on the voltage regulator to allow the chip to
+     * reach its highest frequencies. To access the power controller registers
+     * you first need to enable the peripheral clock to the power controller.
+     */
+    SET_FIELD(RCC->APB1ENR, RCC_APB1ENR_PWREN());
+    __asm("dsb");
+
+    SET_FIELD(PWR->CR1, PWR_CR1_ODEN());
+    while(GET_PWR_CSR1_ODRDY(PWR->CR1) == 0) { }
+
+    SET_FIELD(PWR->CR1, PWR_CR1_ODSWEN());
+    while(GET_PWR_CSR1_ODSWRDY(PWR->CSR1) == 0) { }
+
+    /**
+     * Configure the bus clocks.
+     */
+    SET_FIELD(RCC->CFGR, SET_RCC_CFGR_PPRE1(CLK_APB1_DIV) |
+                         SET_RCC_CFGR_PPRE2(CLK_APB2_DIV));
+
+    /**
+     * Wait for the PLL to lock.
+     */
+    while(GET_RCC_CR_PLLRDY(RCC->CR) == 0) { }
+
+    /**
+     * Switch the system clock to use the main PLL.
+     */
+    SET_FIELD(RCC->CFGR, SET_RCC_CFGR_SW(0x2));
+
+    /**
+     * Disable the high-speed internal (HSI) clock.
+     */
+    CLEAR_FIELD(RCC->CR, RCC_CR_HSION());
+
+    /**
+     * Ensure the system clock was switched to the main PLL successfully.
+     */
+    ABORT_IF_NOT(GET_RCC_CFGR_SWS(RCC->CFGR) == 0x2);
 
     return Success;
 }

@@ -93,6 +93,9 @@ openocd: debug
 burn: release
 	openocd -f board/stm32f7discovery.cfg -c "program $(PROJ_PATH).elf reset exit"
 
+burn_debug: debug
+	openocd -f board/stm32f7discovery.cfg -c "program $(PROJ_PATH)-dbg.elf reset exit"
+
 # Print out the size of the text, data, and bss regions for any built
 # executables.
 size:

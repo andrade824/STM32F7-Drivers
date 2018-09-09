@@ -43,7 +43,7 @@ status_t init_system_timer(void)
 
 /**
  * Trigger the timer to start counting to `ticks` number of CPU cycles.
- * 
+ *
  * @note This is not meant for cycle-accurate timing. There will be overhead
  *       associated with setup and interrupt processing that isn't accounted
  *       for when setting up the timer. If you need cycle-accurate timing then
@@ -65,6 +65,7 @@ status_t start_timer(uint32_t ticks)
     ticks_set = (ticks > SYSTICK_MAX_TICKS) ? SYSTICK_MAX_TICKS : ticks;
     ticks_left = ticks - ticks_set;
     SYSTICK->LOAD = SET_SYSTICK_LOAD_RELOAD(ticks_set);
+    SYSTICK->VAL = 0;
 
     timer_complete = false;
 

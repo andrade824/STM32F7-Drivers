@@ -99,8 +99,8 @@ status_t init_lcd_ctrl(LcdSettings lcd, uint32_t framebuffer)
     /**
      * Set default background color.
      */
-    SET_FIELD(LTDC->BCCR, SET_LTDC_BCCR_BCGREEN(0xFF) |
-                          SET_LTDC_BCCR_BCBLUE(0) |
+    SET_FIELD(LTDC->BCCR, SET_LTDC_BCCR_BCGREEN(0) |
+                          SET_LTDC_BCCR_BCBLUE(0xFF) |
                           SET_LTDC_BCCR_BCRED(0));
 
     /**

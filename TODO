@@ -50,3 +50,4 @@ Maybe have "SOC", "SOC-FAMILY" and "BOARD" parameters instead of just "platform"
 4. Put "SDRAM_ALT_FUNC" and similar into the .c file, not the header file.
 5. Do I need the "INCLUDE_x_DRIVER" guards??? Helps with compile time, but still
 6. Switch whitespace to tabs to indent, spaces to align.
+7. Add default exception handlers that print useful information then infinite loop.
