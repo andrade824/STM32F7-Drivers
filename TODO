@@ -51,3 +51,4 @@ Maybe have "SOC", "SOC-FAMILY" and "BOARD" parameters instead of just "platform"
 5. Do I need the "INCLUDE_x_DRIVER" guards??? Helps with compile time, but still
 6. Switch whitespace to tabs to indent, spaces to align.
 7. Add default exception handlers that print useful information then infinite loop.
+8. Unify order of header file includes (user-created, reg files, then standard library).

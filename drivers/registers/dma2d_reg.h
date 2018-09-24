@@ -65,6 +65,16 @@ BIT_FIELD(DMA2D_CR_CEIE,   13, 0x00002000);
 BIT_FIELD(DMA2D_CR_MODE,   16, 0x00030000);
 
 /**
+ * Definitions for the different supported transfer modes.
+ */
+typedef enum {
+    DMA2D_MEM_MEM = 0x0,
+    DMA2D_MEM_MEM_PFC = 0x1,
+    DMA2D_MEM_MEM_BLEND = 0x2,
+    DMA2D_REG_MEM = 0x3,
+} DMA2D_TRANSFER_MODES;
+
+/**
  * DMA2D Interrupt Status Register Bit Definitions.
  */
 BIT_FIELD(DMA2D_ISR_TEIF,   0, 0x00000001);
@@ -113,6 +123,15 @@ BIT_FIELD(DMA2D_FGPFCCR_START,   5, 0x00000020);
 BIT_FIELD(DMA2D_FGPFCCR_CS,      8, 0x0000FF00);
 BIT_FIELD(DMA2D_FGPFCCR_AM,     16, 0x00030000);
 BIT_FIELD(DMA2D_FGPFCCR_ALPHA,  24, 0xFF000000);
+
+/**
+ * Definitions for the different supported alpha modes.
+ */
+typedef enum {
+    AM_NO_MOD = 0x0,
+    AM_REPLACE = 0x1,
+    AM_REPLACE_MULT = 0x2,
+} DMA2D_ALPHA_MODES;
 
 /**
  * DMA2D Foreground Color Register Bit Definitions.

@@ -5,7 +5,7 @@ SRCS += drivers/*.c
 SRCS += apps/*.c
 
 # Include the drivers you want enabled
-DRIVERS = -DINCLUDE_SDRAM_DRIVER -DINCLUDE_LCD_CTRL_DRIVER -DINCLUDE_DMA2D_DRIVER
+DRIVERS = -DINCLUDE_SDRAM_DRIVER -DINCLUDE_LCD_CTRL_DRIVER -DINCLUDE_DMA2D_DRIVER -DINCLUDE_DMA2D_DRIVER
 
 # Binaries will be generated with this name (.elf, .bin, .hex, etc)
 PROJ_NAME = hello_world

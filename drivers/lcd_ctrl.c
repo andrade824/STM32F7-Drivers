@@ -107,7 +107,7 @@ status_t init_lcd_ctrl(LcdSettings lcd, uint32_t framebuffer)
      * Setup vertical blanking interrupt.
      */
     SET_FIELD(LTDC->LIPCR, SET_LTDC_LIPCR_LIPOS(lcd.active_height));
-    // SET_FIELD(LTDC->IER, LTDC_IER_LIE());
+    SET_FIELD(LTDC->IER, LTDC_IER_LIE());
     SET_FIELD(LTDC->IER, LTDC_IER_FUIE() | LTDC_IER_TERRIE());
 
     /**

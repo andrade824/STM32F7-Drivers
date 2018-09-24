@@ -1,4 +1,5 @@
 #include "debug.h"
+#include "dma2d.h"
 #include "fmc_sdram.h"
 #include "gpio.h"
 #include "interrupt.h"
@@ -8,6 +9,7 @@
 #include "status.h"
 #include "system.h"
 
+#include "registers/dma2d_reg.h"
 #include "registers/fmc_sdram_reg.h"
 #include "registers/lcd_ctrl_reg.h"
 
@@ -16,6 +18,9 @@
 
 const uint16_t height = default_lcd_settings.active_height - 1;
 const uint16_t width = default_lcd_settings.active_width - 1;
+
+const uint32_t draw_buffer = SDRAM_BASE;
+const uint32_t render_buffer = SDRAM_BASE + (default_lcd_settings.active_width * default_lcd_settings.active_height * 4);
 
 #define PIXEL(r,g,b) PIXEL_8888(r,g,b)
 #define PIXEL_8888(r,g,b) (0xFF000000 | ((r & 0xFF) << 16) | ((g & 0xFF) << 8) | (b & 0xFF))
@@ -32,7 +37,7 @@ status_t draw_rect(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint32_t 
     const uint16_t total_width = default_lcd_settings.active_width;
     for(int row = y0; row <= y1; row++) {
         for (int col = x0; col <= x1; col++) {
-            *(uint32_t*)(SDRAM_BASE + ((row * total_width + col) * 4)) = color;
+            *(uint32_t*)(draw_buffer + ((row * total_width + col) * 4)) = color;
         }
     }
 
@@ -54,32 +59,25 @@ status_t draw_random_rect(void) {
     return Success;
 }
 
-volatile uint16_t x = 0;
-const uint16_t y = 100;
-const uint16_t rect_width = 50;
-const uint16_t rect_height = 50;
-
 void vblank_isr(void) {
     if(GET_LTDC_ISR_LIF(LTDC->ISR)) {
         SET_FIELD(LTDC->ICR, LTDC_ICR_CLIF());
-        CLEAR_SCREEN();
-        draw_rect(0, 0, 50, 50, PIXEL(0, 0, 255));
-        draw_rect(100, 170, 150, 220, PIXEL(0, 255, 0));
-        draw_rect(x, y, x + rect_width, y + rect_height, PIXEL(255, 0, 0));
 
-        x = ((x + rect_width + 1) > width) ? 0 : x + 1;
+        if(is_dma2d_complete()) {
+            dma2d_mem_to_mem(draw_buffer, render_buffer, 480, 272);
+        }
     }
 }
 
 void error_isr(void) {
     if(GET_LTDC_ISR_FUIF(LTDC->ISR)) {
-        dbprintf("FIFO Underrun error\n");
+        dbprintf("LCD Error: FIFO Underrun error\n");
 
         SET_FIELD(LTDC->ICR, LTDC_ICR_CFUIF());
     }
 
     if(GET_LTDC_ISR_TERRIF(LTDC->ISR)) {
-        dbprintf("Transfer error\n");
+        dbprintf("LCD Error: Transfer error\n");
 
         SET_FIELD(LTDC->ICR, LTDC_ICR_CTERRIF());
     }
@@ -92,34 +90,40 @@ status_t run(void)
     dbprintf("System Initialized\n");
 
     ABORT_IF_NOT(init_fmc_sdram());
+    ABORT_IF_NOT(init_dma2d());
 
-    // for(int i = 0; i < 3; i++) {
-    //     dbprintf("Beginning Memcheck...\n");
-    //     for (uint32_t uwIndex = 0; uwIndex < 0x00800000; uwIndex += 4)
-    //     {
-    //         *(volatile uint32_t*) (SDRAM_BASE + uwIndex) = uwIndex;
-    //     }
+#if 0
+    for(int i = 0; i < 3; i++) {
+        dbprintf("Beginning Memcheck...\n");
+        for (uint32_t uwIndex = 0; uwIndex < 0x00800000; uwIndex += 4)
+        {
+            *(volatile uint32_t*) (SDRAM_BASE + uwIndex) = uwIndex;
+        }
 
-    //     for (uint32_t uwIndex = 0; uwIndex < 0x00800000; uwIndex += 4)
-    //     {
-    //         uint32_t value = *(volatile uint32_t*) (SDRAM_BASE + uwIndex);
+        for (uint32_t uwIndex = 0; uwIndex < 0x00800000; uwIndex += 4)
+        {
+            uint32_t value = *(volatile uint32_t*) (SDRAM_BASE + uwIndex);
 
-    //         if(value != uwIndex)
-    //         {
-    //             dbprintf("Memcheck failure: value 0x%lx != index 0x%lx\n", value, uwIndex);
-    //             gpio_set_output(GPIO_ARD_D13, high);
-    //             while(1) { }
-    //         }
+            if(value != uwIndex)
+            {
+                dbprintf("Memcheck failure: value 0x%lx != index 0x%lx\n", value, uwIndex);
+                gpio_set_output(GPIO_ARD_D13, high);
+                while(1) { }
+            }
 
-    //         if(uwIndex % 0x10000 == 0) {
-    //             dbprintf("Checkpoint... value 0x%lx -- index 0x%lx\n", value, uwIndex);
-    //         }
-            
-    //     }
-    //     dbprintf("Memcheck complete!!\n");
-    // }
+            if(uwIndex % 0x10000 == 0) {
+                dbprintf("Checkpoint... value 0x%lx -- index 0x%lx\n", value, uwIndex);
+            }
+
+        }
+        dbprintf("Memcheck complete!!\n");
+    }
+
+#endif
+
     srand(37); // Number chosen randomly through multiple dice throws.
     CLEAR_SCREEN();
+#if 0
     draw_rect(100, 170, 150, 220, PIXEL(100, 0, 0x1F));
     draw_random_rect();
     draw_random_rect();
@@ -137,20 +141,27 @@ status_t run(void)
     //     *(uint32_t*)(SDRAM_BASE + ((row * default_lcd_settings.active_width) * 4)) = PIXEL(0xFF, 0xFF, 0xFF);
     //     *(uint32_t*)(SDRAM_BASE + ((row * default_lcd_settings.active_width + 479) * 4)) = PIXEL(0xFF, 0xFF, 0xFF);
     // }
-
+#endif
     ABORT_IF_NOT(request_interrupt(LTDC_IRQn, vblank_isr));
     ABORT_IF_NOT(request_interrupt(LTDC_ER_IRQn, error_isr));
 
-    ABORT_IF_NOT(init_lcd_ctrl(default_lcd_settings, (uint32_t)SDRAM_BASE));
-    
+    ABORT_IF_NOT(init_lcd_ctrl(default_lcd_settings, render_buffer));
+
     ABORT_IF_NOT(gpio_request_input(GPIO_B_USER, GPIO_NO_PULL));
     ABORT_IF_NOT(gpio_request_output(GPIO_ARD_D13, low));
 
     DigitalState led_ctrl = low;
 
+#if 1
+    uint16_t x = 0;
+    const uint16_t y = 100;
+    const uint16_t rect_width = 50;
+    const uint16_t rect_height = 50;
+#endif
+
     while(1)
     {
-        sleep(MSECS(200));
+        sleep(MSECS(16));
 
         if(led_ctrl == low)
             led_ctrl = high;
@@ -158,6 +169,16 @@ status_t run(void)
             led_ctrl = low;
 
         gpio_set_output(GPIO_ARD_D13, led_ctrl);
+
+#if 1
+        CLEAR_SCREEN();
+        draw_random_rect();
+        draw_rect(0, 0, 50, 50, PIXEL(0, 0, 255));
+        draw_rect(100, 170, 150, 220, PIXEL(0, 255, 0));
+        draw_rect(x, y, x + rect_width, y + rect_height, PIXEL(255, 0, 0));
+
+        x = ((x + rect_width + 3) > width) ? 0 : x + 3;
+#endif
     }
 
     return Success;
