@@ -16,7 +16,7 @@
  * The internal base address where the SDRAM controller starts generating
  * addresses on the external bus.
  */
-#define SDRAM_BASE ((uint32_t)0xC0000000)
+#define SDRAM_BASE 0xC0000000U
 
 /**
  * The GPIO alternate function for the FMC SDRAM pins. Check section 3 of the

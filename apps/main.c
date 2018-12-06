@@ -16,11 +16,11 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-const uint16_t height = default_lcd_settings.active_height - 1;
-const uint16_t width = default_lcd_settings.active_width - 1;
+const uint16_t height = LCD_CONFIG_HEIGHT - 1;
+const uint16_t width = LCD_CONFIG_WIDTH - 1;
 
 const uint32_t draw_buffer = SDRAM_BASE;
-const uint32_t render_buffer = SDRAM_BASE + (default_lcd_settings.active_width * default_lcd_settings.active_height * 4);
+const uint32_t render_buffer = SDRAM_BASE + (LCD_CONFIG_WIDTH * LCD_CONFIG_HEIGHT * 4);
 
 #define PIXEL(r,g,b) PIXEL_8888(r,g,b)
 #define PIXEL_8888(r,g,b) (0xFF000000 | ((r & 0xFF) << 16) | ((g & 0xFF) << 8) | (b & 0xFF))
@@ -31,10 +31,10 @@ const uint32_t render_buffer = SDRAM_BASE + (default_lcd_settings.active_width *
 status_t draw_rect(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint32_t color) {
     ABORT_IF(x0 > x1);
     ABORT_IF(y0 > y1);
-    ABORT_IF(x1 >= default_lcd_settings.active_width);
-    ABORT_IF(y1 >= default_lcd_settings.active_height);
+    ABORT_IF(x1 >= LCD_CONFIG_WIDTH);
+    ABORT_IF(y1 >= LCD_CONFIG_HEIGHT);
 
-    const uint16_t total_width = default_lcd_settings.active_width;
+    const uint16_t total_width = LCD_CONFIG_WIDTH;
     for(int row = y0; row <= y1; row++) {
         for (int col = x0; col <= x1; col++) {
             *(uint32_t*)(draw_buffer + ((row * total_width + col) * 4)) = color;
@@ -137,13 +137,28 @@ status_t run(void)
     draw_rect(430, 51 + 20, 479, 100 + 20, PIXEL(0, 255, 0));
     draw_rect(430, 101 + 20, 479, 150 + 20, PIXEL(255, 0, 0));
 
-    // for(int row = 0; row < default_lcd_settings.active_height; row++) {
-    //     *(uint32_t*)(SDRAM_BASE + ((row * default_lcd_settings.active_width) * 4)) = PIXEL(0xFF, 0xFF, 0xFF);
-    //     *(uint32_t*)(SDRAM_BASE + ((row * default_lcd_settings.active_width + 479) * 4)) = PIXEL(0xFF, 0xFF, 0xFF);
+    // for(int row = 0; row < LCD_CONFIG_HEIGHT; row++) {
+    //     *(uint32_t*)(SDRAM_BASE + ((row * LCD_CONFIG_WIDTH) * 4)) = PIXEL(0xFF, 0xFF, 0xFF);
+    //     *(uint32_t*)(SDRAM_BASE + ((row * LCD_CONFIG_WIDTH + 479) * 4)) = PIXEL(0xFF, 0xFF, 0xFF);
     // }
 #endif
     ABORT_IF_NOT(request_interrupt(LTDC_IRQn, vblank_isr));
     ABORT_IF_NOT(request_interrupt(LTDC_ER_IRQn, error_isr));
+
+    const LcdSettings default_lcd_settings = {
+        .hsync =             LCD_CONFIG_HSYNC,
+        .vsync =             LCD_CONFIG_VSYNC,
+        .horiz_back_porch =  LCD_CONFIG_HORIZ_BP,
+        .vert_back_porch =   LCD_CONFIG_VERT_BP,
+        .active_width =      LCD_CONFIG_WIDTH,
+        .active_height =     LCD_CONFIG_HEIGHT,
+        .horiz_front_porch = LCD_CONFIG_HORIZ_FP,
+        .vert_front_porch =  LCD_CONFIG_VERT_FP,
+        .hsync_pol =         LCD_CONFIG_HSYNC_POL,
+        .vsync_pol =         LCD_CONFIG_VSYNC_POL,
+        .data_enable_pol =   LCD_CONFIG_DE_POL,
+        .pixel_clk_pol =     LCD_CONFIG_CLK_POL
+    };
 
     ABORT_IF_NOT(init_lcd_ctrl(default_lcd_settings, render_buffer));
 
