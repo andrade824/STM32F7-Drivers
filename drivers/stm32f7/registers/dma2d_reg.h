@@ -9,7 +9,7 @@
 #define DMA2D_REG_H
 
 #include "bitfield.h"
-#include "platform.h"
+#include "mem_map.h"
 
 #include <stdint.h>
 

@@ -1,0 +1,4 @@
+# Include the drivers you want enabled
+DRIVERS = -DINCLUDE_SDRAM_DRIVER \
+		  -DINCLUDE_LCD_CTRL_DRIVER \
+		  -DINCLUDE_DMA2D_DRIVER

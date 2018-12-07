@@ -7,7 +7,7 @@
  */
 #include "debug.h"
 #include "interrupt.h"
-#include "platform.h"
+#include "config.h"
 #include "registers/flash_reg.h"
 #include "registers/pwr_reg.h"
 #include "registers/rcc_reg.h"

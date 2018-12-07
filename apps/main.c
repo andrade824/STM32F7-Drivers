@@ -1,11 +1,10 @@
+#include "config.h"
 #include "debug.h"
 #include "dma2d.h"
 #include "fmc_sdram.h"
 #include "gpio.h"
 #include "interrupt.h"
 #include "lcd_ctrl.h"
-#include "lcd_timings.h"
-#include "platform.h"
 #include "status.h"
 #include "system.h"
 

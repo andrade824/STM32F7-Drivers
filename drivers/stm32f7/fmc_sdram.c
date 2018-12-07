@@ -11,7 +11,6 @@
 #include "gpio.h"
 #include "registers/fmc_sdram_reg.h"
 #include "registers/rcc_reg.h"
-#include "sdram_timings.h"
 #include "status.h"
 #include "system_timer.h"
 

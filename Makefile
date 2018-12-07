@@ -1,40 +1,48 @@
+# You can override these settings by passing them in as arguments
+PLATFORM ?= stm32f7
+CONFIG ?= stm32f746_disco
+
+# This file determines which drivers are enabled for a specific platform/config.
+# This file should create a "DRIVERS" variable with the correct "-D" defines.
+include configs/$(PLATFORM)/$(CONFIG).mk
+
 # Put your source files here (or *.c, etc)
-SRCS  = platform/*.s
-SRCS += platform/*.c
-SRCS += drivers/*.c
+SRCS += platform/$(PLATFORM)/*.s
+SRCS += platform/$(PLATFORM)/*.c
+#SRCS += drivers/*.c
+SRCS += drivers/$(PLATFORM)/*.c
 SRCS += apps/*.c
 
-# Include the drivers you want enabled
-DRIVERS = -DINCLUDE_SDRAM_DRIVER -DINCLUDE_LCD_CTRL_DRIVER -DINCLUDE_DMA2D_DRIVER -DINCLUDE_DMA2D_DRIVER
-
 # Binaries will be generated with this name (.elf, .bin, .hex, etc)
-PROJ_NAME = hello_world
+PROJ_NAME ?= hello_world
 
 # Where to store the compilation outputs
-OUTPUT_DIR = output
+OUTPUT_DIR ?= output
 
 # Path where the project files will be built
-PROJ_PATH =  $(OUTPUT_DIR)/$(PROJ_NAME)
+PROJ_PATH = $(OUTPUT_DIR)/$(PROJ_NAME)
 
 # Do you want semihosting in debug builds? "yes"/"no"
 SEMIHOSTING_SUPPORT = yes
 
 ###############################################################################
-#TOOLCHAIN=/home/devon/toolchains/gcc-arm-none-eabi-6_2-2016q4/bin
 CC=arm-none-eabi-gcc
 DBG=arm-none-eabi-gdb
 OBJCOPY=arm-none-eabi-objcopy
 
-CFLAGS  = -Wall -Wextra -Werror -Tplatform/stm32_flash.ld
+CFLAGS  = -Wall -Wextra -Werror -Tplatform/$(PLATFORM)/linker.ld
 CFLAGS += -mlittle-endian -mthumb -mcpu=cortex-m7 -mthumb-interwork
 CFLAGS += -mfloat-abi=hard -mfpu=fpv5-sp-d16
-CFLAGS += -Iplatform/ -Idrivers/ -Iapps/
+CFLAGS += -Iconfigs/ -Iplatform/ -Iplatform/$(PLATFORM)/ -Idrivers/$(PLATFORM)/ -Idrivers/ -Iapps/
 
 # Include files from CMSIS
 CFLAGS += -Iplatform/CMSIS/Include
 
 # Include any needed drivers
 CFLAGS += $(DRIVERS)
+
+# Create a define for the CONFIG and PLATFORM
+CFLAGS += -Dplatform_$(PLATFORM) -Dconfig_$(CONFIG)
 
 # Conditionally enable semihosting. Disable if your debugger doesn't support it.
 ifeq ($(SEMIHOSTING_SUPPORT), yes)
@@ -43,8 +51,8 @@ else
 CFLAGS_SEMIHOSTING = --specs=nosys.specs
 endif
 
-# Use semihosting and debug features when in debug mode. Only perform
-# optimizations that don't disturb debugging.
+# Potentially use semihosting and enable debug features when in debug mode. Only
+# perform optimizations that don't disturb debugging.
 CFLAGS_DEBUG = -Og -g3 $(CFLAGS_SEMIHOSTING) -DDEBUG_ON
 
 # No semihosting or debug features in release mode. Use better optimizations.

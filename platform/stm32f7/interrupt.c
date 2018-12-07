@@ -5,8 +5,9 @@
  * Contains methods for initializaing and controlling interrupts and the
  * vector table.
  */
+#include "config.h"
 #include "debug.h"
-#include "platform.h"
+#include "interrupt.h"
 #include "status.h"
 
 #include <stdbool.h>

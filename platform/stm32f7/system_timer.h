@@ -9,7 +9,7 @@
 #ifndef SYSTEM_TIMER_H
 #define SYSTEM_TIMER_H
 
-#include "platform.h"
+#include "config.h"
 #include "status.h"
 
 #include <stdbool.h>
