@@ -14,12 +14,15 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 const uint16_t height = LCD_CONFIG_HEIGHT - 1;
 const uint16_t width = LCD_CONFIG_WIDTH - 1;
 
 const uint32_t draw_buffer = SDRAM_BASE;
 const uint32_t render_buffer = SDRAM_BASE + (LCD_CONFIG_WIDTH * LCD_CONFIG_HEIGHT * 4);
+
+volatile bool trigger_dma_copy = false;
 
 #define PIXEL(r,g,b) PIXEL_8888(r,g,b)
 #define PIXEL_8888(r,g,b) (0xFF000000 | ((r & 0xFF) << 16) | ((g & 0xFF) << 8) | (b & 0xFF))
@@ -62,7 +65,7 @@ void vblank_isr(void) {
     if(GET_LTDC_ISR_LIF(LTDC->ISR)) {
         SET_FIELD(LTDC->ICR, LTDC_ICR_CLIF());
 
-        if(is_dma2d_complete()) {
+        if(trigger_dma_copy && is_dma2d_complete()) {
             dma2d_mem_to_mem(draw_buffer, render_buffer, 480, 272);
         }
     }
@@ -175,7 +178,7 @@ status_t run(void)
 
     while(1)
     {
-        sleep(MSECS(16));
+        //sleep(MSECS(1));
 
         if(led_ctrl == low)
             led_ctrl = high;
@@ -191,7 +194,17 @@ status_t run(void)
         draw_rect(100, 170, 150, 220, PIXEL(0, 255, 0));
         draw_rect(x, y, x + rect_width, y + rect_height, PIXEL(255, 0, 0));
 
-        x = ((x + rect_width + 3) > width) ? 0 : x + 3;
+        x = ((x + rect_width + 1) > width) ? 0 : x + 1;
+
+        trigger_dma_copy = true;
+
+        /**
+         * With CLEAR_SCREEN: 31.8ms per frame (~31fps)
+         * Without CLEAR_SCREEN: 16.6ms per frame (~60fps)
+         */
+
+        // This gets set to false in the DMA complete ISR
+        while(trigger_dma_copy) { }
 #endif
     }
 

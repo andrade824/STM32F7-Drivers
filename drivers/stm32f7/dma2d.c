@@ -19,6 +19,7 @@
 #include <stdint.h>
 
 static volatile bool dma_complete = true;
+extern volatile bool trigger_dma_copy;
 
 /**
  * DMA2D error handler.
@@ -28,6 +29,7 @@ void dma2d_isr(void)
     if(GET_DMA2D_ISR_TCIF(DMA2D->ISR)) {
         SET_FIELD(DMA2D->IFCR, DMA2D_IFCR_CTCIF());
         dma_complete = true;
+        trigger_dma_copy = false;
     } else if(GET_DMA2D_ISR_TEIF(DMA2D->ISR)) {
         SET_FIELD(DMA2D->IFCR, DMA2D_IFCR_CTEIF());
         dbprintf("DMA2D Error: Transfer Error\n");
