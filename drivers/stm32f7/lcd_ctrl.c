@@ -12,9 +12,12 @@
 #include "gpio.h"
 #include "interrupt.h"
 #include "lcd_ctrl.h"
+#include "status.h"
+
 #include "registers/lcd_ctrl_reg.h"
 #include "registers/rcc_reg.h"
-#include "status.h"
+
+#include <stdint.h>
 
 /**
  * The GPIO alternate functions for the LCD pins. Check section 3 of the

@@ -4,13 +4,13 @@
  *
  * Definitions and functions used to manipulate the GPIO module [6].
  */
-#include "registers/gpio_reg.h"
-#include "gpio.h"
-
 #include "bitfield.h"
 #include "debug.h"
-#include "registers/rcc_reg.h"
+#include "gpio.h"
 #include "status.h"
+
+#include "registers/gpio_reg.h"
+#include "registers/rcc_reg.h"
 
 #include <stdbool.h>
 

@@ -16,6 +16,8 @@
 
 #include "registers/lcd_ctrl_reg.h"
 
+#include <stdint.h>
+
 /**
  * Set true to trigger a DMA copy to occur.
  */

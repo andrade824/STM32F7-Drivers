@@ -9,10 +9,11 @@
 #include "debug.h"
 #include "fmc_sdram.h"
 #include "gpio.h"
-#include "registers/fmc_sdram_reg.h"
-#include "registers/rcc_reg.h"
 #include "status.h"
 #include "system_timer.h"
+
+#include "registers/fmc_sdram_reg.h"
+#include "registers/rcc_reg.h"
 
 /**
  * Maximum amount of time to wait for an SDRAM command to complete.

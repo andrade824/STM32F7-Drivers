@@ -5,14 +5,15 @@
  * Contains initialization functions used to get the system into a usable
  * state after startup.
  */
+#include "config.h"
 #include "debug.h"
 #include "interrupt.h"
-#include "config.h"
+#include "status.h"
+#include "system_timer.h"
+
 #include "registers/flash_reg.h"
 #include "registers/pwr_reg.h"
 #include "registers/rcc_reg.h"
-#include "status.h"
-#include "system_timer.h"
 
 /**
  * Enable the caches using the CMSIS-provided methods.

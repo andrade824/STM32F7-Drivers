@@ -13,6 +13,7 @@
 #include "status.h"
 
 #include <stdbool.h>
+#include <stdint.h>
 
 /**
  * Converts between ticks and seconds.

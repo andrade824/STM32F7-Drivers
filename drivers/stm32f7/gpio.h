@@ -7,8 +7,9 @@
 #ifndef GPIO_H
 #define GPIO_H
 
-#include "registers/gpio_reg.h"
 #include "status.h"
+
+#include "registers/gpio_reg.h"
 
 /**
  * Defines a digital state for a pin where a low == 0V, and high == VDD.

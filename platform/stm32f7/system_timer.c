@@ -7,9 +7,10 @@
  */
 #include "debug.h"
 #include "interrupt.h"
-#include "registers/systick_reg.h"
 #include "status.h"
 #include "system_timer.h"
+
+#include "registers/systick_reg.h"
 
 #include <stdbool.h>
 #include <stdint.h>
