@@ -24,21 +24,21 @@ static volatile bool timer_complete = true;
  */
 status_t init_system_timer(void)
 {
-    ABORT_IF_NOT(request_interrupt(SysTick_IRQn, systick_interrupt));
+	ABORT_IF_NOT(request_interrupt(SysTick_IRQn, systick_interrupt));
 
-    /**
-     * Disable the timer, use processor clock, and enable SysTick interrupt.
-     */
-    CLEAR_FIELD(SYSTICK->CTRL, SYSTICK_CTRL_ENABLE());
-    SET_FIELD(SYSTICK->CTRL, SYSTICK_CTRL_TICKINT() |
-                             SYSTICK_CTRL_CLKSOURCE());
+	/**
+	 * Disable the timer, use processor clock, and enable SysTick interrupt.
+	 */
+	CLEAR_FIELD(SYSTICK->CTRL, SYSTICK_CTRL_ENABLE());
+	SET_FIELD(SYSTICK->CTRL, SYSTICK_CTRL_TICKINT() |
+							 SYSTICK_CTRL_CLKSOURCE());
 
-    /**
-     * Clear current count value.
-     */
-    SYSTICK->VAL = 0;
+	/**
+	 * Clear current count value.
+	 */
+	SYSTICK->VAL = 0;
 
-    return Success;
+	return Success;
 }
 
 /**
@@ -53,25 +53,25 @@ status_t init_system_timer(void)
  */
 status_t start_timer(uint32_t ticks)
 {
-    uint32_t ticks_set = 0;
+	uint32_t ticks_set = 0;
 
-    /**
-     * Ensure the timer hasn't already started and that the user is requesting
-     * a valid number of ticks to delay for.
-     */
-    ABORT_IF(ticks_left != 0 || !timer_complete);
-    ABORT_IF(ticks == 0);
+	/**
+	 * Ensure the timer hasn't already started and that the user is requesting
+	 * a valid number of ticks to delay for.
+	 */
+	ABORT_IF(ticks_left != 0 || !timer_complete);
+	ABORT_IF(ticks == 0);
 
-    ticks_set = (ticks > SYSTICK_MAX_TICKS) ? SYSTICK_MAX_TICKS : ticks;
-    ticks_left = ticks - ticks_set;
-    SYSTICK->LOAD = SET_SYSTICK_LOAD_RELOAD(ticks_set);
-    SYSTICK->VAL = 0;
+	ticks_set = (ticks > SYSTICK_MAX_TICKS) ? SYSTICK_MAX_TICKS : ticks;
+	ticks_left = ticks - ticks_set;
+	SYSTICK->LOAD = SET_SYSTICK_LOAD_RELOAD(ticks_set);
+	SYSTICK->VAL = 0;
 
-    timer_complete = false;
+	timer_complete = false;
 
-    SET_FIELD(SYSTICK->CTRL, SYSTICK_CTRL_ENABLE());
+	SET_FIELD(SYSTICK->CTRL, SYSTICK_CTRL_ENABLE());
 
-    return Success;
+	return Success;
 }
 
 /**
@@ -79,11 +79,11 @@ status_t start_timer(uint32_t ticks)
  */
 void stop_timer(void)
 {
-    CLEAR_FIELD(SYSTICK->CTRL, SYSTICK_CTRL_ENABLE());
-    SYSTICK->VAL = 0;
+	CLEAR_FIELD(SYSTICK->CTRL, SYSTICK_CTRL_ENABLE());
+	SYSTICK->VAL = 0;
 
-    timer_complete = true;
-    ticks_left = 0;
+	timer_complete = true;
+	ticks_left = 0;
 }
 
 /**
@@ -98,11 +98,11 @@ void stop_timer(void)
  */
 status_t sleep(uint32_t ticks)
 {
-    ABORT_IF_NOT(start_timer(ticks));
+	ABORT_IF_NOT(start_timer(ticks));
 
-    while(!timer_complete);
+	while(!timer_complete);
 
-    return Success;
+	return Success;
 }
 
 /**
@@ -110,7 +110,7 @@ status_t sleep(uint32_t ticks)
  */
 bool is_timer_complete(void)
 {
-    return timer_complete;
+	return timer_complete;
 }
 
 /**
@@ -118,18 +118,18 @@ bool is_timer_complete(void)
  */
 void systick_interrupt(void)
 {
-    uint32_t ticks_set = 0;
+	uint32_t ticks_set = 0;
 
-    CLEAR_FIELD(SYSTICK->CTRL, SYSTICK_CTRL_ENABLE());
+	CLEAR_FIELD(SYSTICK->CTRL, SYSTICK_CTRL_ENABLE());
 
-    if(ticks_left != 0) {
-        ticks_set = (ticks_left > SYSTICK_MAX_TICKS) ? SYSTICK_MAX_TICKS : ticks_left;
-        ticks_left -= ticks_set;
+	if(ticks_left != 0) {
+		ticks_set = (ticks_left > SYSTICK_MAX_TICKS) ? SYSTICK_MAX_TICKS : ticks_left;
+		ticks_left -= ticks_set;
 
-        SYSTICK->LOAD = SET_SYSTICK_LOAD_RELOAD(ticks_set);
-        SYSTICK->VAL = 0;
-        SET_FIELD(SYSTICK->CTRL, SYSTICK_CTRL_ENABLE());
-    } else {
-        timer_complete = true;
-    }
+		SYSTICK->LOAD = SET_SYSTICK_LOAD_RELOAD(ticks_set);
+		SYSTICK->VAL = 0;
+		SET_FIELD(SYSTICK->CTRL, SYSTICK_CTRL_ENABLE());
+	} else {
+		timer_complete = true;
+	}
 }

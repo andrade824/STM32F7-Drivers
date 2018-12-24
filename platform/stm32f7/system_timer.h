@@ -16,7 +16,7 @@
 
 /**
  * Converts between ticks and seconds.
- * 
+ *
  * Example usage (delay for 25ms):
  * start_timer(MSECS(25));
  */

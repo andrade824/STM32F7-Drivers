@@ -18,11 +18,11 @@
  */
 typedef struct
 {
-    volatile uint32_t SDCR[2];  /*!< SDRAM Control registers ,      Address offset: 0x140-0x144  */
-    volatile uint32_t SDTR[2];  /*!< SDRAM Timing registers ,       Address offset: 0x148-0x14C  */
-    volatile uint32_t SDCMR;    /*!< SDRAM Command Mode register,   Address offset: 0x150  */
-    volatile uint32_t SDRTR;    /*!< SDRAM Refresh Timer register,  Address offset: 0x154  */
-    volatile uint32_t SDSR;     /*!< SDRAM Status register,         Address offset: 0x158  */
+	volatile uint32_t SDCR[2];  /*!< SDRAM Control registers ,      Address offset: 0x140-0x144  */
+	volatile uint32_t SDTR[2];  /*!< SDRAM Timing registers ,       Address offset: 0x148-0x14C  */
+	volatile uint32_t SDCMR;    /*!< SDRAM Command Mode register,   Address offset: 0x150  */
+	volatile uint32_t SDRTR;    /*!< SDRAM Refresh Timer register,  Address offset: 0x154  */
+	volatile uint32_t SDSR;     /*!< SDRAM Status register,         Address offset: 0x158  */
 } FmcSdramReg;
 
 /**
@@ -81,13 +81,13 @@ BIT_FIELD(SDRAM_SDCMR_MRD,  9, 0x003FFE00);
  */
 typedef enum
 {
-    SDCMR_NORMAL = 0x0,
-    SDCMR_CLOCK_CFG = 0x1,
-    SDCMR_PALL = 0x2,
-    SDCMR_AUTO_REFRESH = 0x3,
-    SDCMR_LOAD_MODE_REG = 0x4,
-    SDCMR_SELF_REFRESH = 0x5,
-    SDCMR_POWER_DOWN = 0x6
+	SDCMR_NORMAL = 0x0,
+	SDCMR_CLOCK_CFG = 0x1,
+	SDCMR_PALL = 0x2,
+	SDCMR_AUTO_REFRESH = 0x3,
+	SDCMR_LOAD_MODE_REG = 0x4,
+	SDCMR_SELF_REFRESH = 0x5,
+	SDCMR_POWER_DOWN = 0x6
 } SDCMR_MODE;
 /**
  * @}
@@ -120,8 +120,8 @@ BIT_FIELD(SDRAM_SDSR_BUSY,      5, 0x00000020);
  */
 typedef enum
 {
-    SDSR_READY = 0x0,
-    SDSR_BUSY = 0x1
+	SDSR_READY = 0x0,
+	SDSR_BUSY = 0x1
 } SDSR_BUSY_BIT;
 /**
  * @}

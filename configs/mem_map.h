@@ -14,9 +14,9 @@
 #define MEM_MAP_H
 
 #if defined(platform_stm32f7)
-    #include "stm32f7/stm32f7_mem_map.h"
+	#include "stm32f7/stm32f7_mem_map.h"
 #else
-    #error "The platform doesn't exist"
+	#error "The platform doesn't exist"
 #endif
 
 #endif /* MEM_MAP_H */

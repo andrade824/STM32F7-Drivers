@@ -17,10 +17,10 @@
  */
 typedef struct
 {
-    volatile uint32_t CR1;   /*!< PWR power control register 1,        Address offset: 0x00 */
-    volatile uint32_t CSR1;  /*!< PWR power control/status register 1, Address offset: 0x04 */
-    volatile uint32_t CR2;   /*!< PWR power control register 2,        Address offset: 0x08 */
-    volatile uint32_t CSR2;  /*!< PWR power control/status register 2, Address offset: 0x0C */
+	volatile uint32_t CR1;   /*!< PWR power control register 1,        Address offset: 0x00 */
+	volatile uint32_t CSR1;  /*!< PWR power control/status register 1, Address offset: 0x04 */
+	volatile uint32_t CR2;   /*!< PWR power control register 2,        Address offset: 0x08 */
+	volatile uint32_t CSR2;  /*!< PWR power control/status register 2, Address offset: 0x0C */
 } PowerReg;
 
 /**

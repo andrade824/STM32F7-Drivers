@@ -12,11 +12,11 @@
 #include <stdio.h>
 
 #ifdef DEBUG_ON
-    #define dbputs(s)               puts(s)
-    #define dbprintf(szFormat, ...) printf(szFormat,##__VA_ARGS__)
+	#define dbputs(s)               puts(s)
+	#define dbprintf(szFormat, ...) printf(szFormat,##__VA_ARGS__)
 #else
-    #define dbout(s)
-    #define dbprintf(szFormat, ...)
+	#define dbout(s)
+	#define dbprintf(szFormat, ...)
 #endif
 
 /**
@@ -27,17 +27,17 @@
  * either through hardware or an interrupt service routine.
  */
 #define ABORT_TIMEOUT(expr,timeout)                                 \
-    do                                                              \
-    {                                                               \
-        ABORT_IF_NOT(start_timer(timeout));                         \
-        while(!(expr) && !is_timer_complete());                     \
-        if(is_timer_complete()) {                                   \
-            dbprintf("[ABORT] %s:%s():%d -- %s,\n",                 \
-                     __FILE__, __func__, __LINE__, #expr);          \
-            return Fail;                                            \
-        }                                                           \
-        stop_timer();                                               \
-    } while(0)
+	do                                                              \
+	{                                                               \
+		ABORT_IF_NOT(start_timer(timeout));                         \
+		while(!(expr) && !is_timer_complete());                     \
+		if(is_timer_complete()) {                                   \
+			dbprintf("[ABORT] %s:%s():%d -- %s,\n",                 \
+					 __FILE__, __func__, __LINE__, #expr);          \
+			return Fail;                                            \
+		}                                                           \
+		stop_timer();                                               \
+	} while(0)
 
 /**
  * Aborts the current method early if the expression evaluates to true and
@@ -47,15 +47,15 @@
  * @param retval The value to return if expr is true.
  */
 #define ABORT_IF_VAL(expr,retval)                                   \
-    do                                                              \
-    {                                                               \
-        if((expr))                                                  \
-        {                                                           \
-            dbprintf("[ABORT] %s:%s():%d -- %s,\n",                 \
-                     __FILE__, __func__, __LINE__, #expr);          \
-            return retval;                                          \
-        }                                                           \
-    } while(0)
+	do                                                              \
+	{                                                               \
+		if((expr))                                                  \
+		{                                                           \
+			dbprintf("[ABORT] %s:%s():%d -- %s,\n",                 \
+					 __FILE__, __func__, __LINE__, #expr);          \
+			return retval;                                          \
+		}                                                           \
+	} while(0)
 
 /**
  * Aborts the current method early if the expression evaluates to true.

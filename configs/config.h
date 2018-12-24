@@ -10,9 +10,9 @@
 #define CONFIG_H
 
 #if defined(platform_stm32f7) && defined(config_stm32f746_disco)
-    #include "stm32f7/stm32f746_disco_config.h"
+	#include "stm32f7/stm32f746_disco_config.h"
 #else
-    #error "The platform/config combination doesn't exist"
+	#error "The platform/config combination doesn't exist"
 #endif
 
 #endif /* CONFIG_H */

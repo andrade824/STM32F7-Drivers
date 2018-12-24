@@ -18,29 +18,29 @@
  */
 typedef struct
 {
-    volatile uint32_t CR;            /*!< DMA2D Control Register,                         Address offset: 0x00 */
-    volatile uint32_t ISR;           /*!< DMA2D Interrupt Status Register,                Address offset: 0x04 */
-    volatile uint32_t IFCR;          /*!< DMA2D Interrupt Flag Clear Register,            Address offset: 0x08 */
-    volatile uint32_t FGMAR;         /*!< DMA2D Foreground Memory Address Register,       Address offset: 0x0C */
-    volatile uint32_t FGOR;          /*!< DMA2D Foreground Offset Register,               Address offset: 0x10 */
-    volatile uint32_t BGMAR;         /*!< DMA2D Background Memory Address Register,       Address offset: 0x14 */
-    volatile uint32_t BGOR;          /*!< DMA2D Background Offset Register,               Address offset: 0x18 */
-    volatile uint32_t FGPFCCR;       /*!< DMA2D Foreground PFC Control Register,          Address offset: 0x1C */
-    volatile uint32_t FGCOLR;        /*!< DMA2D Foreground Color Register,                Address offset: 0x20 */
-    volatile uint32_t BGPFCCR;       /*!< DMA2D Background PFC Control Register,          Address offset: 0x24 */
-    volatile uint32_t BGCOLR;        /*!< DMA2D Background Color Register,                Address offset: 0x28 */
-    volatile uint32_t FGCMAR;        /*!< DMA2D Foreground CLUT Memory Address Register,  Address offset: 0x2C */
-    volatile uint32_t BGCMAR;        /*!< DMA2D Background CLUT Memory Address Register,  Address offset: 0x30 */
-    volatile uint32_t OPFCCR;        /*!< DMA2D Output PFC Control Register,              Address offset: 0x34 */
-    volatile uint32_t OCOLR;         /*!< DMA2D Output Color Register,                    Address offset: 0x38 */
-    volatile uint32_t OMAR;          /*!< DMA2D Output Memory Address Register,           Address offset: 0x3C */
-    volatile uint32_t OOR;           /*!< DMA2D Output Offset Register,                   Address offset: 0x40 */
-    volatile uint32_t NLR;           /*!< DMA2D Number of Line Register,                  Address offset: 0x44 */
-    volatile uint32_t LWR;           /*!< DMA2D Line Watermark Register,                  Address offset: 0x48 */
-    volatile uint32_t AMTCR;         /*!< DMA2D AHB Master Timer Configuration Register,  Address offset: 0x4C */
-    uint32_t          RESERVED[236]; /*!< Reserved, 0x50-0x3FF */
-    volatile uint32_t FGCLUT[256];   /*!< DMA2D Foreground CLUT,                          Address offset:400-7FF */
-    volatile uint32_t BGCLUT[256];   /*!< DMA2D Background CLUT,                          Address offset:800-BFF */
+	volatile uint32_t CR;            /*!< DMA2D Control Register,                         Address offset: 0x00 */
+	volatile uint32_t ISR;           /*!< DMA2D Interrupt Status Register,                Address offset: 0x04 */
+	volatile uint32_t IFCR;          /*!< DMA2D Interrupt Flag Clear Register,            Address offset: 0x08 */
+	volatile uint32_t FGMAR;         /*!< DMA2D Foreground Memory Address Register,       Address offset: 0x0C */
+	volatile uint32_t FGOR;          /*!< DMA2D Foreground Offset Register,               Address offset: 0x10 */
+	volatile uint32_t BGMAR;         /*!< DMA2D Background Memory Address Register,       Address offset: 0x14 */
+	volatile uint32_t BGOR;          /*!< DMA2D Background Offset Register,               Address offset: 0x18 */
+	volatile uint32_t FGPFCCR;       /*!< DMA2D Foreground PFC Control Register,          Address offset: 0x1C */
+	volatile uint32_t FGCOLR;        /*!< DMA2D Foreground Color Register,                Address offset: 0x20 */
+	volatile uint32_t BGPFCCR;       /*!< DMA2D Background PFC Control Register,          Address offset: 0x24 */
+	volatile uint32_t BGCOLR;        /*!< DMA2D Background Color Register,                Address offset: 0x28 */
+	volatile uint32_t FGCMAR;        /*!< DMA2D Foreground CLUT Memory Address Register,  Address offset: 0x2C */
+	volatile uint32_t BGCMAR;        /*!< DMA2D Background CLUT Memory Address Register,  Address offset: 0x30 */
+	volatile uint32_t OPFCCR;        /*!< DMA2D Output PFC Control Register,              Address offset: 0x34 */
+	volatile uint32_t OCOLR;         /*!< DMA2D Output Color Register,                    Address offset: 0x38 */
+	volatile uint32_t OMAR;          /*!< DMA2D Output Memory Address Register,           Address offset: 0x3C */
+	volatile uint32_t OOR;           /*!< DMA2D Output Offset Register,                   Address offset: 0x40 */
+	volatile uint32_t NLR;           /*!< DMA2D Number of Line Register,                  Address offset: 0x44 */
+	volatile uint32_t LWR;           /*!< DMA2D Line Watermark Register,                  Address offset: 0x48 */
+	volatile uint32_t AMTCR;         /*!< DMA2D AHB Master Timer Configuration Register,  Address offset: 0x4C */
+	uint32_t          RESERVED[236]; /*!< Reserved, 0x50-0x3FF */
+	volatile uint32_t FGCLUT[256];   /*!< DMA2D Foreground CLUT,                          Address offset:400-7FF */
+	volatile uint32_t BGCLUT[256];   /*!< DMA2D Background CLUT,                          Address offset:800-BFF */
 } Dma2dReg;
 
 
@@ -68,10 +68,10 @@ BIT_FIELD(DMA2D_CR_MODE,   16, 0x00030000);
  * Definitions for the different supported transfer modes.
  */
 typedef enum {
-    DMA2D_MEM_MEM = 0x0,
-    DMA2D_MEM_MEM_PFC = 0x1,
-    DMA2D_MEM_MEM_BLEND = 0x2,
-    DMA2D_REG_MEM = 0x3,
+	DMA2D_MEM_MEM = 0x0,
+	DMA2D_MEM_MEM_PFC = 0x1,
+	DMA2D_MEM_MEM_BLEND = 0x2,
+	DMA2D_REG_MEM = 0x3,
 } DMA2D_TRANSFER_MODES;
 
 /**
@@ -128,9 +128,9 @@ BIT_FIELD(DMA2D_FGPFCCR_ALPHA,  24, 0xFF000000);
  * Definitions for the different supported alpha modes.
  */
 typedef enum {
-    AM_NO_MOD = 0x0,
-    AM_REPLACE = 0x1,
-    AM_REPLACE_MULT = 0x2,
+	AM_NO_MOD = 0x0,
+	AM_REPLACE = 0x1,
+	AM_REPLACE_MULT = 0x2,
 } DMA2D_ALPHA_MODES;
 
 /**
