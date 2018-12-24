@@ -14,7 +14,7 @@
 #include <string.h>
 
 const uint32_t draw_buffer = SDRAM_BASE;
-const uint32_t render_buffer = SDRAM_BASE + (LCD_CONFIG_WIDTH * LCD_CONFIG_HEIGHT * 4);
+const uint32_t render_buffer = SDRAM_BASE + (LCD_CONFIG_WIDTH * LCD_CONFIG_HEIGHT * LCD_CONFIG_PIXEL_SIZE);
 
 status_t draw_random_rect(void) {
 	uint8_t red = rand() % 256;

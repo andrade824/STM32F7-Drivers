@@ -8,6 +8,8 @@
 #ifndef STM32F746_DISCO_CONFIG_H
 #define STM32F746_DISCO_CONFIG_H
 
+#include <stdint.h>
+
 /***** CLOCK SETTINGS *****/
 
 /**
@@ -463,7 +465,19 @@ typedef enum
 #define LCD_CONFIG_VSYNC_POL  ACTIVE_LOW
 #define LCD_CONFIG_DE_POL     ACTIVE_LOW
 #define LCD_CONFIG_CLK_POL    ACTIVE_LOW
+
+#define LCD_CONFIG_PIXEL_FORMAT PF_RGB565
+
+#if LCD_CONFIG_PIXEL_FORMAT == PF_ARGB8888
 #define LCD_CONFIG_PIXEL_SIZE 4U
+typedef uint32_t pixel_t;
+#elif LCD_CONFIG_PIXEL_FORMAT == PF_RGB565
+#define LCD_CONFIG_PIXEL_SIZE 2U
+typedef uint16_t pixel_t;
+#else
+#error Unsupported pixel format selected.
+#endif /* LCD_CONFIG_PIXEL_FORMAT */
+
 #endif /* INCLUDE_LCD_CTRL_DRIVER */
 
 /***** INCLUDE GENERIC STM32F7 CONFIGURATION *****/

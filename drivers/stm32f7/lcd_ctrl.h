@@ -12,6 +12,8 @@
 #include "interrupt.h"
 #include "status.h"
 
+#include "registers/lcd_ctrl_reg.h"
+
 #include <stdint.h>
 
 /**
@@ -22,30 +24,7 @@ typedef enum {
 	ACTIVE_HIGH = 1
 } LcdPolarity;
 
-/**
- * Settings used to initialize the LCD controller.
- */
-typedef struct {
-	uint16_t hsync;
-	uint16_t vsync;
-
-	uint16_t horiz_back_porch;
-	uint16_t vert_back_porch;
-
-	uint16_t active_width;
-	uint16_t active_height;
-
-	uint16_t horiz_front_porch;
-	uint16_t vert_front_porch;
-
-	LcdPolarity hsync_pol;
-	LcdPolarity vsync_pol;
-	LcdPolarity data_enable_pol;
-	LcdPolarity pixel_clk_pol;
-} LcdSettings;
-
-status_t init_lcd_ctrl(LcdSettings lcd, uint32_t framebuffer);
-status_t lcd_set_vblank_isr(ISR_Type vblank_isr);
+status_t init_lcd_ctrl(uint32_t framebuffer, void (*callback) (void));
 
 #endif
 #endif

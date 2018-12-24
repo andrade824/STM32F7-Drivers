@@ -8,6 +8,7 @@
 #ifdef INCLUDE_DMA2D_DRIVER
 #ifdef INCLUDE_LCD_CTRL_DRIVER
 
+#include "config.h"
 #include "debug.h"
 #include "dma2d.h"
 #include "graphics.h"
@@ -38,23 +39,20 @@ static void dma2d_callback(void)
 }
 
 /**
- * Triggered during every vertical blanking period.
+ * The callback that gets triggered during every vertical blanking period.
  *
- * Causes the DMA2D to perform a transfer when one has been triggered and there
- * currently aren't any other DMA transfers happening.
+ * Causes the DMA2D to perform a transfer when one has been triggered (by
+ * gfx_swap_buffers()) and there currently aren't any other DMA transfers
+ * happening.
  */
-static void vblank_isr(void)
+static void vblank_callback(void)
 {
-	if(GET_LTDC_ISR_LIF(LTDC->ISR)) {
-		SET_FIELD(LTDC->ICR, LTDC_ICR_CLIF());
-
-		if(trigger_dma_copy && is_dma2d_complete()) {
-			dma2d_mem_to_mem(backbuffer,
-							 frontbuffer,
-							 LCD_CONFIG_WIDTH,
-							 LCD_CONFIG_HEIGHT,
-							 &dma2d_callback);
-		}
+	if(trigger_dma_copy && is_dma2d_complete()) {
+		dma2d_mem_to_mem(backbuffer,
+		                 frontbuffer,
+		                 LCD_CONFIG_WIDTH,
+		                 LCD_CONFIG_HEIGHT,
+		                 &dma2d_callback);
 	}
 }
 
@@ -73,24 +71,7 @@ status_t init_graphics(uint32_t frontbuf, uint32_t backbuf)
 	backbuffer = backbuf;
 
 	ABORT_IF_NOT(init_dma2d());
-
-	const LcdSettings lcd_settings = {
-		.hsync =             LCD_CONFIG_HSYNC,
-		.vsync =             LCD_CONFIG_VSYNC,
-		.horiz_back_porch =  LCD_CONFIG_HORIZ_BP,
-		.vert_back_porch =   LCD_CONFIG_VERT_BP,
-		.active_width =      LCD_CONFIG_WIDTH,
-		.active_height =     LCD_CONFIG_HEIGHT,
-		.horiz_front_porch = LCD_CONFIG_HORIZ_FP,
-		.vert_front_porch =  LCD_CONFIG_VERT_FP,
-		.hsync_pol =         LCD_CONFIG_HSYNC_POL,
-		.vsync_pol =         LCD_CONFIG_VSYNC_POL,
-		.data_enable_pol =   LCD_CONFIG_DE_POL,
-		.pixel_clk_pol =     LCD_CONFIG_CLK_POL
-	};
-
-	ABORT_IF_NOT(init_lcd_ctrl(lcd_settings, frontbuffer));
-	ABORT_IF_NOT(lcd_set_vblank_isr(vblank_isr));
+	ABORT_IF_NOT(init_lcd_ctrl(frontbuffer, &vblank_callback));
 
 	return Success;
 }
@@ -120,7 +101,7 @@ status_t gfx_set_pixel(uint16_t col, uint16_t row, uint32_t color)
 	ABORT_IF(row >= LCD_CONFIG_HEIGHT);
 
 	const uint32_t pixel_offset = (row * LCD_CONFIG_WIDTH + col) * LCD_CONFIG_PIXEL_SIZE;
-	*(uint32_t*)(backbuffer + pixel_offset) = color;
+	*(pixel_t*)(backbuffer + pixel_offset) = color;
 
 	return Success;
 }
@@ -177,6 +158,14 @@ uint16_t gfx_width(void)
 uint16_t gfx_height(void)
 {
 	return LCD_CONFIG_HEIGHT;
+}
+
+/**
+ * Pixel size (in bytes) getter.
+ */
+uint8_t gfx_pixel_size(void)
+{
+	return LCD_CONFIG_PIXEL_SIZE;
 }
 
 #endif

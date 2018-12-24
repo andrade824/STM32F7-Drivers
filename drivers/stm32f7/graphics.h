@@ -17,9 +17,16 @@
 /**
  * Create a compact pixel value out of three separate color values.
  */
+#if LCD_CONFIG_PIXEL_FORMAT == PF_ARGB8888
 #define PIXEL(r,g,b) PIXEL_8888(r,g,b)
+#elif LCD_CONFIG_PIXEL_FORMAT == PF_RGB565
+#define PIXEL(r,g,b) PIXEL_565(r,g,b)
+#else
+#error Unsupported pixel format selected.
+#endif /* LCD_CONFIG_PIXEL_FORMAT */
+
 #define PIXEL_8888(r,g,b) (0xFF000000 | ((r & 0xFF) << 16) | ((g & 0xFF) << 8) | (b & 0xFF))
-#define PIXEL_565(r,g,b) (((r & 0x1F) << 11) | ((g & 0x3F) << 5) | (b & 0x1F))
+#define PIXEL_565(r,g,b) (((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3))
 
 status_t init_graphics(uint32_t frontbuf, uint32_t backbuf);
 
@@ -31,6 +38,7 @@ status_t gfx_clear_screen(uint32_t color);
 
 uint16_t gfx_width(void);
 uint16_t gfx_height(void);
+uint8_t gfx_pixel_size(void);
 
 #endif
 #endif

@@ -213,16 +213,14 @@ BIT_FIELD(LTDC_LPFCR_PF, 0, 0x00000007);
 /**
  * Definitions for the different supported pixel formats.
  */
-typedef enum {
-	PF_ARGB8888 = 0x0,
-	PF_RGB888 = 0x1,
-	PF_RGB565 = 0x2,
-	PF_ARGB1555 = 0x3,
-	PF_ARGB4444 = 0x4,
-	PF_L8 = 0x5,
-	PF_AL44 = 0x6,
-	PF_AL88 = 0x7
-} PFCR_PIXEL_FORMAT;
+#define PF_ARGB8888 0x0
+#define PF_RGB888   0x1
+#define PF_RGB565   0x2
+#define PF_ARGB1555 0x3
+#define PF_ARGB4444 0x4
+#define PF_L8       0x5
+#define PF_AL44     0x6
+#define PF_AL88     0x7
 
 /**
  * LTDC Layer Constant Alpha Configuration Register Bit Definitions.
