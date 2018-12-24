@@ -3,15 +3,43 @@
  * @created 6/21/2018
  *
  * Definitions and functions used to manipulate the LCD Controller [18].
+ *
+ * Don't call into this module directly, use the dedicated "graphics" module.
  */
 #ifdef INCLUDE_LCD_CTRL_DRIVER
 
 #include "debug.h"
 #include "gpio.h"
+#include "interrupt.h"
 #include "lcd_ctrl.h"
 #include "registers/lcd_ctrl_reg.h"
 #include "registers/rcc_reg.h"
 #include "status.h"
+
+/**
+ * The GPIO alternate functions for the LCD pins. Check section 3 of the
+ * datasheet for more details.
+ */
+#define LCD_ALT14_FUNC AF14
+#define LCD_ALT9_FUNC AF9
+
+/**
+ * Default error ISR that spins when an error occurs.
+ */
+void lcd_ctrl_error_isr(void)
+{
+    if(GET_LTDC_ISR_FUIF(LTDC->ISR)) {
+        SET_FIELD(LTDC->ICR, LTDC_ICR_CFUIF());
+        dbprintf("LCD Error: FIFO Underrun error\n");
+        while(1) { }
+    }
+
+    if(GET_LTDC_ISR_TERRIF(LTDC->ISR)) {
+        SET_FIELD(LTDC->ICR, LTDC_ICR_CTERRIF());
+        dbprintf("LCD Error: Transfer error\n");
+        while(1) { }
+    }
+}
 
 /**
  * Initialize the LCD Controller.
@@ -134,12 +162,11 @@ status_t init_lcd_ctrl(LcdSettings lcd, uint32_t framebuffer)
     SET_FIELD(LTDC_LAYER_REG(LAYER1)->CFBAR, SET_LTDC_LCFBAR_CFBADD(framebuffer));
 
     /**
-     * The screen width is multiplied by the sizeof a single pixel. If you
-     * change pixel formats, you'll need to update this value as well.
+     * The screen width is multiplied by the sizeof a single pixel.
      */
     SET_FIELD(LTDC_LAYER_REG(LAYER1)->CFBLR,
-              SET_LTDC_LCFBLR_CFBLL((lcd.active_width * 4) + 3) |
-              SET_LTDC_LCFBLR_CFBP(lcd.active_width * 4));
+              SET_LTDC_LCFBLR_CFBLL((lcd.active_width * LCD_CONFIG_PIXEL_SIZE) + 3) |
+              SET_LTDC_LCFBLR_CFBP(lcd.active_width * LCD_CONFIG_PIXEL_SIZE));
 
     SET_FIELD(LTDC_LAYER_REG(LAYER1)->CFBLNR,
               SET_LTDC_LCFBLNR_CFBLNBR(lcd.active_height));
@@ -162,6 +189,16 @@ status_t init_lcd_ctrl(LcdSettings lcd, uint32_t framebuffer)
      */
     gpio_set_output(GPIO_LCD_BL_CTRL, high);
     gpio_set_output(GPIO_LCD_DISP, high);
+
+    return Success;
+}
+
+/**
+ * Set the ISR that gets triggered every vertical blanking period.
+ */
+status_t lcd_set_vblank_isr(ISR_Type vblank_isr)
+{
+    ABORT_IF_NOT(request_interrupt(LTDC_IRQn, vblank_isr));
 
     return Success;
 }

@@ -18,12 +18,6 @@
  */
 #define SDRAM_BASE 0xC0000000U
 
-/**
- * The GPIO alternate function for the FMC SDRAM pins. Check section 3 of the
- * datasheet for more details.
- */
-#define SDRAM_ALT_FUNC AF12
-
 status_t init_fmc_sdram(void);
 
 #endif

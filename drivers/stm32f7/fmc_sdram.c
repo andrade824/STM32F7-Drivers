@@ -20,6 +20,12 @@
 #define SDRAM_TIMEOUT MSECS(1)
 
 /**
+ * The GPIO alternate function for the FMC SDRAM pins. Check section 3 of the
+ * datasheet for more details.
+ */
+#define SDRAM_ALT_FUNC AF12
+
+/**
  * Initialize the SDRAM Controller.
  */
 status_t init_fmc_sdram(void)

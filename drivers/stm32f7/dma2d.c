@@ -3,6 +3,8 @@
  * @created 9/23/2018
  *
  * Definitions and functions used to manipulate the DMA2D Controller [9].
+ *
+ * Don't call into this module directly, use the dedicated "graphics" module.
  */
 #ifdef INCLUDE_DMA2D_DRIVER
 
@@ -18,27 +20,36 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+/* Flag that gets set to true when the DMA is not performing transfers. */
 static volatile bool dma_complete = true;
-extern volatile bool trigger_dma_copy;
+
+/* The callback function to call when a DMA transfer finishes. */
+static void (*dma_callback) (void) = NULL;
 
 /**
- * DMA2D error handler.
+ * DMA2D ISR. Set dma_complete if transfer complete or spin on error.
  */
 void dma2d_isr(void)
 {
     if(GET_DMA2D_ISR_TCIF(DMA2D->ISR)) {
         SET_FIELD(DMA2D->IFCR, DMA2D_IFCR_CTCIF());
         dma_complete = true;
-        trigger_dma_copy = false;
+
+        if(dma_callback != NULL) {
+            dma_callback();
+        }
     } else if(GET_DMA2D_ISR_TEIF(DMA2D->ISR)) {
         SET_FIELD(DMA2D->IFCR, DMA2D_IFCR_CTEIF());
         dbprintf("DMA2D Error: Transfer Error\n");
+        while(1) { }
     } else if(GET_DMA2D_ISR_CAEIF(DMA2D->ISR)) {
         SET_FIELD(DMA2D->IFCR, DMA2D_IFCR_CCAEIF());
         dbprintf("DMA2D Error: CLUT Access Error\n");
+        while(1) { }
     } else if(GET_DMA2D_ISR_CEIF(DMA2D->ISR)) {
         SET_FIELD(DMA2D->IFCR, DMA2D_IFCR_CCEIF());
         dbprintf("DMA2D Error: Configuration Error\n");
+        while(1) { }
     }
 }
 
@@ -71,11 +82,14 @@ status_t init_dma2d(void)
  * @param dst_addr The address of the first pixel in the destination buffer.
  * @param width The number of pixels per line to transfer.
  * @param height The number of lines to transfer.
+ * @param callback Function to call when transfer is complete or NULL for no
+ *                 callback.
  */
 status_t dma2d_mem_to_mem(uint32_t src_addr,
                           uint32_t dst_addr,
                           uint16_t width,
-                          uint16_t height)
+                          uint16_t height,
+                          void (*callback) (void))
 {
     /**
      * Abort early if the DMA is already running.
@@ -108,6 +122,7 @@ status_t dma2d_mem_to_mem(uint32_t src_addr,
     /**
      * Start the transaction.
      */
+    dma_callback = callback;
     dma_complete = false;
     SET_FIELD(DMA2D->CR, DMA2D_CR_START());
 

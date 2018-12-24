@@ -9,6 +9,7 @@
 #define LCD_CTRL_H
 
 #include "gpio.h"
+#include "interrupt.h"
 #include "status.h"
 
 #include <stdint.h>
@@ -43,14 +44,8 @@ typedef struct {
     LcdPolarity pixel_clk_pol;
 } LcdSettings;
 
-/**
- * The GPIO alternate functions for the LCD pins. Check section 3 of the
- * datasheet for more details.
- */
-#define LCD_ALT14_FUNC AF14
-#define LCD_ALT9_FUNC AF9
-
 status_t init_lcd_ctrl(LcdSettings lcd, uint32_t framebuffer);
+status_t lcd_set_vblank_isr(ISR_Type vblank_isr);
 
 #endif
 #endif
