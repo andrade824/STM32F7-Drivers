@@ -10,6 +10,15 @@
 /**
  * Memory Map definitions.
  */
+#define SCS_BASE        (0xE000E000UL)         /*!< System Control Space Base Address */
+#define ITM_BASE        (0xE0000000UL)         /*!< ITM Base Address */
+#define DWT_BASE        (0xE0001000UL)         /*!< DWT Base Address */
+#define TPI_BASE        (0xE0040000UL)         /*!< TPI Base Address */
+#define CoreDebug_BASE  (0xE000EDF0UL)         /*!< Core Debug Base Address */
+#define SysTick_BASE    (SCS_BASE +  0x0010UL) /*!< SysTick Base Address */
+#define NVIC_BASE       (SCS_BASE +  0x0100UL) /*!< NVIC Base Address */
+#define SCB_BASE        (SCS_BASE +  0x0D00UL) /*!< System Control Block Base Address */
+
 #define RAMITCM_BASE    0x00000000U /*!< Base address of : 16KB RAM reserved for CPU execution/instruction accessible over ITCM  */
 #define FLASHITCM_BASE  0x00200000U /*!< Base address of : (up to 1 MB) embedded FLASH memory  accessible over ITCM              */
 #define FLASHAXI_BASE   0x08000000U /*!< Base address of : (up to 1 MB) embedded FLASH memory accessible over AXI                */

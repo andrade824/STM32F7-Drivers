@@ -26,8 +26,7 @@ typedef struct
 /**
  * Define the SysTick register map accessor.
  */
-#define SYSTICK_REG_BASE (SCS_BASE +  0x0010UL)
-#define SYSTICK ((SysTickReg *) SYSTICK_REG_BASE)
+#define SYSTICK ((SysTickReg *) SysTick_BASE)
 
 /**
  * Control and Status Register [ARM Cortex-M7 Devices Generic User's
