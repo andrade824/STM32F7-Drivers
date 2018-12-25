@@ -41,19 +41,19 @@ CFLAGS += -Iplatform/CMSIS/Include
 # Include any needed drivers
 CFLAGS += $(DRIVERS)
 
-# Create a define for the CONFIG and PLATFORM
+# Create defines for the CONFIG and PLATFORM
 CFLAGS += -Dplatform_$(PLATFORM) -Dconfig_$(CONFIG)
 
 # Conditionally enable semihosting. Disable if your debugger doesn't support it.
 ifeq ($(SEMIHOSTING_SUPPORT), yes)
-CFLAGS_SEMIHOSTING = --specs=rdimon.specs -lc -lrdimon
+CFLAGS_SEMIHOSTING = --specs=nano.specs --specs=rdimon.specs
 else
-CFLAGS_SEMIHOSTING = --specs=nosys.specs
+CFLAGS_SEMIHOSTING = --specs=nano.specs --specs=nosys.specs
 endif
 
 # Potentially use semihosting and enable debug features when in debug mode. Only
 # perform optimizations that don't disturb debugging.
-CFLAGS_DEBUG = -Og -g3 $(CFLAGS_SEMIHOSTING) -DDEBUG_ON
+CFLAGS_DEBUG = -Og -g3 $(CFLAGS_SEMIHOSTING) -Wl,-Map,$(PROJ_PATH)-dbg.map -DDEBUG_ON
 
 # No semihosting or debug features in release mode. Use better optimizations.
 CFLAGS_RELEASE = -O2 --specs=nosys.specs -Wl,-Map,$(PROJ_PATH).map

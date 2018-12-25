@@ -15,7 +15,7 @@
 	#define dbputs(s)               puts(s)
 	#define dbprintf(szFormat, ...) printf(szFormat,##__VA_ARGS__)
 #else
-	#define dbout(s)
+	#define dbputs(s)
 	#define dbprintf(szFormat, ...)
 #endif
 
