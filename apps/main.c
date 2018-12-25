@@ -16,6 +16,7 @@
 const uint32_t draw_buffer = SDRAM_BASE;
 const uint32_t render_buffer = SDRAM_BASE + (LCD_CONFIG_WIDTH * LCD_CONFIG_HEIGHT * LCD_CONFIG_PIXEL_SIZE);
 
+#if 0
 status_t draw_random_rect(void) {
 	uint8_t red = rand() % 256;
 	uint8_t blue = rand() % 256;
@@ -30,6 +31,7 @@ status_t draw_random_rect(void) {
 
 	return Success;
 }
+#endif
 
 status_t run(void)
 {
@@ -39,6 +41,14 @@ status_t run(void)
 
 	ABORT_IF_NOT(init_fmc_sdram());
 	ABORT_IF_NOT(init_graphics(render_buffer, draw_buffer));
+
+	gfx_clear_screen(PIXEL(0,0,0));
+	ABORT_IF_NOT(gfx_text_set_cursor(0, 26));
+	gfx_text_foreground(PIXEL(0, 255, 0));
+	gfx_text_background(PIXEL(255, 0, 0));
+	ABORT_IF_NOT(gfx_draw_text("Hello There! "));
+
+	gfx_swap_buffers();
 
 #if 0
 	for(int i = 0; i < 3; i++) {
@@ -76,10 +86,12 @@ status_t run(void)
 
 	DigitalState led_ctrl = low;
 
+#if 0
 	uint16_t x = 0;
 	const uint16_t y = 100;
 	const uint16_t rect_width = 50;
 	const uint16_t rect_height = 50;
+#endif
 
 	while(1)
 	{
@@ -89,7 +101,10 @@ status_t run(void)
 			led_ctrl = low;
 
 		gpio_set_output(GPIO_ARD_D13, led_ctrl);
+		sleep(MSECS(500));
+		ABORT_IF_NOT(gfx_draw_text("Oh shit, waddup, here come dat boi! "));
 
+#if 0
 		gfx_clear_screen(PIXEL(255, 255, 255));
 		draw_random_rect();
 		gfx_draw_rect(0, 0, 50, 50, PIXEL(0, 0, 255));
@@ -102,9 +117,11 @@ status_t run(void)
 		 * With CLEAR_SCREEN: 31.8ms per frame (~31fps)
 		 * Without CLEAR_SCREEN: 16.6ms per frame (~60fps)
 		 */
+#endif
 
 		/* Wait for the DMA transfer to complete. */
 		gfx_swap_buffers();
+
 	}
 
 	return Success;

@@ -9,7 +9,7 @@ include configs/$(PLATFORM)/$(CONFIG).mk
 # Put your source files here (or *.c, etc)
 SRCS += platform/$(PLATFORM)/*.s
 SRCS += platform/$(PLATFORM)/*.c
-#SRCS += drivers/*.c
+SRCS += drivers/*.c
 SRCS += drivers/$(PLATFORM)/*.c
 SRCS += apps/*.c
 

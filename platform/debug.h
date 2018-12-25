@@ -84,4 +84,15 @@
  */
 #define ABORT_IF_NOT(expr) ABORT_IF(!(expr))
 
+/**
+ * Asserts are similar to Aborts except they get compiled out on release builds.
+ */
+#ifdef DEBUG_ON
+	#define ASSERT(expr) ABORT_IF_NOT(expr)
+	#define ASSERT_NOT(expr) ABORT_IF(expr)
+#else
+	#define ASSERT(expr)
+	#define ASSERT_NOT(expr)
+#endif
+
 #endif

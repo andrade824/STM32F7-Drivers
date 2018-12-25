@@ -5,12 +5,12 @@
  * A single software module used to draw graphics onto the STM32F7 Discovery
  * board's LCD module. This module encapsulates the LCD and 2D DMA controllers.
  */
-#ifdef INCLUDE_DMA2D_DRIVER
-#ifdef INCLUDE_LCD_CTRL_DRIVER
+#if defined(INCLUDE_DMA2D_DRIVER) && defined(INCLUDE_LCD_CTRL_DRIVER)
 
 #include "config.h"
 #include "debug.h"
 #include "dma2d.h"
+#include "font.h"
 #include "graphics.h"
 #include "lcd_ctrl.h"
 #include "status.h"
@@ -18,10 +18,15 @@
 #include "registers/lcd_ctrl_reg.h"
 
 #include <stdint.h>
+#include <string.h>
 
-/**
- * Set true to trigger a DMA copy to occur.
- */
+/* Number of characters per line. */
+#define NUM_CHARS (LCD_CONFIG_WIDTH / (FONT_WIDTH + 1U))
+
+/* Number of lines of text that can fill the screen. */
+#define NUM_LINES (LCD_CONFIG_HEIGHT / (FONT_HEIGHT + 1U))
+
+/* Set true to trigger a DMA copy to occur. */
 static volatile bool trigger_dma_copy = false;
 
 /* The framebuffer that the LCD controller reads from. */
@@ -29,6 +34,14 @@ static uint32_t frontbuffer = 0;
 
 /* The framebuffer that the application draws into. */
 static uint32_t backbuffer = 0;
+
+/* Text foreground and background color. */
+static uint32_t foreground_color = PIXEL(255, 255, 255);
+static uint32_t background_color = PIXEL(0, 0, 0);
+
+/* Text cursor location (in pixels). */
+static uint16_t cursor_col = 0;
+static uint16_t cursor_row = 0;
 
 /**
  * The callback that gets called when a DMA transfer completes.
@@ -97,8 +110,8 @@ void gfx_swap_buffers(void)
  */
 status_t gfx_set_pixel(uint16_t col, uint16_t row, uint32_t color)
 {
-	ABORT_IF(col >= LCD_CONFIG_WIDTH);
-	ABORT_IF(row >= LCD_CONFIG_HEIGHT);
+	ASSERT(col < LCD_CONFIG_WIDTH);
+	ASSERT(row < LCD_CONFIG_HEIGHT);
 
 	const uint32_t pixel_offset = (row * LCD_CONFIG_WIDTH + col) * LCD_CONFIG_PIXEL_SIZE;
 	*(pixel_t*)(backbuffer + pixel_offset) = color;
@@ -118,10 +131,10 @@ status_t gfx_set_pixel(uint16_t col, uint16_t row, uint32_t color)
  * @param color The color of the rectangle.
  */
 status_t gfx_draw_rect(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint32_t color) {
-	ABORT_IF(x0 > x1);
-	ABORT_IF(y0 > y1);
-	ABORT_IF(x1 >= LCD_CONFIG_WIDTH);
-	ABORT_IF(y1 >= LCD_CONFIG_HEIGHT);
+	ASSERT(x0 <= x1);
+	ASSERT(y0 <= y1);
+	ASSERT(x1 < LCD_CONFIG_WIDTH);
+	ASSERT(y1 < LCD_CONFIG_HEIGHT);
 
 	for(int row = y0; row <= y1; row++) {
 		for (int col = x0; col <= x1; col++) {
@@ -135,11 +148,140 @@ status_t gfx_draw_rect(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint3
 /**
  * Clear the entire screen to the passed in color.
  *
+ * @note This also resets the text cursor back to the top left.
+ *
  * @param color The color to set the entire screen to.
  */
 status_t gfx_clear_screen(uint32_t color)
 {
 	ABORT_IF_NOT(gfx_draw_rect(0, 0, LCD_CONFIG_WIDTH - 1, LCD_CONFIG_HEIGHT - 1, color));
+
+	cursor_col = 0;
+	cursor_row = 0;
+
+	return Success;
+}
+
+/**
+ * Set the location of the text rendering cursor.
+ *
+ * @param col The cursor x-coordinate (in characters).
+ * @param row The cursor y-coordinate (in lines).
+ */
+status_t gfx_text_set_cursor(uint8_t col, uint8_t row)
+{
+	ASSERT(col < NUM_CHARS);
+	ASSERT(row < NUM_LINES);
+
+	cursor_col = col * (FONT_WIDTH + 1);
+	cursor_row = row * (FONT_HEIGHT + 1);
+
+	return Success;
+}
+
+/**
+ * Set the text foreground color.
+ *
+ * @param color The new text foreground color.
+ */
+void gfx_text_foreground(uint32_t color)
+{
+	foreground_color = color;
+}
+
+/**
+ * Set the text background color.
+ *
+ * @param color The new text background color.
+ */
+void gfx_text_background(uint32_t color)
+{
+	background_color = color;
+}
+
+/**
+ * Render an ASCII character at the current cursor location. The cursor will
+ * automatically be moved to the next character location. If the end of the
+ * screen is reached, a new line will be inserted at the bottom and the rest
+ * of the screen will be scrolled up.
+ *
+ * @param ascii The ASCII character to draw.
+ */
+status_t gfx_draw_char(char ascii)
+{
+	ASSERT(ascii >= FONT_ASCII_OFFSET);
+	ASSERT(ascii < (FONT_ASCII_OFFSET + FONT_TOTAL_CHARS));
+
+	const uint16_t font_index = FONT_ASCII_INDEX(ascii);
+
+	for(uint8_t row = 0; row < (FONT_HEIGHT + 1); ++row) {
+		/* Intentionally inject a spacer row after the character is printed. */
+		uint8_t char_line = (row < FONT_HEIGHT) ? font_table[font_index + row] : 0;
+
+		for(uint8_t col = 0; col < (FONT_WIDTH + 1); ++col) {
+			const uint32_t color = (char_line & 0x80) ? foreground_color : background_color;
+			gfx_set_pixel(cursor_col + col, cursor_row + row, color);
+			char_line <<= 1;
+		}
+	}
+
+	/* Move to the next character on the line */
+	cursor_col += FONT_WIDTH + 1;
+
+	/* Check to see if the cursor needs to wrap to the next line. */
+	if((cursor_col + FONT_WIDTH) >= LCD_CONFIG_WIDTH) {
+		cursor_col = 0;
+		cursor_row += FONT_HEIGHT + 1;
+
+		if((cursor_row + FONT_HEIGHT) >= LCD_CONFIG_HEIGHT) {
+			/**
+			 * Reached end of the screen. Scroll the screen up by a line and set
+			 * the cursor to the last line.
+			 */
+			ABORT_IF_NOT(gfx_text_scroll_line());
+			cursor_row = (NUM_LINES - 1) * (FONT_HEIGHT + 1);
+		}
+	}
+
+	return Success;
+}
+
+/**
+ * Render an entire string of text at the current cursor location.
+ *
+ * @param str The string of text to render.
+ */
+status_t gfx_draw_text(char *str)
+{
+	for(int i = 0; str[i] != '\0'; ++i) {
+		ABORT_IF_NOT(gfx_draw_char(str[i]));
+	}
+
+	return Success;
+}
+
+/**
+ * Moves all text up by one line. This requires copying lines 1 through
+ * NUM_LINES - 1 on top of line 0 and clearing out the bottom line.
+ *
+ * @note The cursor location does not change.
+ */
+status_t gfx_text_scroll_line(void)
+{
+	/* The number of bytes a single line of text occupies. */
+	const uint32_t text_line_bytes = LCD_CONFIG_WIDTH *
+	                                 LCD_CONFIG_PIXEL_SIZE *
+	                                 (FONT_HEIGHT + 1);
+
+	memmove((void*)backbuffer,
+	        (void*)(backbuffer + text_line_bytes),
+	        FRAMEBUFFER_SIZE - text_line_bytes);
+
+	ABORT_IF_NOT(gfx_draw_rect(0,
+	                           (NUM_LINES - 1) * (FONT_HEIGHT + 1),
+	                           LCD_CONFIG_WIDTH - 1,
+	                           LCD_CONFIG_HEIGHT - 1,
+	                           background_color));
 
 	return Success;
 }
@@ -168,5 +310,20 @@ uint8_t gfx_pixel_size(void)
 	return LCD_CONFIG_PIXEL_SIZE;
 }
 
-#endif
+/**
+ * Number of characters per line getter.
+ */
+uint8_t gfx_num_chars(void)
+{
+	return NUM_CHARS;
+}
+
+/**
+ * Number of lines of text that can fill the screen getter.
+ */
+uint8_t gfx_num_lines(void)
+{
+	return NUM_LINES;
+}
+
 #endif

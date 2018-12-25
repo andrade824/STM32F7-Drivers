@@ -1,2 +1,1 @@
-1. Move to RGB565 to save RAM.
-2. Add font and text drawing mode.
+1. Add configurable font sizes.
