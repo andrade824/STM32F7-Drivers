@@ -5,10 +5,11 @@
  * A single software module used to draw graphics onto the STM32F7 Discovery
  * board's LCD module. This module encapsulates the LCD and 2D DMA controllers.
  */
-#if defined(INCLUDE_DMA2D_DRIVER) && defined(INCLUDE_LCD_CTRL_DRIVER)
+#if INCLUDE_GRAPHICS_MODULE
 #ifndef GRAPHICS_H
 #define GRAPHICS_H
 
+#include "config.h"
 #include "status.h"
 
 #include <stdint.h>
@@ -48,5 +49,5 @@ uint8_t gfx_pixel_size(void);
 uint8_t gfx_num_chars(void);
 uint8_t gfx_num_lines(void);
 
-#endif
-#endif
+#endif /* GRAPHICS_H */
+#endif /* INCLUDE_GRAPHICS_MODULE */

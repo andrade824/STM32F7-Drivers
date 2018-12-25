@@ -43,10 +43,9 @@ status_t run(void)
 	ABORT_IF_NOT(init_graphics(render_buffer, draw_buffer));
 
 	gfx_clear_screen(PIXEL(0,0,0));
-	ABORT_IF_NOT(gfx_text_set_cursor(0, 26));
+	ABORT_IF_NOT(gfx_text_set_cursor(20, 10));
 	gfx_text_foreground(PIXEL(0, 255, 0));
-	gfx_text_background(PIXEL(255, 0, 0));
-	ABORT_IF_NOT(gfx_draw_text("Hello There! "));
+	gfx_text_background(PIXEL(0, 0, 0));
 
 	gfx_swap_buffers();
 
@@ -101,8 +100,11 @@ status_t run(void)
 			led_ctrl = low;
 
 		gpio_set_output(GPIO_ARD_D13, led_ctrl);
-		sleep(MSECS(500));
-		ABORT_IF_NOT(gfx_draw_text("Oh shit, waddup, here come dat boi! "));
+		sleep(MSECS(100));
+		gfx_text_foreground(PIXEL(255, 0, 0));
+		ABORT_IF_NOT(gfx_draw_text("Merry "));
+		gfx_text_foreground(PIXEL(0, 255, 0));
+		ABORT_IF_NOT(gfx_draw_text("Christmas! "));
 
 #if 0
 		gfx_clear_screen(PIXEL(255, 255, 255));

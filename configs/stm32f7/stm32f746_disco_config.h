@@ -480,6 +480,14 @@ typedef uint16_t pixel_t;
 
 #endif /* INCLUDE_LCD_CTRL_DRIVER */
 
+/***** FONT CONFIGURATION *****/
+#ifdef INCLUDE_FONT_TABLE
+
+/* The size of the wanted font in points (check font.h for supported sizes). */
+#define FONT_CONFIG 9
+
+#endif /* INCLUDE_FONT_TABLE */
+
 /***** INCLUDE GENERIC STM32F7 CONFIGURATION *****/
 
 /**

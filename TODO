@@ -1,1 +1,4 @@
-1. Add configurable font sizes.
+1. Create SDIO driver.
+2. Write FAT32 filesystem driver.
+3. Write I2C controller driver.
+4. Write touchscreen driver.

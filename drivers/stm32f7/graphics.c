@@ -5,7 +5,11 @@
  * A single software module used to draw graphics onto the STM32F7 Discovery
  * board's LCD module. This module encapsulates the LCD and 2D DMA controllers.
  */
-#if defined(INCLUDE_DMA2D_DRIVER) && defined(INCLUDE_LCD_CTRL_DRIVER)
+#ifdef INCLUDE_GRAPHICS_MODULE
+
+#if !defined(INCLUDE_DMA2D_DRIVER) || !defined(INCLUDE_LCD_CTRL_DRIVER) || !defined(INCLUDE_FONT_TABLE)
+#error Need to include the DMA2D, LCD Controller, and Font Table drivers for graphics module support.
+#endif
 
 #include "config.h"
 #include "debug.h"
@@ -17,6 +21,7 @@
 
 #include "registers/lcd_ctrl_reg.h"
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -215,13 +220,21 @@ status_t gfx_draw_char(char ascii)
 	const uint16_t font_index = FONT_ASCII_INDEX(ascii);
 
 	for(uint8_t row = 0; row < (FONT_HEIGHT + 1); ++row) {
-		/* Intentionally inject a spacer row after the character is printed. */
-		uint8_t char_line = (row < FONT_HEIGHT) ? font_table[font_index + row] : 0;
+		/* Each line of a font character is broken into 8-bit chunks */
+		for(uint8_t line_idx = 0; line_idx < FONT_LINE_LENGTH; ++line_idx) {
+			/* The last line chunk may not be a full 8-bits, and also add a spacer pixel */
+			const bool last_chunk = (line_idx == (FONT_LINE_LENGTH - 1));
+			const uint8_t line_width = (last_chunk) ? (FONT_WIDTH & 7) + 1 : 8;
 
-		for(uint8_t col = 0; col < (FONT_WIDTH + 1); ++col) {
-			const uint32_t color = (char_line & 0x80) ? foreground_color : background_color;
-			gfx_set_pixel(cursor_col + col, cursor_row + row, color);
-			char_line <<= 1;
+			/* Intentionally inject a spacer row after the character is printed. */
+			const uint16_t font_idx = font_index + (row * FONT_LINE_LENGTH) + line_idx;
+			uint8_t char_line = (row < FONT_HEIGHT) ? font_table[font_idx] : 0;
+
+			for(uint8_t col = (line_idx * 8); col < ((line_idx * 8) + line_width); ++col) {
+				const uint32_t color = (char_line & 0x80) ? foreground_color : background_color;
+				gfx_set_pixel(cursor_col + col, cursor_row + row, color);
+				char_line <<= 1;
+			}
 		}
 	}
 
@@ -326,4 +339,4 @@ uint8_t gfx_num_lines(void)
 	return NUM_LINES;
 }
 
-#endif
+#endif /* INCLUDE_GRAPHICS_MODULE */
