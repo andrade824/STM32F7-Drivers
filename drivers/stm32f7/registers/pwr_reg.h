@@ -31,8 +31,6 @@ typedef struct
 
 /**
  * Power Control Register 1 Bit Definitions [4.4.1].
- *
- * @{
  */
 BIT_FIELD(PWR_CR1_LPDS,    0, 0x00000001);
 BIT_FIELD(PWR_CR1_PDDS,    1, 0x00000002);
@@ -48,14 +46,9 @@ BIT_FIELD(PWR_CR1_VOS,    14, 0x0000C000);
 BIT_FIELD(PWR_CR1_ODEN,   16, 0x00010000);
 BIT_FIELD(PWR_CR1_ODSWEN, 17, 0x00020000);
 BIT_FIELD(PWR_CR1_UDEN,   18, 0x000C0000);
-/**
- * @}
- */
 
 /**
  * Power Control/Status Register 1 Bit Definitions [4.4.2].
- *
- * @{
  */
 BIT_FIELD(PWR_CSR1_WUIF,     0, 0x00000001);
 BIT_FIELD(PWR_CSR1_SBF,      1, 0x00000002);
@@ -67,8 +60,5 @@ BIT_FIELD(PWR_CSR1_VOSRDY,  14, 0x00004000);
 BIT_FIELD(PWR_CSR1_ODRDY,   16, 0x00010000);
 BIT_FIELD(PWR_CSR1_ODSWRDY, 17, 0x00020000);
 BIT_FIELD(PWR_CSR1_UDRDY,   18, 0x000C0000);
-/**
- * @}
- */
 
 #endif

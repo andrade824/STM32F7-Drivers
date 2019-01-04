@@ -2,7 +2,7 @@
  * @author Devon Andrade
  * @created 12/23/2018
  *
- * Definitions and functions used to manipulate the System Control Block.
+ * Definitions and functions used to manipulate the System Control Block (SCB).
  */
 #ifndef SCB_REG_H
 #define SCB_REG_H

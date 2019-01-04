@@ -34,15 +34,10 @@ typedef struct
 
 /**
  * Access Control Register Bit Definitions [3.7.1].
- *
- * @{
  */
 BIT_FIELD(FLASH_ACR_LATENCY, 0, 0x0000000F);
 BIT_FIELD(FLASH_ACR_PRFTEN,  8, 0x00000100);
 BIT_FIELD(FLASH_ACR_ARTEN,   9, 0x00000200);
 BIT_FIELD(FLASH_ACR_ARTRST, 11, 0x00000800);
-/**
- * @}
- */
 
 #endif

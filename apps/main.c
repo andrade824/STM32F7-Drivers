@@ -8,6 +8,7 @@
 #include "system.h"
 
 #include "registers/fmc_sdram_reg.h"
+#include "registers/usart_reg.h"
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -33,12 +34,38 @@ status_t draw_random_rect(void) {
 }
 #endif
 
+void test_usart_reg(void)
+{
+	dbprintf("USART_CR1_UE: 0x%lx\n", USART_CR1_UE());
+	dbprintf("USART_CR1_RE: 0x%lx\n", USART_CR1_RE());
+	dbprintf("USART_CR1_TE: 0x%lx\n", USART_CR1_TE());
+	dbprintf("USART_CR1_IDLEIE: 0x%lx\n", USART_CR1_IDLEIE());
+	dbprintf("USART_CR1_RXNEIE: 0x%lx\n", USART_CR1_RXNEIE());
+	dbprintf("USART_CR1_TCIE: 0x%lx\n", USART_CR1_TCIE());
+	dbprintf("USART_CR1_TXEIE: 0x%lx\n", USART_CR1_TXEIE());
+	dbprintf("USART_CR1_PEIE: 0x%lx\n", USART_CR1_PEIE());
+	dbprintf("USART_CR1_PS: 0x%lx\n", USART_CR1_PS());
+	dbprintf("USART_CR1_PCE: 0x%lx\n", USART_CR1_PCE());
+	dbprintf("USART_CR1_WAKE: 0x%lx\n", USART_CR1_WAKE());
+	dbprintf("USART_CR1_M0: 0x%lx\n", USART_CR1_M0());
+	dbprintf("USART_CR1_MME: 0x%lx\n", USART_CR1_MME());
+	dbprintf("USART_CR1_CMIE: 0x%lx\n", USART_CR1_CMIE());
+	dbprintf("USART_CR1_OVER8: 0x%lx\n", USART_CR1_OVER8());
+	dbprintf("USART_CR1_DEDT: 0x%lx\n", USART_CR1_DEDT());
+	dbprintf("USART_CR1_DEAT: 0x%lx\n", USART_CR1_DEAT());
+	dbprintf("USART_CR1_RTOIE: 0x%lx\n", USART_CR1_RTOIE());
+	dbprintf("USART_CR1_EOBIE: 0x%lx\n", USART_CR1_EOBIE());
+	dbprintf("USART_CR1_M1: 0x%lx\n", USART_CR1_M1());
+	dbprintf("GET_USART_CR1_UE: 0x%lx\n", GET_USART_CR1_UE(USART1->CR1));
+	dbprintf("SET_USART_CR1_DEAT: 0x%lx\n", SET_USART_CR1_DEAT(0xFFFF));
+}
+
 status_t run(void)
 {
 	ABORT_IF_NOT(init_system());
 
 	dbprintf("System Initialized\n");
-
+	test_usart_reg();
 	ABORT_IF_NOT(init_fmc_sdram());
 	ABORT_IF_NOT(init_graphics(render_buffer, draw_buffer));
 
