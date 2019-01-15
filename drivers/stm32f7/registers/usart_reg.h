@@ -75,6 +75,13 @@ BIT_FIELD2(USART_CR1_RTOIE,  26, 26);
 BIT_FIELD2(USART_CR1_EOBIE,  27, 27);
 BIT_FIELD2(USART_CR1_M1,     28, 28);
 
+/* USART Data bit length options. */
+typedef enum {
+	USART_8_DATA = 0,
+	USART_9_DATA = 1,
+	USART_7_DATA = 2
+} UsartWordLength;
+
 /**
  * Control Register 2 [31.8.2].
  */
@@ -96,6 +103,14 @@ BIT_FIELD2(USART_CR2_ABREN,    20, 20);
 BIT_FIELD2(USART_CR2_ABRMOD,   21, 22);
 BIT_FIELD2(USART_CR2_RTOEN,    23, 23);
 BIT_FIELD2(USART_CR2_ADD,      24, 31);
+
+/* USART Stop bit length options. */
+typedef enum {
+	USART_1_STOP = 0,
+	USART_0_5_STOP = 1,
+	USART_2_STOP = 2,
+	USART_1_5_STOP = 3
+} UsartStopBits;
 
 /**
  * Control Register 3 [31.8.3].

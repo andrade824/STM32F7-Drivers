@@ -6,10 +6,11 @@
 #include "interrupt.h"
 #include "status.h"
 #include "system.h"
+#include "usart.h"
 
 #include "registers/fmc_sdram_reg.h"
-#include "registers/usart_reg.h"
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -34,38 +35,11 @@ status_t draw_random_rect(void) {
 }
 #endif
 
-void test_usart_reg(void)
-{
-	dbprintf("USART_CR1_UE: 0x%lx\n", USART_CR1_UE());
-	dbprintf("USART_CR1_RE: 0x%lx\n", USART_CR1_RE());
-	dbprintf("USART_CR1_TE: 0x%lx\n", USART_CR1_TE());
-	dbprintf("USART_CR1_IDLEIE: 0x%lx\n", USART_CR1_IDLEIE());
-	dbprintf("USART_CR1_RXNEIE: 0x%lx\n", USART_CR1_RXNEIE());
-	dbprintf("USART_CR1_TCIE: 0x%lx\n", USART_CR1_TCIE());
-	dbprintf("USART_CR1_TXEIE: 0x%lx\n", USART_CR1_TXEIE());
-	dbprintf("USART_CR1_PEIE: 0x%lx\n", USART_CR1_PEIE());
-	dbprintf("USART_CR1_PS: 0x%lx\n", USART_CR1_PS());
-	dbprintf("USART_CR1_PCE: 0x%lx\n", USART_CR1_PCE());
-	dbprintf("USART_CR1_WAKE: 0x%lx\n", USART_CR1_WAKE());
-	dbprintf("USART_CR1_M0: 0x%lx\n", USART_CR1_M0());
-	dbprintf("USART_CR1_MME: 0x%lx\n", USART_CR1_MME());
-	dbprintf("USART_CR1_CMIE: 0x%lx\n", USART_CR1_CMIE());
-	dbprintf("USART_CR1_OVER8: 0x%lx\n", USART_CR1_OVER8());
-	dbprintf("USART_CR1_DEDT: 0x%lx\n", USART_CR1_DEDT());
-	dbprintf("USART_CR1_DEAT: 0x%lx\n", USART_CR1_DEAT());
-	dbprintf("USART_CR1_RTOIE: 0x%lx\n", USART_CR1_RTOIE());
-	dbprintf("USART_CR1_EOBIE: 0x%lx\n", USART_CR1_EOBIE());
-	dbprintf("USART_CR1_M1: 0x%lx\n", USART_CR1_M1());
-	dbprintf("GET_USART_CR1_UE: 0x%lx\n", GET_USART_CR1_UE(USART1->CR1));
-	dbprintf("SET_USART_CR1_DEAT: 0x%lx\n", SET_USART_CR1_DEAT(0xFFFF));
-}
-
 status_t run(void)
 {
 	ABORT_IF_NOT(init_system());
 
 	dbprintf("System Initialized\n");
-	test_usart_reg();
 	ABORT_IF_NOT(init_fmc_sdram());
 	ABORT_IF_NOT(init_graphics(render_buffer, draw_buffer));
 
@@ -110,7 +84,16 @@ status_t run(void)
 	ABORT_IF_NOT(gpio_request_input(GPIO_B_USER, GPIO_NO_PULL));
 	ABORT_IF_NOT(gpio_request_output(GPIO_ARD_D13, low));
 
+	/* Initialize the USART module */
+	ABORT_IF_NOT(gpio_request_alt(GPIO_PC6, AF8, GPIO_OSPEED_4MHZ));
+	ABORT_IF_NOT(gpio_request_alt(GPIO_PC7, AF8, GPIO_OSPEED_4MHZ));
+	ABORT_IF_NOT(usart_init(USART6, 115200, USART_8_DATA, USART_1_STOP));
+	usart_enable_rx(USART6, true);
+	usart_enable_tx(USART6, true);
+	usart_send(USART6, (uint8_t*)"Hello There!\r\n", 14);
+
 	DigitalState led_ctrl = low;
+	uint8_t ascii = 0;
 
 #if 0
 	uint16_t x = 0;
@@ -127,11 +110,20 @@ status_t run(void)
 			led_ctrl = low;
 
 		gpio_set_output(GPIO_ARD_D13, led_ctrl);
-		sleep(MSECS(100));
+
+		ascii = usart_receive(USART6);
+		dbprintf("%d\n", ascii);
+		usart_send_byte(USART6, ascii);
+		if(ascii >= 32 && ascii < 127) {
+			ABORT_IF_NOT(gfx_draw_char(ascii));
+		}
+
+#if 0
 		gfx_text_foreground(PIXEL(255, 0, 0));
 		ABORT_IF_NOT(gfx_draw_text("Merry "));
 		gfx_text_foreground(PIXEL(0, 255, 0));
 		ABORT_IF_NOT(gfx_draw_text("Christmas! "));
+#endif
 
 #if 0
 		gfx_clear_screen(PIXEL(255, 255, 255));
