@@ -15,6 +15,14 @@
 #include "registers/pwr_reg.h"
 #include "registers/rcc_reg.h"
 
+#ifdef SEMIHOSTING_ENABLED
+/**
+ * This method is provided by the rdimon library for initializing semihosting
+ * operations. This must be called before any printf() method is called.
+ */
+extern void initialise_monitor_handles(void);
+#endif
+
 /**
  * Enable the caches using the CMSIS-provided methods.
  */
@@ -58,6 +66,10 @@ static status_t init_clocks(void)
 	/**
 	 * Configure and enable the high-speed external (HSE) clock.
 	 */
+#if HSE_BYPASS
+	SET_FIELD(RCC->CR, RCC_CR_HSEBYP());
+#endif
+
 	SET_FIELD(RCC->CR, RCC_CR_HSEON());
 	while(GET_RCC_CR_HSERDY(RCC->CR) == 0);
 
@@ -151,9 +163,13 @@ status_t init_system(void)
 	 * Give both privileged and unprivileged code full access to coprocessors
 	 * 10 and 11 (the ones dealing with floating point).
 	 */
-	#if (__FPU_PRESENT == 1) && (__FPU_USED == 1)
-		SCB->CPACR |= ((3UL << 10*2)|(3UL << 11*2));
-	#endif
+#if (__FPU_PRESENT == 1) && (__FPU_USED == 1)
+	SCB->CPACR |= ((3UL << 10*2)|(3UL << 11*2));
+#endif
+
+#ifdef SEMIHOSTING_ENABLED
+	initialise_monitor_handles();
+#endif
 
 	ABORT_IF_NOT(init_caches());
 	ABORT_IF_NOT(init_flash());

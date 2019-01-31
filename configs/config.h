@@ -11,6 +11,8 @@
 
 #if defined(platform_stm32f7) && defined(config_stm32f746_disco)
 	#include "stm32f7/stm32f746_disco_config.h"
+#elif defined(platform_stm32f7) && defined(config_stm32f7_dev_board)
+	#include "stm32f7/stm32f7_dev_board_config.h"
 #else
 	#error "The platform/config combination doesn't exist"
 #endif

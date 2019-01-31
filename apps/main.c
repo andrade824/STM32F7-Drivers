@@ -15,8 +15,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#if 0
 const uint32_t draw_buffer = SDRAM_BASE;
 const uint32_t render_buffer = SDRAM_BASE + (LCD_CONFIG_WIDTH * LCD_CONFIG_HEIGHT * LCD_CONFIG_PIXEL_SIZE);
+#endif
 
 #if 0
 status_t draw_random_rect(void) {
@@ -40,6 +42,7 @@ status_t run(void)
 	ABORT_IF_NOT(init_system());
 
 	dbprintf("System Initialized\n");
+#if 0
 	ABORT_IF_NOT(init_fmc_sdram());
 	ABORT_IF_NOT(init_graphics(render_buffer, draw_buffer));
 
@@ -49,6 +52,7 @@ status_t run(void)
 	gfx_text_background(PIXEL(0, 0, 0));
 
 	gfx_swap_buffers();
+#endif
 
 #if 0
 	for(int i = 0; i < 3; i++) {
@@ -79,11 +83,15 @@ status_t run(void)
 
 #endif
 
-	srand(37); // Number chosen randomly through multiple dice throws.
+#if 1
+#define GPIO_B_USER GPIO_BTN_USER
+#define GPIO_ARD_D13 GPIO_LED_USER
+#endif
 
 	ABORT_IF_NOT(gpio_request_input(GPIO_B_USER, GPIO_NO_PULL));
 	ABORT_IF_NOT(gpio_request_output(GPIO_ARD_D13, low));
 
+#if 0
 	/* Initialize the USART module */
 	ABORT_IF_NOT(gpio_request_alt(GPIO_PC6, AF8, GPIO_OSPEED_4MHZ));
 	ABORT_IF_NOT(gpio_request_alt(GPIO_PC7, AF8, GPIO_OSPEED_4MHZ));
@@ -91,11 +99,14 @@ status_t run(void)
 	usart_enable_rx(USART6, true);
 	usart_enable_tx(USART6, true);
 	usart_send(USART6, (uint8_t*)"Hello There!\r\n", 14);
+	uint8_t ascii = 0;
+#endif
 
 	DigitalState led_ctrl = low;
-	uint8_t ascii = 0;
 
 #if 0
+	srand(37); // Number chosen randomly through multiple dice throws.
+
 	uint16_t x = 0;
 	const uint16_t y = 100;
 	const uint16_t rect_width = 50;
@@ -104,19 +115,27 @@ status_t run(void)
 
 	while(1)
 	{
-		if(led_ctrl == low)
-			led_ctrl = high;
-		else
-			led_ctrl = low;
+		if(gpio_get_input(GPIO_B_USER) == low) {
+			if(led_ctrl == low) {
+				led_ctrl = high;
+			} else {
+				led_ctrl = low;
+			}
+		} else {
+			dbprintf("Button pressed!\n");
+		}
 
 		gpio_set_output(GPIO_ARD_D13, led_ctrl);
+		sleep(MSECS(500));
 
+#if 0
 		ascii = usart_receive(USART6);
 		dbprintf("%d\n", ascii);
 		usart_send_byte(USART6, ascii);
 		if(ascii >= 32 && ascii < 127) {
 			ABORT_IF_NOT(gfx_draw_char(ascii));
 		}
+#endif
 
 #if 0
 		gfx_text_foreground(PIXEL(255, 0, 0));
@@ -140,8 +159,10 @@ status_t run(void)
 		 */
 #endif
 
+#if 0
 		/* Wait for the DMA transfer to complete. */
 		gfx_swap_buffers();
+#endif
 
 	}
 

@@ -1,6 +1,14 @@
 # You can override these settings by passing them in as arguments
 PLATFORM ?= stm32f7
-CONFIG ?= stm32f746_disco
+CONFIG ?= stm32f7_dev_board
+
+# The device that JLink thinks it's connecting to.
+#
+# JLink doesn't actually support the STM32F730R8 device, so a similar device is
+# chosen instead: STM32F723IC. The main difference being the STM32F730R8 has
+# 64KB of flash, while the STM32F723IC has 256KB (so make sure to only flash
+# binaries of size 64KB or less).
+JLINK_DEVICE ?= STM32F723IC
 
 # This file determines which drivers are enabled for a specific platform/config.
 # This file should create a "DRIVERS" variable with the correct "-D" defines.
@@ -30,7 +38,7 @@ CC=arm-none-eabi-gcc
 DBG=arm-none-eabi-gdb
 OBJCOPY=arm-none-eabi-objcopy
 
-CFLAGS  = -Wall -Wextra -Werror -Tplatform/$(PLATFORM)/linker.ld
+CFLAGS  = -Wall -Wextra -Werror -Tplatform/$(PLATFORM)/linker-$(CONFIG).ld
 CFLAGS += -mlittle-endian -mthumb -mcpu=cortex-m7 -mthumb-interwork
 CFLAGS += -mfloat-abi=hard -mfpu=fpv5-sp-d16
 CFLAGS += -Iconfigs/ -Iplatform/ -Iplatform/$(PLATFORM)/ -Idrivers/$(PLATFORM)/ -Idrivers/ -Iapps/
@@ -46,7 +54,7 @@ CFLAGS += -Dplatform_$(PLATFORM) -Dconfig_$(CONFIG)
 
 # Conditionally enable semihosting. Disable if your debugger doesn't support it.
 ifeq ($(SEMIHOSTING_SUPPORT), yes)
-CFLAGS_SEMIHOSTING = --specs=nano.specs --specs=rdimon.specs
+CFLAGS_SEMIHOSTING = --specs=nano.specs --specs=rdimon.specs -DSEMIHOSTING_ENABLED
 else
 CFLAGS_SEMIHOSTING = --specs=nano.specs --specs=nosys.specs
 endif
@@ -56,7 +64,7 @@ endif
 CFLAGS_DEBUG = -Og -g3 $(CFLAGS_SEMIHOSTING) -Wl,-Map,$(PROJ_PATH)-dbg.map -DDEBUG_ON
 
 # No semihosting or debug features in release mode. Use better optimizations.
-CFLAGS_RELEASE = -O2 --specs=nosys.specs -Wl,-Map,$(PROJ_PATH).map
+CFLAGS_RELEASE = -O2 --specs=nano.specs --specs=nosys.specs -Wl,-Map,$(PROJ_PATH).map
 
 OBJS = $(SRCS:.c=.o)
 
@@ -84,8 +92,11 @@ clean:
 		$(PROJ_PATH)-dbg.bin
 
 # Kick open GDB to debug an executable with debug symbols.
-gdb: debug
-	$(DBG) $(PROJ_PATH)-dbg.elf
+gdb_openocd: debug
+	$(DBG) -x .gdbinit_openocd $(PROJ_PATH)-dbg.elf
+
+gdb_jlink: debug
+	$(DBG) -x .gdbinit_jlink $(PROJ_PATH)-dbg.elf
 
 # Start an OpenOCD GDB server.
 #
@@ -97,12 +108,21 @@ gdb: debug
 openocd: debug
 	openocd -f board/stm32f7discovery.cfg
 
+# Start a JLink GDB server.
+jlink: debug
+	JLinkGDBServer -device $(JLINK_DEVICE) -if SWD -speed 4000
+
 # Flash the STM32F7 with the "release" executable.
-burn: release
+burn_openocd: release
 	openocd -f board/stm32f7discovery.cfg -c "program $(PROJ_PATH).elf reset exit"
 
-burn_debug: debug
+burn_openocd_debug: debug
 	openocd -f board/stm32f7discovery.cfg -c "program $(PROJ_PATH)-dbg.elf reset exit"
+
+# Flash the STM32F7 with the "release" executable.
+burn_jlink: release
+	printf "r\nloadbin %s 0x08000000\nr\ngo\nexit\n" "$(PROJ_PATH).bin" > .jlink_command
+	JLinkExe -device $(JLINK_DEVICE) -if SWD -speed 4000 -CommandFile .jlink_command
 
 # Print out the size of the text, data, and bss regions for any built
 # executables.

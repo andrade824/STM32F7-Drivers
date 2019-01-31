@@ -23,6 +23,13 @@
 #define FLASH_WAIT_STATES 7
 
 /**
+ * Bypass the HSE oscillator. Enable this bypass when an external oscillator is
+ * used. Disable this when an external crystal is used and an oscillator is
+ * still needed.
+ */
+#define HSE_BYPASS 1
+
+/**
  * PLL and bus divider settings used to get the clock values above.
  *
  * CPU_HZ = (fInput * (PLLN / PLLM)) / PLLP
@@ -373,7 +380,7 @@ typedef enum
 	I2C4_ER_IRQn                = 96,     /*!< I2C4 Error Interrupt                                              */
 	SPDIF_RX_IRQn               = 97,     /*!< SPDIF-RX global Interrupt                                         */
 
-	IRQ_END                     = 98
+	IRQ_END
 } IRQn_Type;
 
 /***** SDRAM CONFIGURATION *****/

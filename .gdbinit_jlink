@@ -1,0 +1,23 @@
+# Connect to an already running JLinkGDBServer
+target extended-remote localhost:2331
+
+# Enable semihosting support (let printf() print out to the debug console).
+monitor semihosting IOClient 3
+monitor semihosting ThumbSWI 0xAB
+monitor semihosting enable
+
+# Reset and halt the CPU.
+monitor reset
+monitor halt
+
+# Load the binary into flash.
+load
+
+# Set a breakpoint on the "run()" function.
+b run
+
+# Run to that breakpoint (aka, run past the reset handler).
+continue
+
+# Enable TUI (Text UI) mode because I find it easier to use.
+tui enable

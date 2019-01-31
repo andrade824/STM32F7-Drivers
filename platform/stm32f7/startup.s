@@ -158,4 +158,3 @@ g_pfnVectors:
 	.word  Default_Handler
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
-

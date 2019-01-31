@@ -22,15 +22,13 @@
 #define RAMITCM_BASE    0x00000000U /*!< Base address of : 16KB RAM reserved for CPU execution/instruction accessible over ITCM  */
 #define FLASHITCM_BASE  0x00200000U /*!< Base address of : (up to 1 MB) embedded FLASH memory  accessible over ITCM              */
 #define FLASHAXI_BASE   0x08000000U /*!< Base address of : (up to 1 MB) embedded FLASH memory accessible over AXI                */
-#define RAMDTCM_BASE    0x20000000U /*!< Base address of : 64KB system data RAM accessible over DTCM                             */
+#define RAMDTCM_BASE    0x20000000U /*!< Base address of : System data RAM accessible over DTCM                                  */
 #define PERIPH_BASE     0x40000000U /*!< Base address of : AHB/ABP Peripherals                                                   */
 #define BKPSRAM_BASE    0x40024000U /*!< Base address of : Backup SRAM(4 KB)                                                     */
 #define QSPI_BASE       0x90000000U /*!< Base address of : QSPI memories  accessible over AXI                                    */
 #define FMC_R_BASE      0xA0000000U /*!< Base address of : FMC Control registers                                                 */
 #define QSPI_R_BASE     0xA0001000U /*!< Base address of : QSPI Control  registers                                               */
-#define SRAM1_BASE      0x20010000U /*!< Base address of : 240KB RAM1 accessible over AXI/AHB                                    */
-#define SRAM2_BASE      0x2004C000U /*!< Base address of : 16KB RAM2 accessible over AXI/AHB                                     */
-#define FLASH_END       0x080FFFFFU /*!< FLASH end address */
+#define SRAM1_BASE      0x20010000U /*!< Base address of : RAM1 accessible over AXI/AHB                                          */
 
 #define FLASH_BASE      FLASHAXI_BASE
 
