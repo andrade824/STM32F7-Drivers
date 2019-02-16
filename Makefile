@@ -38,7 +38,7 @@ CC=arm-none-eabi-gcc
 DBG=arm-none-eabi-gdb
 OBJCOPY=arm-none-eabi-objcopy
 
-CFLAGS  = -Wall -Wextra -Werror -Tplatform/$(PLATFORM)/linker-$(CONFIG).ld
+CFLAGS  = -Wall -Wextra -Werror -flto -Tplatform/$(PLATFORM)/linker-$(CONFIG).ld
 CFLAGS += -mlittle-endian -mthumb -mcpu=cortex-m7 -mthumb-interwork
 CFLAGS += -mfloat-abi=hard -mfpu=fpv5-sp-d16
 CFLAGS += -Iconfigs/ -Iplatform/ -Iplatform/$(PLATFORM)/ -Idrivers/$(PLATFORM)/ -Idrivers/ -Iapps/

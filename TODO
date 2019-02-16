@@ -1,4 +1,7 @@
-1. Create SDIO driver.
-2. Write FAT32 filesystem driver.
-3. Write I2C controller driver.
-4. Write touchscreen driver.
+- Create SDIO driver.
+- Write FAT32 filesystem driver.
+- Write I2C controller driver.
+- Write RFM69 (radio module) driver.
+- Convert every "register" header file to BITFIELD2.
+- Maybe write a script/program that converts an SVD file into a "register" header file.
+- Figure out a way to integrate unit tests for drivers into the build system.
