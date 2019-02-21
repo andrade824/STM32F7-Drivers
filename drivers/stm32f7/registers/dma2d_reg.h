@@ -5,7 +5,7 @@
  * Chrom-ART Accelerator (Graphics DMA) Controller Register Map [18.7].
  */
 #ifdef INCLUDE_DMA2D_DRIVER
-#ifndef DAM2D_REG_H
+#ifndef DMA2D_REG_H
 #define DMA2D_REG_H
 
 #include "bitfield.h"

@@ -1,4 +1,8 @@
 - Create SDIO driver.
+--- Setup 48MHz clock
+--- Create enum for CMDs
+--- Create bitfields for responses
+--- Create generic "send_cmd" function
 - Write FAT32 filesystem driver.
 - Write I2C controller driver.
 - Write RFM69 (radio module) driver.
