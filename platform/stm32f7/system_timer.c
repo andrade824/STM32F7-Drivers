@@ -15,6 +15,11 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+/**
+ * The maximum number of CPU cycles the SysTick timer can count to.
+ */
+#define SYSTICK_MAX_TICKS 0x00FFFFFF
+
 void systick_interrupt(void);
 
 static uint32_t volatile ticks_left = 0;

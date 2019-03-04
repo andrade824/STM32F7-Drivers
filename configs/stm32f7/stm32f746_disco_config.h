@@ -13,50 +13,11 @@
 /***** CLOCK SETTINGS *****/
 
 /**
- * Clock settings. The user needs to ensure that init_clocks() in "system.c"
- * generates clocks with these frequencies.
- */
-#define CPU_HZ 216000000
-#define APB2_HZ 108000000
-#define APB1_HZ 54000000
-#define AHB_HZ CPU_HZ
-#define FLASH_WAIT_STATES 7
-
-/**
  * Bypass the HSE oscillator. Enable this bypass when an external oscillator is
  * used. Disable this when an external crystal is used and an oscillator is
  * still needed.
  */
 #define HSE_BYPASS 1
-
-/**
- * PLL and bus divider settings used to get the clock values above.
- *
- * CPU_HZ = (fInput * (PLLN / PLLM)) / PLLP
- * AHB_HZ = CPU_HZ
- * APB2_HZ = AHB_HZ / APB2_DIV
- * APB1_HZ = AHB_HZ / APB1_DIV
- */
-#define CLK_PLLQ 4
-#define CLK_PLLM 25
-#define CLK_PLLN 432
-#define CLK_PLLP 0        /* Divide by 2 */
-
-#define CLK_APB1_DIV 5    /* Divide by 4 */
-#define CLK_APB2_DIV 4    /* Divide by 2 */
-
-/**
- * Clock settings used for the LCD pixel clock.
- *
- * PLLSAI = fInput * (PLLSAIN / PLLM)
- * PLLSAIR = PLLSAI / PLLSAIR
- * Pixel Clock = PLLSAIR / PLLSAIDIVR
- *
- * Pixel Clock = ((25MHz * (192 / 25)) / 5) / 4 = 9.6MHz
- */
-#define CLK_PLLSAI_PLLN 192
-#define CLK_PLLSAIR     5
-#define CLK_PLLSAIDIVR  1 /* Divide by 4 */
 
 /***** GPIO CONFIGURATION *****/
 

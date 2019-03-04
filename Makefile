@@ -3,12 +3,7 @@ PLATFORM ?= stm32f7
 CONFIG ?= stm32f7_dev_board
 
 # The device that JLink thinks it's connecting to.
-#
-# JLink doesn't actually support the STM32F730R8 device, so a similar device is
-# chosen instead: STM32F723IC. The main difference being the STM32F730R8 has
-# 64KB of flash, while the STM32F723IC has 256KB (so make sure to only flash
-# binaries of size 64KB or less).
-JLINK_DEVICE ?= STM32F723IC
+JLINK_DEVICE ?= STM32F730R8
 
 # This file determines which drivers are enabled for a specific platform/config.
 # This file should create a "DRIVERS" variable with the correct "-D" defines.

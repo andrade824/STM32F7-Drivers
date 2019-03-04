@@ -48,6 +48,11 @@ typedef struct
  */
 BIT_FIELD2(SDMMC_POWER_PWRCTL, 0, 1);
 
+typedef enum {
+    SD_POWER_OFF = 0,
+    SD_POWER_ON = 3
+} sd_pwrctrl_t;
+
 /**
  * SDMMC Clock Control Register.
  */
@@ -73,6 +78,13 @@ BIT_FIELD2(SDMMC_CMD_WAITINT,      8, 8);
 BIT_FIELD2(SDMMC_CMD_WAITPEND,     9, 9);
 BIT_FIELD2(SDMMC_CMD_CPSMEN,      10, 10);
 BIT_FIELD2(SDMMC_CMD_SDIOSUSPEND, 11, 11);
+
+/* The type of response expected from a sent command (WAITRESP field). */
+typedef enum {
+    SD_NO_RESP = 0,
+    SD_SHORT_RESP = 1,
+    SD_LONG_RESP = 3
+} sd_resp_t;
 
 /**
  * SDMMC Command Response Register.

@@ -4,6 +4,7 @@
 #include "gpio.h"
 #include "graphics.h"
 #include "interrupt.h"
+#include "sdmmc.h"
 #include "status.h"
 #include "system.h"
 #include "usart.h"
@@ -90,6 +91,21 @@ status_t run(void)
 
 	ABORT_IF_NOT(gpio_request_input(GPIO_B_USER, GPIO_NO_PULL));
 	ABORT_IF_NOT(gpio_request_output(GPIO_ARD_D13, low));
+
+	/* Initialize the SDMMC module */
+	ABORT_IF_NOT(gpio_request_alt(GPIO_USD_D0, AF12, GPIO_OSPEED_50MHZ));
+	gpio_set_pullstate(GPIO_USD_D0, GPIO_PULL_UP);
+	ABORT_IF_NOT(gpio_request_alt(GPIO_USD_D1, AF12, GPIO_OSPEED_50MHZ));
+	gpio_set_pullstate(GPIO_USD_D1, GPIO_PULL_UP);
+	ABORT_IF_NOT(gpio_request_alt(GPIO_USD_D2, AF12, GPIO_OSPEED_50MHZ));
+	gpio_set_pullstate(GPIO_USD_D2, GPIO_PULL_UP);
+	ABORT_IF_NOT(gpio_request_alt(GPIO_USD_D3, AF12, GPIO_OSPEED_50MHZ));
+	gpio_set_pullstate(GPIO_USD_D3, GPIO_PULL_UP);
+	ABORT_IF_NOT(gpio_request_alt(GPIO_USD_CLK, AF12, GPIO_OSPEED_50MHZ));
+	ABORT_IF_NOT(gpio_request_alt(GPIO_USD_CMD, AF12, GPIO_OSPEED_50MHZ));
+	gpio_set_pullstate(GPIO_USD_CMD, GPIO_PULL_UP);
+	ABORT_IF_NOT(sdmmc_init());
+	dbprintf("SDMMC appears to have initialized!\n");
 
 #if 0
 	/* Initialize the USART module */

@@ -73,6 +73,12 @@ static status_t init_clocks(void)
 	SET_FIELD(RCC->CR, RCC_CR_HSEON());
 	while(GET_RCC_CR_HSERDY(RCC->CR) == 0);
 
+	/* Configure the 48MHz clock. */
+#ifdef ENABLE_48MHZ_CLOCK
+	SET_FIELD(RCC->DCKCFGR2, SET_RCC_DCKCFGR2_CK48MSEL(CLK_CK48MSEL) |
+	                        SET_RCC_DCKCFGR2_SDMMC1SEL(CLK_SDMMCSEL));
+#endif /* ENABLE_48MHZ_CLOCK */
+
 	/**
 	 * Configure and enable the main PLL.
 	 *
@@ -89,21 +95,17 @@ static status_t init_clocks(void)
 	SET_FIELD(RCC->CR, RCC_CR_PLLON());
 
 #ifdef INCLUDE_LCD_CTRL_DRIVER
-	/**
-	 * Configure and enable PLLSAI (used to drive the LCD pixel clock).
-	 */
+	/* Configure and enable PLLSAI (used to drive the LCD pixel clock). */
 	CLEAR_FIELD(RCC->PLLSAICFGR, RCC_PLLSAICFGR_PLLN() |
 								 RCC_PLLSAICFGR_PLLSAIR());
 	SET_FIELD(RCC->PLLSAICFGR, SET_RCC_PLLSAICFGR_PLLN(CLK_PLLSAI_PLLN) |
 							   SET_RCC_PLLSAICFGR_PLLSAIR(CLK_PLLSAIR));
 
-	SET_FIELD(RCC->DCKCFGR1, SET_RCC_DKCFGR1_PLLSAIDIVR(CLK_PLLSAIDIVR));
+	SET_FIELD(RCC->DCKCFGR1, SET_RCC_DCKCFGR1_PLLSAIDIVR(CLK_PLLSAIDIVR));
 
 	SET_FIELD(RCC->CR, RCC_CR_PLLSAION());
 
-	/**
-	 * Wait for PLLSAI to lock.
-	 */
+	/* Wait for PLLSAI to lock. */
 	while(GET_RCC_CR_PLLSAIRDY(RCC->CR) == 0) { }
 #endif /* INCLUDE_LCD_CTRL_DRIVER */
 

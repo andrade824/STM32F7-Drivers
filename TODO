@@ -1,3 +1,4 @@
+- Create an abort() function that the ABORT macros call into.
 - Create SDIO driver.
 --- Setup 48MHz clock
 --- Create enum for CMDs
@@ -9,3 +10,16 @@
 - Convert every "register" header file to BITFIELD2.
 - Maybe write a script/program that converts an SVD file into a "register" header file.
 - Figure out a way to integrate unit tests for drivers into the build system.
+- Refactor build system to be more modular? (Maybe recursive make files or ninja)
+- Enforce code style
+--- singe line comments using /* */
+--- Success -> SUCCESS
+--- UsartStopBits -> usart_stop_bits_t?
+--- Put function doc comments in header file
+- New bitfield macro idea:
+--- #define MODULE SDMMC, #define REGISTER <put reg name here>
+--- Inside the bitfield macro, use MODULE and REGISTER to generate the names
+--- #undef the MODULE at the end of the file and #undef the REGISTER inbetween register definitions
+--- The GET() macro can then take in "x" and automatically do "x->REGISTER"
+--- #define BIT_FIELD2(field, lsb_pos, msb_pos)
+--- static inline uint32_t MODULE ## _ ## REGISTER ## _ ## field()

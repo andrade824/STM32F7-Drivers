@@ -25,11 +25,6 @@
 #define MSECS(x) (x * (CPU_HZ / 1000))
 #define USECS(x) (x * (CPU_HZ / 1000000))
 
-/**
- * The maximum number of CPU cycles the SysTick timer can count to.
- */
-#define SYSTICK_MAX_TICKS 0x00FFFFFF
-
 status_t init_system_timer(void);
 
 status_t start_timer(uint32_t ticks);
