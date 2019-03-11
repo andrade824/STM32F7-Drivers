@@ -36,7 +36,7 @@
 /* SD Card Commands */
 typedef enum {
 	SD_CMD0_GO_IDLE_STATE         =  0,
-	SD_CMD1_ALL_SEND_CID          =  2,
+	SD_CMD2_ALL_SEND_CID          =  2,
 	SD_CMD3_SEND_RELATIVE_ADDR    =  3,
 	SD_CMD7_SELECT_CARD           =  7,
 	SD_CMD8_SEND_IF_COND          =  8,
@@ -62,6 +62,24 @@ typedef enum {
 	SD_ACMD23_SET_WR_BLK_ERASE_COUNT = 23,
 	SD_ACMD41_SEND_OP_COND           = 41
 } sd_app_cmd_t;
+
+/* Error fields within an R1 response */
+#define R1_ALL_ERRORS           0xFDF98008U
+#define R1_ADDRESS_OUT_OF_RANGE 0x80000000U
+#define R1_ADDRESS_MISALIGN     0x40000000U
+#define R1_BLOCK_LEN_ERROR      0x20000000U
+#define R1_ERASE_SEQ_ERROR      0x10000000U
+#define R1_ERASE_PARAM          0x08000000U
+#define R1_WP_VIOLATION         0x04000000U
+#define R1_LOCK_UNLOCK_FAILED   0x01000000U
+#define R1_COM_CRC_ERROR        0x00800000U
+#define R1_ILLEGAL_COMMAND      0x00400000U
+#define R1_CARD_ECC_FAILED      0x00200000U
+#define R1_CC_ERROR             0x00100000U
+#define R1_GENERIC_ERROR        0x00080000U
+#define R1_CID_CSD_OVERWRITE    0x00010000U
+#define R1_WP_ERASE_SKIP        0x00008000U
+#define R1_AKE_SEQ_ERROR        0x00000008U
 
 /**
  * CMD8 Fields.
@@ -92,7 +110,8 @@ typedef enum {
 #define ACMD41_HIGH_CAPACITY 0x40000000U
 #define ACMD41_BUSY_BIT      0x80000000U /* Low = Busy, High = Powered Up */
 
-#define SDMMC_R1_ERRORBITS 0xFDFFE008U
+/* ACMD6 argument to set the bus width to 4-bits. */
+#define ACMD6_4BIT_WIDTH 2U
 
 /* Properties of the connected SD Card. */
 static SdCard card;
@@ -100,22 +119,259 @@ static SdCard card;
 /**
  * Clear all status flags that may have been set.
  */
-void clear_all_flags(void) {
-	/* TODO: Figure out why I can't just use individual flags */
-	// SDMMC->ICR = SDMMC_ICR_CCRCFAILC() | SDMMC_ICR_DCRCFAILC(), SDMMC_ICR_CTIMEOUTC() |
-	//              SDMMC_ICR_DTIMEOUTC() | SDMMC_ICR_TXUNDERRC() | SDMMC_ICR_RXOVERRC() |
-	//              SDMMC_ICR_CMDRENDC() | SDMMC_ICR_CMDSENTC() | SDMMC_ICR_DATAENDC() |
-	//              SDMMC_ICR_DBCKENDC() | SDMMC_ICR_SDIOITC();
-	SDMMC->ICR = 0xFFFFFFFF;
+void clear_all_flags(void)
+{
+	SDMMC->ICR = SDMMC_ICR_CCRCFAILC() | SDMMC_ICR_DCRCFAILC() | SDMMC_ICR_CTIMEOUTC() |
+	             SDMMC_ICR_DTIMEOUTC() | SDMMC_ICR_TXUNDERRC() | SDMMC_ICR_RXOVERRC() |
+	             SDMMC_ICR_CMDRENDC() | SDMMC_ICR_CMDSENTC() | SDMMC_ICR_DATAENDC() |
+	             SDMMC_ICR_DBCKENDC() | SDMMC_ICR_SDIOITC();
 }
 
 /**
  * Check the error bits in an R1 response and return an error if any of them
  * are set.
  */
-sd_status_t check_r1_resp(uint32_t resp) {
-	/******** TODO: ACTUALLY SET REAL ERROR CODES *********/
-	if(resp & SDMMC_R1_ERRORBITS) {
+sd_status_t check_r1_resp(uint32_t resp)
+{
+	if((resp & R1_ALL_ERRORS) == 0)         { return SD_SUCCESS; }
+	else if(resp & R1_ADDRESS_OUT_OF_RANGE) { return SD_ADDRESS_OUT_OF_RANGE; }
+	else if(resp & R1_ADDRESS_MISALIGN)     { return SD_ADDRESS_MISALIGN; }
+	else if(resp & R1_BLOCK_LEN_ERROR)      { return SD_BLOCK_LEN_ERROR; }
+	else if(resp & R1_ERASE_SEQ_ERROR)      { return SD_ERASE_SEQ_ERROR; }
+	else if(resp & R1_ERASE_PARAM)          { return SD_ERASE_PARAM; }
+	else if(resp & R1_WP_VIOLATION)         { return SD_WP_VIOLATION; }
+	else if(resp & R1_LOCK_UNLOCK_FAILED)   { return SD_LOCK_UNLOCK_FAILED; }
+	else if(resp & R1_COM_CRC_ERROR)        { return SD_COM_CRC_ERROR; }
+	else if(resp & R1_ILLEGAL_COMMAND)      { return SD_ILLEGAL_COMMAND; }
+	else if(resp & R1_CARD_ECC_FAILED)      { return SD_CARD_ECC_FAILED; }
+	else if(resp & R1_CC_ERROR)             { return SD_CC_ERROR; }
+	else if(resp & R1_GENERIC_ERROR)        { return SD_GENERIC_ERROR; }
+	else if(resp & R1_CID_CSD_OVERWRITE)    { return SD_CID_CSD_OVERWRITE; }
+	else if(resp & R1_WP_ERASE_SKIP)        { return SD_WP_ERASE_SKIP; }
+	else if(resp & R1_AKE_SEQ_ERROR)        { return SD_AKE_SEQ_ERROR; }
+
+	dbprintf("[SDMMC] Reached end of R1 response checking which should be impossible... 0x%lx\n", resp);
+
+	return SD_FAIL;
+}
+
+/**
+ * CMD8 is sent as the second command in the inititialization sequence to
+ * determine whether a card supports the v1 or v2 protocols. If there's no
+ * response, then version 1 is assumed.
+ */
+sd_status_t send_cmd8_send_if_cond(void)
+{
+	sd_status_t status = SD_SUCCESS;
+	uint32_t resp = 0;
+
+	ASSERT(card.state == SD_IDENT_STATE);
+	card.state = SD_DETERMINE_VERSION_STATE;
+
+	status = send_cmd(SD_CMD8_SEND_IF_COND, CMD8_ARG, SD_SHORT_RESP, &resp);
+	if(status != SD_SUCCESS) {
+		dbprintf("[SDMMC] No SD Card inserted\n");
+		return SD_FAIL;
+	} else {
+		/* Verify the "check pattern" matches what was sent. */
+		if(resp != CMD8_ARG) {
+			dbprintf("[SDMMC] Response from CMD8 didn't match sent check pattern.\n");
+			return SD_FAIL;
+		}
+	}
+
+	return SD_SUCCESS;
+}
+
+/**
+ * Send ACMD41 in a loop as required by the SD protocol. This command needs to
+ * be sent until the SD Card is finished powering up (as indicated by a status
+ * bit in the response).
+ */
+sd_status_t send_acmd41_send_op_cond(void)
+{
+	sd_status_t status = SD_SUCCESS;
+	uint32_t resp = 0;
+
+	ASSERT(card.state == SD_DETERMINE_VERSION_STATE);
+	card.state = SD_WAIT_POWER_UP_STATE;
+
+	/**
+	 * The argument to ACMD41 indicates the wanted voltage window and whether
+	 * the card is expected to be high capacity (based on its version).
+	 */
+	const uint32_t acmd41_arg = ACMD41_VOLTAGE | ACMD41_HIGH_CAPACITY;
+
+	uint32_t acmd41_tries = 0;
+	while(acmd41_tries < ACMD41_MAX_TRIES) {
+		/* Send APP_CMD, default RCA is 0. */
+		if(send_cmd(SD_CMD55_APP_CMD, 0, SD_SHORT_RESP, &resp) != SD_SUCCESS) {
+			return SD_FAIL;
+		}
+
+		if(check_r1_resp(resp) != SD_SUCCESS) {
+			return SD_FAIL;
+		}
+
+		/* Send ACMD41 */
+		status = send_cmd(SD_ACMD41_SEND_OP_COND, acmd41_arg, SD_SHORT_RESP, &resp);
+		if(status != SD_SUCCESS) {
+			return SD_FAIL;
+		}
+
+		if(resp & ACMD41_BUSY_BIT) {
+			break;
+		}
+
+		acmd41_tries++;
+	}
+
+	if(acmd41_tries == ACMD41_MAX_TRIES) {
+		dbprintf("[SDMMC] Timed out waiting for ACMD41 to set power up status bit.\n");
+		return SD_FAIL;
+	}
+
+	if(resp & ACMD41_HIGH_CAPACITY) {
+		dbprintf("[SDMMC] Detected SDHC/SDXC card.\n");
+	} else {
+		dbprintf("[SDMMC] Detected non-high-capacity card\n");
+		return SD_FAIL;
+	}
+
+	return SD_SUCCESS;
+}
+
+/**
+ * Retrieve the Card Identification register and parse it.
+ */
+sd_status_t send_cmd2_all_send_cid(void)
+{
+	uint32_t resp[4] = { 0 };
+
+	ASSERT(card.state == SD_WAIT_POWER_UP_STATE);
+	card.state = SD_GET_CID_STATE;
+
+	if(send_cmd(SD_CMD2_ALL_SEND_CID, 0, SD_LONG_RESP, resp) != SD_SUCCESS) {
+		return SD_FAIL;
+	}
+
+	/* Parse the CID register fields. */
+	card.manufacturer_id = (resp[3] & 0xFF000000) >> 24;
+	card.oem_id[0] = (resp[3] & 0x00FF0000) >> 16;
+	card.oem_id[1] = (resp[3] & 0x0000FF00) >> 8;
+	card.oem_id[2] = '\0';
+	card.product_name[0] = resp[3] & 0x000000FF;
+	card.product_name[1] = (resp[2] & 0xFF000000) >> 24;
+	card.product_name[2] = (resp[2] & 0x00FF0000) >> 16;
+	card.product_name[3] = (resp[2] & 0x0000FF00) >> 8;
+	card.product_name[4] = resp[2] & 0x000000FF;
+	card.product_name[5] = '\0';
+	card.product_rev = (resp[1] & 0xFF000000) >> 24;
+	card.serial_num = ((resp[1] & 0x00FFFFFF) << 8) | ((resp[0] & 0xFF000000) >> 24);
+	card.manufacturing_date = (resp[0] & 0x000FFF00) >> 8;
+
+	return SD_SUCCESS;
+}
+
+/**
+ * Dump Card Identification information for diagnostic purposes.
+ */
+void dump_cid(void)
+{
+	dbprintf("[SDMMC] MID: 0x%x, OID: %s, PNM: %s, PRV: 0x%x, PSN: 0x%lx, MDT: 0x%x\n",
+	         card.manufacturer_id, card.oem_id, card.product_name, card.product_rev,
+	         card.serial_num, card.manufacturing_date);
+}
+
+/**
+ * Retrieve the Relative Card Address (RCA).
+ */
+sd_status_t send_cmd3_send_relative_addr(void)
+{
+	uint32_t resp = 0;
+
+	ASSERT(card.state == SD_GET_CID_STATE);
+	card.state = SD_GET_RCA_STATE;
+
+	if(send_cmd(SD_CMD3_SEND_RELATIVE_ADDR, 0, SD_SHORT_RESP, &resp) != SD_SUCCESS) {
+		return SD_FAIL;
+	}
+
+	card.rca = resp & 0xFFFF0000;
+
+	return SD_SUCCESS;
+}
+
+/**
+ * Retrieve the Card-Specific-Data register and parse it.
+ */
+sd_status_t send_cmd9_send_csd(void)
+{
+	uint32_t resp[4] = { 0 };
+
+	ASSERT(card.state == SD_GET_RCA_STATE);
+	card.state = SD_GET_CSD_STATE;
+
+	if(send_cmd(SD_CMD9_SEND_CSD, card.rca, SD_LONG_RESP, resp) != SD_SUCCESS) {
+		return SD_FAIL;
+	}
+
+	/* Parse the CSD register fields. */
+	card.total_blocks = ((resp[2] & 0x3F) << 16) | ((resp[1] & 0xFFFF0000) >> 16);
+	card.total_size = (card.total_blocks + 1ULL) << 19ULL;
+	card.block_len = 1 << ((resp[2] & 0xF0000) >> 16);
+
+	return SD_SUCCESS;
+}
+
+/**
+ * Move an SD Card into the Transfer state.
+ */
+sd_status_t send_cmd7_select_card(void)
+{
+	uint32_t resp = 0;
+
+	ASSERT(card.state == SD_GET_CSD_STATE);
+	card.state = SD_TRANSFER_STATE;
+
+	if(send_cmd(SD_CMD7_SELECT_CARD, card.rca, SD_SHORT_RESP, &resp) != SD_SUCCESS) {
+		return SD_FAIL;
+	}
+
+	if(check_r1_resp(resp) != SD_SUCCESS) {
+		return SD_FAIL;
+	}
+
+	return SD_SUCCESS;
+}
+
+
+/**
+ * Set the bus width to 4-bits wide.
+ */
+sd_status_t send_acmd6_set_bus_width(void)
+{
+	sd_status_t status = SD_SUCCESS;
+	uint32_t resp = 0;
+
+	ASSERT(card.state == SD_TRANSFER_STATE);
+
+	/* Send APP_CMD */
+	if(send_cmd(SD_CMD55_APP_CMD, card.rca, SD_SHORT_RESP, &resp) != SD_SUCCESS) {
+		return SD_FAIL;
+	}
+
+	if(check_r1_resp(resp) != SD_SUCCESS) {
+		return SD_FAIL;
+	}
+
+	/* Send ACMD6 */
+	status = send_cmd(SD_ACMD6_SET_BUS_WIDTH, ACMD6_4BIT_WIDTH, SD_SHORT_RESP, &resp);
+	if(status != SD_SUCCESS) {
+		return SD_FAIL;
+	}
+
+	if(check_r1_resp(resp) != SD_SUCCESS) {
 		return SD_FAIL;
 	}
 
@@ -148,83 +404,60 @@ status_t sdmmc_init() {
 	SET_FIELD(SDMMC->POWER, SET_SDMMC_POWER_PWRCTL(SD_POWER_ON));
 	SET_FIELD(SDMMC->CLKCR, SET_SDMMC_CLKCR_CLKDIV(SD_CLKDIV) | SDMMC_CLKCR_CLKEN());
 
-	/* TODO: Is this needed? Can the delay be reduced? */
 	ABORT_IF_NOT(sleep(SD_POWER_ON_DELAY));
 
 	/* Place card into IDLE state. */
+	card.state = SD_IDENT_STATE;
 	status = send_cmd(SD_CMD0_GO_IDLE_STATE, 0, SD_NO_RESP, NULL);
 	if(status != SD_SUCCESS) {
 		dbprintf("[SDMMC] Failed to send CMD0 %u\n", status);
 		return status;
 	}
 
-	/** TODO: BREAK THESE INTO SMALLER FUNCTIONS **/
-
-	uint32_t resp = 0;
-	status = send_cmd(SD_CMD8_SEND_IF_COND, CMD8_ARG, SD_SHORT_RESP, &resp);
-	if(status != SD_SUCCESS) {
-		dbprintf("[SDMMC] CMD8 failed, assuming v1.0 card. %d\n", status);
-		card.version = SDCARD_V1;
-	} else {
-		/* Verify the "check pattern" matches what was sent. */
-		if(resp != CMD8_ARG) {
-			dbprintf("[SDMMC] Response from CMD8 didn't match sent check pattern.\n");
-			return Fail;
-		}
-
-		dbprintf("[SDMMC] CMD8 succeeded, assuming v2.0 card.\n");
-		card.version = SDCARD_V2;
-	}
-
-	/**
-	 * The argument to ACMD41 indicates the wanted voltage window and whether
-	 * the card is expected to be high capacity (based on its version).
-	 */
-	uint32_t acmd41_arg = ACMD41_VOLTAGE;
-	acmd41_arg |= (card.version == SDCARD_V2) ? ACMD41_HIGH_CAPACITY : 0;
-
-	uint32_t acmd41_tries = 0;
-	while(acmd41_tries < ACMD41_MAX_TRIES) {
-		/* Send APP_CMD, default RCA is 0. */
-		status = send_cmd(SD_CMD55_APP_CMD, 0, SD_SHORT_RESP, &resp);
-		if(status != SD_SUCCESS) {
-			dbprintf("[SDMMC] CMD55 failed to send.\n");
-			return Fail;
-		}
-
-		if(check_r1_resp(resp) != SD_SUCCESS) {
-			dbprintf("[SDMMC] Response from CMD55 had error bits set.\n");
-			return Fail;
-		}
-
-		/* Send ACMD41 */
-		status = send_cmd(SD_ACMD41_SEND_OP_COND, acmd41_arg, SD_SHORT_RESP, &resp);
-
-		if(status != SD_SUCCESS) {
-			dbprintf("[SDMMC] ACMD41 failed to send.\n");
-			return Fail;
-		}
-
-		if(resp & ACMD41_BUSY_BIT) {
-			break;
-		}
-
-		acmd41_tries++;
-	}
-
-	if(acmd41_tries == ACMD41_MAX_TRIES) {
-		dbprintf("[SDMMC] Timed out waiting for ACMD41 to set power up status bit.\n");
+	/* Send CMD8 to determine if the card is v1 or v2. */
+	if(send_cmd8_send_if_cond() != SD_SUCCESS) {
 		return Fail;
 	}
 
-	dbprintf("Number ACMD41 tries: %lu\n", acmd41_tries);
+	/* Send ACMD41 to verify voltage and wait for the card to power up. */
+	if(send_acmd41_send_op_cond() != SD_SUCCESS) {
+		dbprintf("[SDMMC] Error while waiting for the SD card to power up.\n");
+		return Fail;
+	}
 
-	if(resp & ACMD41_HIGH_CAPACITY) {
-		card.type = SDCARD_SDHC_SDXC;
-		dbprintf("[SDMMC] Detected SDHC/SDXC card.\n");
-	} else {
-		card.type = SDCARD_SDSC;
-		dbprintf("[SDMMC] Detected SDSC card.\n");
+	/* Send CMD2 to retrieve the Card Identification Register. */
+	if(send_cmd2_all_send_cid() != SD_SUCCESS) {
+		dbprintf("[SDMMC] Error retrieving the CID.\n");
+		return Fail;
+	}
+
+	dump_cid();
+
+	/* Send CMD3 to retrieve the card's relative address. */
+	if(send_cmd3_send_relative_addr() != SD_SUCCESS) {
+		dbprintf("[SDMMC] Error retrieving the RCA.\n");
+		return Fail;
+	}
+
+	/* Bump up the SDMMC clock to 48MHz now that the card is in Data Transfer Mode. */
+	SET_FIELD(SDMMC->CLKCR, SDMMC_CLKCR_BYPASS());
+
+	/* Send CMD9 to retrieve the card specific data (e.g., card capacity). */
+	if(send_cmd9_send_csd() != SD_SUCCESS) {
+		dbprintf("[SDMMC] Error retrieving the CSD.\n");
+		return Fail;
+	}
+
+	/* Send CMD7 to move the card into the transfer state */
+	if(send_cmd7_select_card() != SD_SUCCESS) {
+		dbprintf("[SDMMC] CMD7 failed to select SD Card.\n");
+		return Fail;
+	}
+
+	/* Set the bus width to 4-bits wide. */
+	if(send_acmd6_set_bus_width() != SD_SUCCESS) {
+		dbprintf("[SDMMC] ACMD6 failed to set bus width to 4-bits.\n");
+		return Fail;
 	}
 
 	return Success;
@@ -289,9 +522,9 @@ sd_status_t send_cmd(uint8_t cmd_index,
 		return SD_STATUS_CTIMEOUT;
 	}
 
-	if((type != SD_NO_RESP) && !is_acmd41 &&
+	if((type == SD_SHORT_RESP) && !is_acmd41 &&
 	   (GET_SDMMC_RESPCMD_RESPCMD(SDMMC->RESPCMD) != cmd_index)) {
-		dbprintf("The RESPCMD: %lu\n", SDMMC->RESPCMD);
+		dbprintf("[SDMMC] Received invalid RESPCMD: %u %lu\n", cmd_index, SDMMC->RESPCMD);
 		return SD_INCORRECT_RESPCMD;
 	}
 
