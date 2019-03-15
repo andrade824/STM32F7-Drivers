@@ -64,6 +64,13 @@ BIT_FIELD2(SDMMC_CLKCR_WIDBUS,  11, 12);
 BIT_FIELD2(SDMMC_CLKCR_NEGEDGE, 13, 13);
 BIT_FIELD2(SDMMC_CLKCR_HWFC_EN, 14, 14);
 
+/* How wide the bus is (WIDBUS field). */
+typedef enum {
+    SD_1_BIT = 0,
+    SD_4_BIT = 1,
+    SD_8_BIT = 2
+} sd_widbus_t;
+
 /**
  * SDMMC Argument Register.
  */
@@ -118,6 +125,45 @@ BIT_FIELD2(SDMMC_DCTRL_RWSTART,    8, 8);
 BIT_FIELD2(SDMMC_DCTRL_RWSTOP,     9, 9);
 BIT_FIELD2(SDMMC_DCTRL_RWMOD,     10, 10);
 BIT_FIELD2(SDMMC_DCTRL_SDIOEN,    11, 11);
+
+/* Direction of the data transfer (DTDIR field). */
+typedef enum {
+    SD_TO_CARD   = 0,
+    SD_FROM_CARD = 1
+} sd_transfer_dir_t;
+
+/* Block or stream data transfer (DTMODE field). */
+typedef enum {
+    SD_BLOCK_TRANSFER  = 0,
+    SD_STREAM_TRANSFER = 1
+} sd_transfer_mode_t;
+
+/* Whether the DMA is enabled for a transfer (DMAEN field). */
+typedef enum {
+    SD_DMA_DISABLED = 0,
+    SD_DMA_ENABLED  = 1
+} sd_dma_enabled_t;
+
+/* The data block size (parameters for the DBLOCKSIZE field). */
+typedef enum {
+    SD_1_BYTE      = 0,
+    SD_2_BYTES     = 1,
+    SD_4_BYTES     = 2,
+    SD_8_BYTES     = 3,
+    SD_16_BYTES    = 4,
+    SD_32_BYTES    = 5,
+    SD_64_BYTES    = 6,
+    SD_128_BYTES   = 7,
+    SD_256_BYTES   = 8,
+    SD_512_BYTES   = 9,
+    SD_1024_BYTES  = 10,
+    SD_2048_BYTES  = 11,
+    SD_4096_BYTES  = 12,
+    SD_8192_BYTES  = 13,
+    SD_16384_BYTES = 14
+} sd_block_size_t;
+
+
 
 /**
  * SDMMC Data Counter Register.

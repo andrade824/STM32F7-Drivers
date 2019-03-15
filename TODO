@@ -1,9 +1,5 @@
-- Create an abort() function that the ABORT macros call into.
-- Create SDIO driver.
---- Setup 48MHz clock
---- Create enum for CMDs
---- Create bitfields for responses
---- Create generic "send_cmd" function
+- Update the ABORT_IF/ASSERT macros to call die()
+--- This will require updating a lot of methods to not return status_t (if you always ABORT, you dont need to return anything).
 - Write FAT32 filesystem driver.
 - Write I2C controller driver.
 - Write RFM69 (radio module) driver.

@@ -108,6 +108,83 @@ status_t run(void)
 	dbprintf("SDMMC appears to have initialized!\n");
 
 #if 0
+	uint8_t write_data[2048];
+	for(int i = 0; i < 8; i++) {
+		for(int j = 0; j < 256; j++) {
+			write_data[(i * 256) + j] = j;
+		}
+	}
+
+	extern SdCard card;
+	dbprintf("------Writing Data at %lu...-------\n", card.total_blocks - 5);
+	sd_status_t status = sd_write_data(write_data, card.total_blocks - 5, 4);
+	if(status != SD_SUCCESS) {
+		ABORT("Here's the SD status for write %d\n", status);
+	}
+
+
+	uint8_t read_data[2048];
+	status = sd_read_data(read_data, card.total_blocks - 5, 4);
+	if(status != SD_SUCCESS) {
+		ABORT("Here's the SD status for read %d\n", status);
+	}
+
+	dbprintf("------Checking Data at %lu...-------\n", card.total_blocks - 5);
+	for(int i = 0; i < 8; i++) {
+		for(int j = 0; j < 256; j++) {
+			const size_t index = (i * 256) + j;
+			if(read_data[index] != write_data[index]) {
+				ABORT("DATA MISMATCH AT INDEX %d, %d != %d\n", index, read_data[index], write_data[index]);
+			}
+		}
+	}
+
+	dbprintf("Data verified correctly!\n");
+#endif
+
+#if 1
+	uint8_t data[2048];
+	dbprintf("Reading from LBA: %lu\n", sd_get_card_info().total_blocks - 5);
+	sd_status_t status = sd_read_data(data, sd_get_card_info().total_blocks - 5, 4);
+	if(status != SD_SUCCESS) {
+		ABORT("Here's the SD status %d\n", status);
+	}
+
+	for(int i = 0; i < 2048; ++i) {
+		if(i % 256 == 0) {
+			dbprintf("\n\n");
+		}
+		dbprintf("0x%X ", data[i]);
+	}
+	dbprintf("\n");
+#endif
+
+#if 0
+	uint8_t data[512];
+	sd_status_t status = sd_read_data(data, 0, 1);
+	if(status != SD_SUCCESS) {
+		ABORT("Here's the SD status %d\n", status);
+	}
+	printf("------MBR Partition:-------\n");
+	for(int i = 0; i < 512; ++i) {
+		dbprintf("0x%x ", data[i]);
+	}
+	dbprintf("\n");
+
+	uint32_t fat32_lba = (data[457] << 24) | (data[456] << 16) | (data[455] << 8) | data[454];
+	printf("Logical block address: 0x%lx\n", fat32_lba);
+	status = sd_read_data(data, fat32_lba, 1);
+	if(status != SD_SUCCESS) {
+		ABORT("Here's the SD status %d\n", status);
+	}
+	printf("------FAT32 Partition:-------\n");
+	for(int i = 0; i < 512; ++i) {
+		dbprintf("0x%x ", data[i]);
+	}
+	dbprintf("\n");
+#endif
+
+#if 0
 	/* Initialize the USART module */
 	ABORT_IF_NOT(gpio_request_alt(GPIO_PC6, AF8, GPIO_OSPEED_4MHZ));
 	ABORT_IF_NOT(gpio_request_alt(GPIO_PC7, AF8, GPIO_OSPEED_4MHZ));

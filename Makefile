@@ -1,6 +1,7 @@
 # You can override these settings by passing them in as arguments
 PLATFORM ?= stm32f7
 CONFIG ?= stm32f7_dev_board
+#CONFIG ?= stm32f746_disco
 
 # The device that JLink thinks it's connecting to.
 JLINK_DEVICE ?= STM32F730R8
@@ -10,6 +11,7 @@ JLINK_DEVICE ?= STM32F730R8
 include configs/$(PLATFORM)/$(CONFIG).mk
 
 # Put your source files here (or *.c, etc)
+SRCS += platform/*.c
 SRCS += platform/$(PLATFORM)/*.s
 SRCS += platform/$(PLATFORM)/*.c
 SRCS += drivers/*.c
@@ -63,7 +65,7 @@ CFLAGS_RELEASE = -O2 --specs=nano.specs --specs=nosys.specs -Wl,-Map,$(PROJ_PATH
 
 OBJS = $(SRCS:.c=.o)
 
-.PHONY: release debug clean gdb openocd burn size
+.PHONY: release debug clean jlink openocd burn_jlink burn_openocd size
 
 all: release debug
 
@@ -100,11 +102,11 @@ gdb_jlink: debug
 # ST-Link programmer. In the OpenOCD source code, 'contrib/60-openocd.rules'
 # contains the correct rule for the ST-Link device that ensures the USB device
 # file has the 'plugdev' group.
-openocd: debug
+openocd:
 	openocd -f board/stm32f7discovery.cfg
 
 # Start a JLink GDB server.
-jlink: debug
+jlink:
 	JLinkGDBServer -device $(JLINK_DEVICE) -if SWD -speed 4000
 
 # Flash the STM32F7 with the "release" executable.
