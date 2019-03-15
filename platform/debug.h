@@ -20,6 +20,26 @@
 #endif
 
 /**
+ * Cause the system to enter an infinite loop. This is called when the system
+ * encounters an unrecoverable error. This gives the user a chance to connect
+ * a debugger and capture a backtrace.
+ */
+void die(void);
+
+/**
+ * Prints out a debug message and then enters the system into an "abort" state.
+ *
+ * @param msg The abort message to print before crashing.
+ */
+#define ABORT(msg,...)                                                  \
+	do                                                                  \
+	{                                                                   \
+		dbprintf("[ABORT] %s:%s():%d\n[ABORT] Abort message: " msg,     \
+					__FILE__, __func__, __LINE__, ##__VA_ARGS__);       \
+		die();                                                          \
+	} while(0)
+
+/**
  * Aborts the current method early if the expression doesn't evaluate to true
  * within the given `timeout` period.
  *

@@ -22,35 +22,41 @@ typedef enum {
 	SD_GET_CID_STATE,
 	SD_GET_RCA_STATE,
 	SD_GET_CSD_STATE,
-	SD_TRANSFER_STATE
+	SD_TRANSFER_STATE,
+	SD_READ_STATE,
+	SD_WRITE_STATE
 } sd_state_t;
 
 /* Custom error values for SDMMC functions. */
 typedef enum {
-	SD_SUCCESS,
-	SD_FAIL,
+	SD_SUCCESS              = 0,
+	SD_FAIL                 = 1,
 
 	/* Errors generated sending commands */
-	SD_STATUS_CCRCFAIL,
-	SD_STATUS_CTIMEOUT,
-	SD_INCORRECT_RESPCMD,
+	SD_STATUS_CCRCFAIL      = 2,
+	SD_STATUS_CTIMEOUT      = 3,
+	SD_INCORRECT_RESPCMD    = 4,
+	SD_STATUS_RXOVERR       = 5,
+	SD_STATUS_TXUNDERR      = 6,
+	SD_STATUS_DCRCFAIL      = 7,
+	SD_STATUS_DTIMEOUT      = 8,
 
 	/* Errors returned in R1 response */
-	SD_ADDRESS_OUT_OF_RANGE,
-	SD_ADDRESS_MISALIGN,
-	SD_BLOCK_LEN_ERROR,
-	SD_ERASE_SEQ_ERROR,
-	SD_ERASE_PARAM,
-	SD_WP_VIOLATION,
-	SD_LOCK_UNLOCK_FAILED,
-	SD_COM_CRC_ERROR,
-	SD_ILLEGAL_COMMAND,
-	SD_CARD_ECC_FAILED,
-	SD_CC_ERROR,
-	SD_GENERIC_ERROR,
-	SD_CID_CSD_OVERWRITE,
-	SD_WP_ERASE_SKIP,
-	SD_AKE_SEQ_ERROR
+	SD_ADDRESS_OUT_OF_RANGE = 9,
+	SD_ADDRESS_MISALIGN     = 10,
+	SD_BLOCK_LEN_ERROR      = 11,
+	SD_ERASE_SEQ_ERROR      = 12,
+	SD_ERASE_PARAM          = 13,
+	SD_WP_VIOLATION         = 14,
+	SD_LOCK_UNLOCK_FAILED   = 15,
+	SD_COM_CRC_ERROR        = 16,
+	SD_ILLEGAL_COMMAND      = 17,
+	SD_CARD_ECC_FAILED      = 18,
+	SD_CC_ERROR             = 19,
+	SD_GENERIC_ERROR        = 20,
+	SD_CID_CSD_OVERWRITE    = 21,
+	SD_WP_ERASE_SKIP        = 22,
+	SD_AKE_SEQ_ERROR        = 23
 } sd_status_t;
 
 /* SD Card Properties. */
@@ -70,10 +76,10 @@ typedef struct {
 
 status_t sdmmc_init();
 
-sd_status_t send_cmd(uint8_t cmd_index,
-                     uint32_t arg,
-                     sd_resp_t type,
-                     uint32_t *resp);
+sd_status_t sd_read_data(void *data, uint32_t block_addr, uint16_t num_blocks);
+sd_status_t sd_write_data(void *data, uint32_t addr, uint16_t num_blocks);
+
+SdCard sd_get_card_info(void);
 
 #endif /* SDMMC_H */
 #endif /* INCLUDE_SDMMC_DRIVER */
