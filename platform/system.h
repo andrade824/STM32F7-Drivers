@@ -10,6 +10,6 @@
 
 #include "status.h"
 
-status_t init_system(void);
+void init_system(void);
 
 #endif

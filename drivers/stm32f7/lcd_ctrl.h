@@ -24,7 +24,7 @@ typedef enum {
 	ACTIVE_HIGH = 1
 } LcdPolarity;
 
-status_t init_lcd_ctrl(uint32_t framebuffer, void (*callback) (void));
+void init_lcd_ctrl(uint32_t framebuffer, void (*callback) (void));
 
 #endif
 #endif

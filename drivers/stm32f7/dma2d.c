@@ -56,7 +56,7 @@ void dma2d_isr(void)
 /**
  * Initialize the DMA2D Controller.
  */
-status_t init_dma2d(void)
+void init_dma2d(void)
 {
 	/**
 	 * Enable the DMA2D clock.
@@ -70,9 +70,7 @@ status_t init_dma2d(void)
 						 DMA2D_ISR_CAEIF() |
 						 DMA2D_ISR_CEIF());
 
-	ABORT_IF_NOT(request_interrupt(DMA2D_IRQn, dma2d_isr));
-
-	return Success;
+	request_interrupt(DMA2D_IRQn, dma2d_isr);
 }
 
 /**
@@ -85,18 +83,16 @@ status_t init_dma2d(void)
  * @param callback Function to call when transfer is complete or NULL for no
  *                 callback.
  */
-status_t dma2d_mem_to_mem(uint32_t src_addr,
-						  uint32_t dst_addr,
-						  uint16_t width,
-						  uint16_t height,
-						  void (*callback) (void))
+void dma2d_mem_to_mem(uint32_t src_addr,
+                      uint32_t dst_addr,
+                      uint16_t width,
+                      uint16_t height,
+                      void (*callback) (void))
 {
 	/**
 	 * Abort early if the DMA is already running.
 	 */
-#if 1
 	ABORT_IF_NOT(is_dma2d_complete());
-#endif
 
 	/**
 	 * Set the transfer mode to memory-to-memory.
@@ -125,8 +121,6 @@ status_t dma2d_mem_to_mem(uint32_t src_addr,
 	dma_callback = callback;
 	dma_complete = false;
 	SET_FIELD(DMA2D->CR, DMA2D_CR_START());
-
-	return Success;
 }
 
 /**

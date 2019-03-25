@@ -16,10 +16,10 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-status_t usart_init(UsartReg *usart,
-                    uint32_t baud,
-                    UsartWordLength data_bits,
-                    UsartStopBits stop_bits);
+void usart_init(UsartReg *usart,
+                uint32_t baud,
+                UsartWordLength data_bits,
+                UsartStopBits stop_bits);
 void usart_enable_tx(UsartReg *usart, bool enable);
 void usart_enable_rx(UsartReg *usart, bool enable);
 

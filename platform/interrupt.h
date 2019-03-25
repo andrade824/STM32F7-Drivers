@@ -17,9 +17,9 @@
  */
 typedef void (*ISR_Type) (void);
 
-status_t init_interrupts(void);
+void init_interrupts(void);
 
-status_t request_interrupt(IRQn_Type irq, ISR_Type isr);
+void request_interrupt(IRQn_Type irq, ISR_Type isr);
 
 /* TODO: Add methods for setting priorities and enabling/disabling ISRs */
 

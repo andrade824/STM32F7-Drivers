@@ -70,7 +70,7 @@ void lcd_ctrl_error_isr(void)
  * @param callback A callback function to trigger during every vertical blanking
  *                 period (or NULL for no callback).
  */
-status_t init_lcd_ctrl(uint32_t framebuffer, void (*callback) (void))
+void init_lcd_ctrl(uint32_t framebuffer, void (*callback) (void))
 {
 	/**
 	 * Enable the LCD APB2 clock.
@@ -81,39 +81,39 @@ status_t init_lcd_ctrl(uint32_t framebuffer, void (*callback) (void))
 	/**
 	 * Request all of the required GPIOs.
 	 */
-	ABORT_IF_NOT(gpio_request_alt(GPIO_LCD_R0, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ));
-	ABORT_IF_NOT(gpio_request_alt(GPIO_LCD_R1, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ));
-	ABORT_IF_NOT(gpio_request_alt(GPIO_LCD_R2, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ));
-	ABORT_IF_NOT(gpio_request_alt(GPIO_LCD_R3, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ));
-	ABORT_IF_NOT(gpio_request_alt(GPIO_LCD_R4, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ));
-	ABORT_IF_NOT(gpio_request_alt(GPIO_LCD_R5, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ));
-	ABORT_IF_NOT(gpio_request_alt(GPIO_LCD_R6, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ));
-	ABORT_IF_NOT(gpio_request_alt(GPIO_LCD_R7, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ));
+	gpio_request_alt(GPIO_LCD_R0, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ);
+	gpio_request_alt(GPIO_LCD_R1, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ);
+	gpio_request_alt(GPIO_LCD_R2, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ);
+	gpio_request_alt(GPIO_LCD_R3, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ);
+	gpio_request_alt(GPIO_LCD_R4, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ);
+	gpio_request_alt(GPIO_LCD_R5, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ);
+	gpio_request_alt(GPIO_LCD_R6, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ);
+	gpio_request_alt(GPIO_LCD_R7, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ);
 
-	ABORT_IF_NOT(gpio_request_alt(GPIO_LCD_G0, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ));
-	ABORT_IF_NOT(gpio_request_alt(GPIO_LCD_G1, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ));
-	ABORT_IF_NOT(gpio_request_alt(GPIO_LCD_G2, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ));
-	ABORT_IF_NOT(gpio_request_alt(GPIO_LCD_G3, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ));
-	ABORT_IF_NOT(gpio_request_alt(GPIO_LCD_G4, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ));
-	ABORT_IF_NOT(gpio_request_alt(GPIO_LCD_G5, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ));
-	ABORT_IF_NOT(gpio_request_alt(GPIO_LCD_G6, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ));
-	ABORT_IF_NOT(gpio_request_alt(GPIO_LCD_G7, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ));
+	gpio_request_alt(GPIO_LCD_G0, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ);
+	gpio_request_alt(GPIO_LCD_G1, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ);
+	gpio_request_alt(GPIO_LCD_G2, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ);
+	gpio_request_alt(GPIO_LCD_G3, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ);
+	gpio_request_alt(GPIO_LCD_G4, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ);
+	gpio_request_alt(GPIO_LCD_G5, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ);
+	gpio_request_alt(GPIO_LCD_G6, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ);
+	gpio_request_alt(GPIO_LCD_G7, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ);
 
-	ABORT_IF_NOT(gpio_request_alt(GPIO_LCD_B0, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ));
-	ABORT_IF_NOT(gpio_request_alt(GPIO_LCD_B1, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ));
-	ABORT_IF_NOT(gpio_request_alt(GPIO_LCD_B2, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ));
-	ABORT_IF_NOT(gpio_request_alt(GPIO_LCD_B3, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ));
-	ABORT_IF_NOT(gpio_request_alt(GPIO_LCD_B4, LCD_ALT9_FUNC, GPIO_OSPEED_50MHZ));
-	ABORT_IF_NOT(gpio_request_alt(GPIO_LCD_B5, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ));
-	ABORT_IF_NOT(gpio_request_alt(GPIO_LCD_B6, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ));
-	ABORT_IF_NOT(gpio_request_alt(GPIO_LCD_B7, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ));
+	gpio_request_alt(GPIO_LCD_B0, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ);
+	gpio_request_alt(GPIO_LCD_B1, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ);
+	gpio_request_alt(GPIO_LCD_B2, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ);
+	gpio_request_alt(GPIO_LCD_B3, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ);
+	gpio_request_alt(GPIO_LCD_B4, LCD_ALT9_FUNC, GPIO_OSPEED_50MHZ);
+	gpio_request_alt(GPIO_LCD_B5, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ);
+	gpio_request_alt(GPIO_LCD_B6, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ);
+	gpio_request_alt(GPIO_LCD_B7, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ);
 
-	ABORT_IF_NOT(gpio_request_alt(GPIO_LCD_CLK, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ));
-	ABORT_IF_NOT(gpio_request_alt(GPIO_LCD_HSYNC, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ));
-	ABORT_IF_NOT(gpio_request_alt(GPIO_LCD_VSYNC, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ));
-	ABORT_IF_NOT(gpio_request_alt(GPIO_LCD_DE, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ));
-	ABORT_IF_NOT(gpio_request_output(GPIO_LCD_DISP, low));
-	ABORT_IF_NOT(gpio_request_output(GPIO_LCD_BL_CTRL, low));
+	gpio_request_alt(GPIO_LCD_CLK, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ);
+	gpio_request_alt(GPIO_LCD_HSYNC, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ);
+	gpio_request_alt(GPIO_LCD_VSYNC, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ);
+	gpio_request_alt(GPIO_LCD_DE, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ);
+	gpio_request_output(GPIO_LCD_DISP, low);
+	gpio_request_output(GPIO_LCD_BL_CTRL, low);
 	gpio_set_otype(GPIO_LCD_BL_CTRL, GPIO_OPEN_DRAIN);
 
 	/**
@@ -160,12 +160,12 @@ status_t init_lcd_ctrl(uint32_t framebuffer, void (*callback) (void))
 	 */
 	vblank_callback = callback;
 	if(vblank_callback) {
-		ABORT_IF_NOT(request_interrupt(LTDC_IRQn, vblank_isr));
+		request_interrupt(LTDC_IRQn, vblank_isr);
 		SET_FIELD(LTDC->LIPCR, SET_LTDC_LIPCR_LIPOS(LCD_CONFIG_HEIGHT));
 		SET_FIELD(LTDC->IER, LTDC_IER_LIE());
 	}
 
-	ABORT_IF_NOT(request_interrupt(LTDC_ER_IRQn, lcd_ctrl_error_isr));
+	request_interrupt(LTDC_ER_IRQn, lcd_ctrl_error_isr);
 	SET_FIELD(LTDC->IER, LTDC_IER_FUIE() | LTDC_IER_TERRIE());
 
 	/**
@@ -219,8 +219,6 @@ status_t init_lcd_ctrl(uint32_t framebuffer, void (*callback) (void))
 	 */
 	gpio_set_output(GPIO_LCD_BL_CTRL, high);
 	gpio_set_output(GPIO_LCD_DISP, high);
-
-	return Success;
 }
 
 #endif

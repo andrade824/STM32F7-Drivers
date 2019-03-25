@@ -28,10 +28,10 @@
  * @param data_bits The wanted number of data bits.
  * @param stop_bits The wanted number of stop bits.
  */
-status_t usart_init(UsartReg *usart,
-                    uint32_t baud,
-                    UsartWordLength data_bits,
-                    UsartStopBits stop_bits)
+void usart_init(UsartReg *usart,
+                uint32_t baud,
+                UsartWordLength data_bits,
+                UsartStopBits stop_bits)
 {
 	uint8_t usart_num = 0;
 
@@ -60,8 +60,7 @@ status_t usart_init(UsartReg *usart,
 		usart_num = 7;
 		SET_FIELD(RCC->APB1ENR, RCC_APB1ENR_UART8EN());
 	} else {
-		dbprintf("Invalid USART module passed to %s\n", __FUNCTION__);
-		return Fail;
+		ABORT("Invalid USART module passed to %s\n", __FUNCTION__);
 	}
 
 	/* The USART clock selection fields are contiguous in RCC->DCKCFGR2[15:0]. */
@@ -75,8 +74,6 @@ status_t usart_init(UsartReg *usart,
 	SET_FIELD(usart->CR1, SET_USART_CR1_M0(data_bits & 1) |
 	                      SET_USART_CR1_M1((data_bits >> 1) & 1) |
 	                      SET_USART_CR1_UE(1));
-
-	return Success;
 }
 
 /**

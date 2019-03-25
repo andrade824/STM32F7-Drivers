@@ -527,7 +527,7 @@ status_t sdmmc_init() {
 	SET_FIELD(SDMMC->POWER, SET_SDMMC_POWER_PWRCTL(SD_POWER_ON));
 	SET_FIELD(SDMMC->CLKCR, SET_SDMMC_CLKCR_CLKDIV(SD_CLKDIV) | SDMMC_CLKCR_CLKEN());
 
-	ABORT_IF_NOT(sleep(SD_POWER_ON_DELAY));
+	sleep(SD_POWER_ON_DELAY);
 
 	/* Place card into IDLE state. */
 	card.state = SD_IDENT_STATE;
@@ -590,6 +590,8 @@ status_t sdmmc_init() {
  * @param data A buffer to read data into (must be num_blocks * 512 bytes in size).
  * @param block_addr Start address of the block to read.
  * @param num_blocks The number of blocks to read.
+ *
+ * @retval SD_SUCCESS if data was read correctly, otherwise an error value.
  */
 sd_status_t sd_read_data(void *data, uint32_t block_addr, uint16_t num_blocks)
 {
@@ -689,6 +691,8 @@ sd_status_t sd_read_data(void *data, uint32_t block_addr, uint16_t num_blocks)
  * @param data A buffer of data to write (must be num_blocks * 512 bytes in size).
  * @param block_addr Start address of the block to write.
  * @param num_blocks The number of blocks to write.
+ *
+ * @retval SD_SUCCESS if data was written correctly, otherwise an error value.
  */
 sd_status_t sd_write_data(void *data, uint32_t block_addr, uint16_t num_blocks)
 {

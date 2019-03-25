@@ -83,15 +83,13 @@ static void vblank_callback(void)
  * @param backbuf  Starting address of the framebuffer that the application
  *                 draws into.
  */
-status_t init_graphics(uint32_t frontbuf, uint32_t backbuf)
+void init_graphics(uint32_t frontbuf, uint32_t backbuf)
 {
 	frontbuffer = frontbuf;
 	backbuffer = backbuf;
 
-	ABORT_IF_NOT(init_dma2d());
-	ABORT_IF_NOT(init_lcd_ctrl(frontbuffer, &vblank_callback));
-
-	return Success;
+	init_dma2d();
+	init_lcd_ctrl(frontbuffer, &vblank_callback);
 }
 
 /**
@@ -113,15 +111,13 @@ void gfx_swap_buffers(void)
  * @param row the Y-coordinate of the pixel to set.
  * @param color The color to set the pixel to.
  */
-status_t gfx_set_pixel(uint16_t col, uint16_t row, uint32_t color)
+void gfx_set_pixel(uint16_t col, uint16_t row, uint32_t color)
 {
 	ASSERT(col < LCD_CONFIG_WIDTH);
 	ASSERT(row < LCD_CONFIG_HEIGHT);
 
 	const uint32_t pixel_offset = (row * LCD_CONFIG_WIDTH + col) * LCD_CONFIG_PIXEL_SIZE;
 	*(pixel_t*)(backbuffer + pixel_offset) = color;
-
-	return Success;
 }
 
 /**
@@ -135,7 +131,7 @@ status_t gfx_set_pixel(uint16_t col, uint16_t row, uint32_t color)
  * @param y1 Bottom-right Y-coordinate of rectangle.
  * @param color The color of the rectangle.
  */
-status_t gfx_draw_rect(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint32_t color) {
+void gfx_draw_rect(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint32_t color) {
 	ASSERT(x0 <= x1);
 	ASSERT(y0 <= y1);
 	ASSERT(x1 < LCD_CONFIG_WIDTH);
@@ -146,8 +142,6 @@ status_t gfx_draw_rect(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint3
 			gfx_set_pixel(col, row, color);
 		}
 	}
-
-	return Success;
 }
 
 /**
@@ -157,14 +151,12 @@ status_t gfx_draw_rect(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint3
  *
  * @param color The color to set the entire screen to.
  */
-status_t gfx_clear_screen(uint32_t color)
+void gfx_clear_screen(uint32_t color)
 {
-	ABORT_IF_NOT(gfx_draw_rect(0, 0, LCD_CONFIG_WIDTH - 1, LCD_CONFIG_HEIGHT - 1, color));
+	gfx_draw_rect(0, 0, LCD_CONFIG_WIDTH - 1, LCD_CONFIG_HEIGHT - 1, color);
 
 	cursor_col = 0;
 	cursor_row = 0;
-
-	return Success;
 }
 
 /**
@@ -173,15 +165,13 @@ status_t gfx_clear_screen(uint32_t color)
  * @param col The cursor x-coordinate (in characters).
  * @param row The cursor y-coordinate (in lines).
  */
-status_t gfx_text_set_cursor(uint8_t col, uint8_t row)
+void gfx_text_set_cursor(uint8_t col, uint8_t row)
 {
 	ASSERT(col < NUM_CHARS);
 	ASSERT(row < NUM_LINES);
 
 	cursor_col = col * (FONT_WIDTH + 1);
 	cursor_row = row * (FONT_HEIGHT + 1);
-
-	return Success;
 }
 
 /**
@@ -212,7 +202,7 @@ void gfx_text_background(uint32_t color)
  *
  * @param ascii The ASCII character to draw.
  */
-status_t gfx_draw_char(char ascii)
+void gfx_draw_char(char ascii)
 {
 	ASSERT(ascii >= FONT_ASCII_OFFSET);
 	ASSERT(ascii < (FONT_ASCII_OFFSET + FONT_TOTAL_CHARS));
@@ -251,12 +241,10 @@ status_t gfx_draw_char(char ascii)
 			 * Reached end of the screen. Scroll the screen up by a line and set
 			 * the cursor to the last line.
 			 */
-			ABORT_IF_NOT(gfx_text_scroll_line());
+			gfx_text_scroll_line();
 			cursor_row = (NUM_LINES - 1) * (FONT_HEIGHT + 1);
 		}
 	}
-
-	return Success;
 }
 
 /**
@@ -264,13 +252,11 @@ status_t gfx_draw_char(char ascii)
  *
  * @param str The string of text to render.
  */
-status_t gfx_draw_text(char *str)
+void gfx_draw_text(char *str)
 {
 	for(int i = 0; str[i] != '\0'; ++i) {
-		ABORT_IF_NOT(gfx_draw_char(str[i]));
+		gfx_draw_char(str[i]);
 	}
-
-	return Success;
 }
 
 /**
@@ -279,7 +265,7 @@ status_t gfx_draw_text(char *str)
  *
  * @note The cursor location does not change.
  */
-status_t gfx_text_scroll_line(void)
+void gfx_text_scroll_line(void)
 {
 	/* The number of bytes a single line of text occupies. */
 	const uint32_t text_line_bytes = LCD_CONFIG_WIDTH *
@@ -290,13 +276,11 @@ status_t gfx_text_scroll_line(void)
 	        (void*)(backbuffer + text_line_bytes),
 	        FRAMEBUFFER_SIZE - text_line_bytes);
 
-	ABORT_IF_NOT(gfx_draw_rect(0,
-	                           (NUM_LINES - 1) * (FONT_HEIGHT + 1),
-	                           LCD_CONFIG_WIDTH - 1,
-	                           LCD_CONFIG_HEIGHT - 1,
-	                           background_color));
-
-	return Success;
+	gfx_draw_rect(0,
+	              (NUM_LINES - 1) * (FONT_HEIGHT + 1),
+	              LCD_CONFIG_WIDTH - 1,
+	              LCD_CONFIG_HEIGHT - 1,
+	              background_color);
 }
 
 /**

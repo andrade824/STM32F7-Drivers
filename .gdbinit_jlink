@@ -14,7 +14,7 @@ monitor halt
 load
 
 # Set a breakpoint on the "run()" function.
-b run
+b main
 
 # Run to that breakpoint (aka, run past the reset handler).
 continue

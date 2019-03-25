@@ -18,11 +18,8 @@
  * Check if a pin is already in use, and enable it's port clock if not.
  *
  * @param pin The pin to check.
- *
- * @return Fail if the pin was already requested, Success if configured
- *         correctly.
  */
-static inline status_t gpio_setup_pin(GpioPin pin)
+static inline void gpio_setup_pin(GpioPin pin)
 {
 #ifdef DEBUG_ON
 	/**
@@ -31,7 +28,7 @@ static inline status_t gpio_setup_pin(GpioPin pin)
 	static bool requested_gpios[NUM_GPIO_PINS];
 
 	/**
-	 * Fail if a pin was already requested.
+	 * Abort if a pin was already requested.
 	 */
 	ABORT_IF(requested_gpios[pin] == true);
 	requested_gpios[pin] = true;
@@ -44,8 +41,6 @@ static inline status_t gpio_setup_pin(GpioPin pin)
 	 */
 	SET_FIELD(RCC->AHB1ENR, (1 << GPIO_GET_PORT(pin)));
 	__asm("dsb");
-
-	return Success;
 }
 
 /**
@@ -58,9 +53,9 @@ static inline status_t gpio_setup_pin(GpioPin pin)
  * @return Fail if the pin was already requested, Success if the pin was
  *         configured correctly.
  */
-status_t gpio_request_input(GpioReg *reg, GpioPin pin, GpioPull pull)
+void gpio_request_input(GpioReg *reg, GpioPin pin, GpioPull pull)
 {
-	ABORT_IF_NOT(gpio_setup_pin(pin));
+	gpio_setup_pin(pin);
 
 	/**
 	 * Set GPIO mode to input (MODE = 0x0).
@@ -68,8 +63,6 @@ status_t gpio_request_input(GpioReg *reg, GpioPin pin, GpioPull pull)
 	reg->MODER &= ~(0x3 << (GPIO_GET_PIN(pin) * 2));
 
 	gpio_set_pullstate(reg, pin, pull);
-
-	return Success;
 }
 
 /**
@@ -78,15 +71,12 @@ status_t gpio_request_input(GpioReg *reg, GpioPin pin, GpioPull pull)
  * @param reg The port register to use.
  * @param pin The pin to set as an output.
  * @param default_state Default state of the pin (high or low).
- *
- * @return Fail if the pin was already requested, Success if the pin was
- *         configured correctly.
  */
-status_t gpio_request_output(GpioReg *reg,
-							 GpioPin pin,
-							 DigitalState default_state)
+void gpio_request_output(GpioReg *reg,
+                         GpioPin pin,
+                         DigitalState default_state)
 {
-	ABORT_IF_NOT(gpio_setup_pin(pin));
+	gpio_setup_pin(pin);
 
 	/**
 	 * Set GPIO mode to output (MODE = 0x1).
@@ -97,8 +87,6 @@ status_t gpio_request_output(GpioReg *reg,
 	gpio_set_ospeed(reg, pin, GPIO_OSPEED_4MHZ);
 	gpio_set_pullstate(reg, pin, GPIO_NO_PULL);
 	gpio_set_output(reg, pin, default_state);
-
-	return Success;
 }
 
 /**
@@ -108,16 +96,13 @@ status_t gpio_request_output(GpioReg *reg,
  * @param pin The pin to set as an alternate function.
  * @param alt The alternate function to set this pin to.
  * @param speed The wanted output speed.
- *
- * @return Fail if the pin was already requested, Success if the pin was
- *         configured correctly.
  */
-status_t gpio_request_alt(GpioReg *reg,
-						  GpioPin pin,
-						  GpioAlternateFunction alt,
-						  GpioOSpeed speed)
+void gpio_request_alt(GpioReg *reg,
+                      GpioPin pin,
+                      GpioAlternateFunction alt,
+                      GpioOSpeed speed)
 {
-	ABORT_IF_NOT(gpio_setup_pin(pin));
+	gpio_setup_pin(pin);
 
 	/**
 	 * Set the alternate function for the requested pin. The alternate functions
@@ -138,8 +123,6 @@ status_t gpio_request_alt(GpioReg *reg,
 	 * Set GPIO mode to alternate function (MODE = 0x2).
 	 */
 	reg->MODER |= (GPIO_ALT_FUNC << (GPIO_GET_PIN(pin) * 2));
-
-	return Success;
 }
 
 /**

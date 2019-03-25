@@ -49,58 +49,36 @@ void die(void);
 #define ABORT_TIMEOUT(expr,timeout)                                 \
 	do                                                              \
 	{                                                               \
-		ABORT_IF_NOT(start_timer(timeout));                         \
+		start_timer(timeout);                                       \
 		while(!(expr) && !is_timer_complete());                     \
 		if(is_timer_complete()) {                                   \
-			dbprintf("[ABORT] %s:%s():%d -- %s,\n",                 \
+			dbprintf("[ABORT] %s:%s():%d -- %s\n",                  \
 					 __FILE__, __func__, __LINE__, #expr);          \
-			return Fail;                                            \
+			die();                                                  \
 		}                                                           \
 		stop_timer();                                               \
 	} while(0)
 
 /**
- * Aborts the current method early if the expression evaluates to true and
- * returns a custom value.
+ * Aborts the current method early if the expression evaluates to true.
  *
- * @param expr The expression to break on.
- * @param retval The value to return if expr is true.
+ * @param expr The expression to die on.
  */
-#define ABORT_IF_VAL(expr,retval)                                   \
+#define ABORT_IF(expr)                                   \
 	do                                                              \
 	{                                                               \
 		if((expr))                                                  \
 		{                                                           \
-			dbprintf("[ABORT] %s:%s():%d -- %s,\n",                 \
+			dbprintf("[ABORT] %s:%s():%d -- %s\n",                  \
 					 __FILE__, __func__, __LINE__, #expr);          \
-			return retval;                                          \
+			die();                                                  \
 		}                                                           \
 	} while(0)
 
 /**
- * Aborts the current method early if the expression evaluates to true.
- *
- * @param expr The expression to break on.
- *
- * @return Fail if the expression is true.
- */
-#define ABORT_IF(expr) ABORT_IF_VAL(expr,Fail)
-
-/**
- * Aborts the current method early if the expression evaluates to false and
- * return a custom value.
- *
- * @param expr The expression to break on.
- * @param retval The value to return if expr is false.
- */
-#define ABORT_IF_NOT_VAL(expr,retval) ABORT_IF_VAL(!(expr),retval)
-
-/**
  * Aborts the current method early if the expression evaluates to false.
  *
- * @param expr The expression to break on.
- *
- * @return Fail if the expression is false.
+ * @param expr The expression to break on if false.
  */
 #define ABORT_IF_NOT(expr) ABORT_IF(!(expr))
 

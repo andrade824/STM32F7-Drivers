@@ -28,9 +28,9 @@ static volatile bool timer_complete = true;
 /**
  * Initialize the system timer.
  */
-status_t init_system_timer(void)
+void init_system_timer(void)
 {
-	ABORT_IF_NOT(request_interrupt(SysTick_IRQn, systick_interrupt));
+	request_interrupt(SysTick_IRQn, systick_interrupt);
 
 	/**
 	 * Disable the timer, use processor clock, and enable SysTick interrupt.
@@ -43,8 +43,6 @@ status_t init_system_timer(void)
 	 * Clear current count value.
 	 */
 	SYSTICK->VAL = 0;
-
-	return Success;
 }
 
 /**
@@ -57,7 +55,7 @@ status_t init_system_timer(void)
  *
  * @param ticks The number of ticks to sleep for.
  */
-status_t start_timer(uint32_t ticks)
+void start_timer(uint32_t ticks)
 {
 	uint32_t ticks_set = 0;
 
@@ -65,8 +63,8 @@ status_t start_timer(uint32_t ticks)
 	 * Ensure the timer hasn't already started and that the user is requesting
 	 * a valid number of ticks to delay for.
 	 */
-	ABORT_IF(ticks_left != 0 || !timer_complete);
-	ABORT_IF(ticks == 0);
+	ASSERT_NOT(ticks_left != 0 || !timer_complete);
+	ASSERT_NOT(ticks == 0);
 
 	ticks_set = (ticks > SYSTICK_MAX_TICKS) ? SYSTICK_MAX_TICKS : ticks;
 	ticks_left = ticks - ticks_set;
@@ -76,8 +74,6 @@ status_t start_timer(uint32_t ticks)
 	timer_complete = false;
 
 	SET_FIELD(SYSTICK->CTRL, SYSTICK_CTRL_ENABLE());
-
-	return Success;
 }
 
 /**
@@ -102,13 +98,11 @@ void stop_timer(void)
  *
  * @param ticks The number of ticks to sleep for.
  */
-status_t sleep(uint32_t ticks)
+void sleep(uint32_t ticks)
 {
-	ABORT_IF_NOT(start_timer(ticks));
+	start_timer(ticks);
 
 	while(!timer_complete);
-
-	return Success;
 }
 
 /**

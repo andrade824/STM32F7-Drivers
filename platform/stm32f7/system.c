@@ -26,12 +26,10 @@ extern void initialise_monitor_handles(void);
 /**
  * Enable the caches using the CMSIS-provided methods.
  */
-static status_t init_caches(void)
+static void init_caches(void)
 {
 	SCB_EnableICache();
 	SCB_EnableDCache();
-
-	return Success;
 }
 
 /**
@@ -41,7 +39,7 @@ static status_t init_caches(void)
  * You MUST call this function before setting up the clocks. This ensures that
  * the wait states are properly initialized before boosting the clock up.
  */
-static status_t init_flash(void)
+static void init_flash(void)
 {
 	SET_FIELD(FLASH->ACR, FLASH_ACR_ARTRST());
 	SET_FIELD(FLASH->ACR, SET_FLASH_ACR_LATENCY(FLASH_WAIT_STATES) |
@@ -49,14 +47,12 @@ static status_t init_flash(void)
 						  FLASH_ACR_ARTEN());
 
 	ABORT_IF_NOT(GET_FLASH_ACR_LATENCY(FLASH->ACR) == FLASH_WAIT_STATES);
-
-	return Success;
 }
 
 /**
  * Initialize the clock generator to utilize the external clock and PLL.
  */
-static status_t init_clocks(void)
+static void init_clocks(void)
 {
 	/**
 	 * Disable all RCC interrupts.
@@ -148,15 +144,13 @@ static status_t init_clocks(void)
 	 * Ensure the system clock was switched to the main PLL successfully.
 	 */
 	ABORT_IF_NOT(GET_RCC_CFGR_SWS(RCC->CFGR) == 0x2);
-
-	return Success;
 }
 
 /**
   * Setup the clocks, caches, memory protection unit (MPU), and other low-level
   * systems.
   */
-status_t init_system(void)
+void init_system(void)
 {
 	/**
 	 * Initialize FPU. The weird macro checking is done to ensure that you setup
@@ -173,11 +167,9 @@ status_t init_system(void)
 	initialise_monitor_handles();
 #endif
 
-	ABORT_IF_NOT(init_caches());
-	ABORT_IF_NOT(init_flash());
-	ABORT_IF_NOT(init_clocks());
-	ABORT_IF_NOT(init_interrupts());
-	ABORT_IF_NOT(init_system_timer());
-
-	return Success;
+	init_caches();
+	init_flash();
+	init_clocks();
+	init_interrupts();
+	init_system_timer();
 }

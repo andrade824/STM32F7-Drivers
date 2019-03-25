@@ -18,7 +18,7 @@
  */
 #define SDRAM_BASE 0xC0000000U
 
-status_t init_fmc_sdram(void);
+void init_fmc_sdram(void);
 
 #endif
 #endif

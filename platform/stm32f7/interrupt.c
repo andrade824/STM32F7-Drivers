@@ -196,7 +196,7 @@ static ISR_Type *vector_table = (ISR_Type *)(VECTOR_TABLE_ADDR +
  * @note This method must be called before any of the interrupt methods,
  *       otherwise undefined behavior may occur.
  */
-status_t init_interrupts(void)
+void init_interrupts(void)
 {
 	/**
 	 * Linker script symbols defining where the default vector table located in
@@ -240,8 +240,6 @@ status_t init_interrupts(void)
 
 	/* Configure the Vector Table location. */
 	SCB->VTOR = VECTOR_TABLE_ADDR;
-
-	return Success;
 }
 
 /**
@@ -251,7 +249,7 @@ status_t init_interrupts(void)
  * @param irq The interrupt request number for the ISR to set.
  * @param isr A pointer to a function to act as the interrupt service routine.
  */
-status_t request_interrupt(IRQn_Type irq, ISR_Type isr)
+void request_interrupt(IRQn_Type irq, ISR_Type isr)
 {
 #ifdef DEBUG_ON
 	ABORT_IF(irq <= IRQ_START || irq >= IRQ_END);
@@ -275,6 +273,4 @@ status_t request_interrupt(IRQn_Type irq, ISR_Type isr)
 	if(irq >= 0) {
 		NVIC_EnableIRQ(irq);
 	}
-
-	return Success;
 }
