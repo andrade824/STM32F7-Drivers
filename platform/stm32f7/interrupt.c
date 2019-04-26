@@ -20,7 +20,7 @@ static void nmi_exc(void)
 {
 	dbprintf("Non-Maskable Interrupt triggered... that's weird\n");
 
-	while(1) { }
+	die();
 }
 
 /**
@@ -44,7 +44,7 @@ static void hard_fault_exc(void)
 		dbprintf("Check CFSR dump for more information as to the real reason.\n");
 	}
 
-	while(1) { }
+	die();
 }
 
 /**
@@ -85,7 +85,7 @@ static void mem_manage_exc(void)
 		dbprintf("The MemManage fault address: 0x%lx\n", SCB->MMFAR);
 	}
 
-	while(1) { }
+	die();
 }
 
 /**
@@ -128,7 +128,7 @@ static void bus_fault_exc(void)
 		dbprintf("The Bus fault address: 0x%lx\n", SCB->BFAR);
 	}
 
-	while(1) { }
+	die();
 }
 
 /**
@@ -170,7 +170,7 @@ static void usage_fault_exc(void)
 		         "divisor of 0.\n");
 	}
 
-	while(1) { }
+	die();
 }
 
 /**

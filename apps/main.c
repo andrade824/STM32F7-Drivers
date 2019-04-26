@@ -10,7 +10,7 @@ int main(void)
 	init_system();
 	dbprintf("System Initialized\n");
 
-	usart_gfx_test();
+	sd_read_mbr_test();
 
 #ifdef config_stm32f7_dev_board
 #define GPIO_B_USER GPIO_BTN_USER
@@ -22,8 +22,7 @@ int main(void)
 
 	DigitalState led_ctrl = low;
 
-	while(1)
-	{
+	while(1) {
 		if(gpio_get_input(GPIO_B_USER) == low) {
 			if(led_ctrl == low) {
 				led_ctrl = high;

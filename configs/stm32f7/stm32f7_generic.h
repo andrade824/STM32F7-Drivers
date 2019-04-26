@@ -57,6 +57,16 @@
 #define CLK_CK48MSEL 0U /* Use the PLLQ output as the 48MHz */
 #define CLK_SDMMCSEL 0U /* Use the 48MHz clock as the SDMMC clock source */
 
+/***** RTOS SETTINGS ******/
+
+/**
+ * System timer tick granularity (in CPU_HZ cycles).
+ *
+ * This has to be less than 2^24 cycles (the width of the systick timer). With
+ * a 216MHz CPU clock, this gives a maximum tick of 77.6ms.
+ */
+#define SYSTIMER_TICK (CPU_HZ / 1000U) /* 1ms tick */
+
 /**
  * Configuration of the Cortex-M7 Processor and Core Peripherals for CMSIS.
  *

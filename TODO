@@ -4,11 +4,13 @@
 - Convert every "register" header file to BITFIELD2.
 - Maybe write a script/program that converts an SVD file into a "register" header file.
 - Refactor build system to be more modular? (Maybe recursive make files or ninja)
+- Remove dependency on CMSIS by creating custom cache enable and interrupt code.
 - Enforce code style
 --- singe line comments using /* */
 --- Success -> SUCCESS
 --- UsartStopBits -> usart_stop_bits_t?
 --- Put function doc comments in header file
+--- Use #pragma once
 - New bitfield macro idea:
 --- #define MODULE SDMMC, #define REGISTER <put reg name here>
 --- Inside the bitfield macro, use MODULE and REGISTER to generate the names

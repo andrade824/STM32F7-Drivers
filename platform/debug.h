@@ -34,8 +34,8 @@ void die(void);
 #define ABORT(msg,...)                                                  \
 	do                                                                  \
 	{                                                                   \
-		dbprintf("[ABORT] %s:%s():%d\n[ABORT] Abort message: " msg,     \
-					__FILE__, __func__, __LINE__, ##__VA_ARGS__);       \
+		dbprintf("[ABORT] %s:%s():%d -- " msg "\n",                      \
+				 __FILE__, __func__, __LINE__, ##__VA_ARGS__);          \
 		die();                                                          \
 	} while(0)
 
@@ -49,14 +49,13 @@ void die(void);
 #define ABORT_TIMEOUT(expr,timeout)                                 \
 	do                                                              \
 	{                                                               \
-		start_timer(timeout);                                       \
-		while(!(expr) && !is_timer_complete());                     \
-		if(is_timer_complete()) {                                   \
+		const uint64_t target_cycles = get_cycles() + timeout;      \
+		while(!(expr) && !(get_cycles() <= target_cycles));         \
+		if(get_cycles() > target_cycles) {                         \
 			dbprintf("[ABORT] %s:%s():%d -- %s\n",                  \
 					 __FILE__, __func__, __LINE__, #expr);          \
 			die();                                                  \
 		}                                                           \
-		stop_timer();                                               \
 	} while(0)
 
 /**
@@ -64,7 +63,7 @@ void die(void);
  *
  * @param expr The expression to die on.
  */
-#define ABORT_IF(expr)                                   \
+#define ABORT_IF(expr)                                              \
 	do                                                              \
 	{                                                               \
 		if((expr))                                                  \

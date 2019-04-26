@@ -1,7 +1,7 @@
 # You can override these settings by passing them in as arguments
 PLATFORM ?= stm32f7
-#CONFIG ?= stm32f7_dev_board
-CONFIG ?= stm32f746_disco
+CONFIG ?= stm32f7_dev_board
+#CONFIG ?= stm32f746_disco
 
 # The device that JLink thinks it's connecting to.
 JLINK_DEVICE ?= STM32F730R8
@@ -51,14 +51,14 @@ CFLAGS += -Dplatform_$(PLATFORM) -Dconfig_$(CONFIG)
 
 # Conditionally enable semihosting. Disable if your debugger doesn't support it.
 ifeq ($(SEMIHOSTING_SUPPORT), yes)
-CFLAGS_SEMIHOSTING = --specs=nano.specs --specs=rdimon.specs -DSEMIHOSTING_ENABLED
+CFLAGS_SEMIHOSTING = --specs=rdimon.specs -DSEMIHOSTING_ENABLED
 else
-CFLAGS_SEMIHOSTING = --specs=nano.specs --specs=nosys.specs
+CFLAGS_SEMIHOSTING = --specs=nosys.specs
 endif
 
 # Potentially use semihosting and enable debug features when in debug mode. Only
 # perform optimizations that don't disturb debugging.
-CFLAGS_DEBUG = -Og -g3 $(CFLAGS_SEMIHOSTING) -Wl,-Map,$(PROJ_PATH)-dbg.map -DDEBUG_ON
+CFLAGS_DEBUG = -Og -g3 --specs=nano.specs $(CFLAGS_SEMIHOSTING) -Wl,-Map,$(PROJ_PATH)-dbg.map -DDEBUG_ON
 
 # No semihosting or debug features in release mode. Use better optimizations.
 CFLAGS_RELEASE = -O2 --specs=nano.specs --specs=nosys.specs -Wl,-Map,$(PROJ_PATH).map

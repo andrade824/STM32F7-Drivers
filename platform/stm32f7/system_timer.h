@@ -27,10 +27,8 @@
 
 void init_system_timer(void);
 
-void start_timer(uint32_t ticks);
-void stop_timer(void);
-void sleep(uint32_t ticks);
+void sleep(uint64_t cycles);
 
-bool is_timer_complete(void);
+uint64_t get_cycles(void);
 
 #endif
