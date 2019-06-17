@@ -106,7 +106,6 @@ void sd_read_write_test(void)
 	dbprintf("Data verified correctly!\n");
 }
 
-
 /**
  * Read MBR partition and the first FAT32 Partition.
  */

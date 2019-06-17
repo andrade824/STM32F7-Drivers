@@ -745,7 +745,7 @@ sd_status_t sd_write_data(void *data, uint32_t block_addr, uint16_t num_blocks)
 	/* Write the data to the SD Card. */
 	const uint32_t flags_mask = SDMMC_STA_TXUNDERR() | SDMMC_STA_DCRCFAIL() |
 	                            SDMMC_STA_DTIMEOUT() | SDMMC_STA_DATAEND();
-	const uint32_t tx_length = num_blocks * 128; /* Number of words to send */
+	const uint32_t tx_length = num_blocks * (card.block_len / 4); /* Number of words to send */
 	uint32_t word_count = 0;
 	while(!(SDMMC->STA & flags_mask)) {
 		if(SDMMC->STA & SDMMC_STA_TXFIFOHE()) {

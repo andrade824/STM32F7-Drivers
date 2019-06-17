@@ -77,7 +77,7 @@ typedef struct {
 status_t sdmmc_init();
 
 sd_status_t sd_read_data(void *data, uint32_t block_addr, uint16_t num_blocks);
-sd_status_t sd_write_data(void *data, uint32_t addr, uint16_t num_blocks);
+sd_status_t sd_write_data(void *data, uint32_t block_addr, uint16_t num_blocks);
 
 SdCard sd_get_card_info(void);
 
