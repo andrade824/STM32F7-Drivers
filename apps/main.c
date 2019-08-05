@@ -34,6 +34,14 @@ int main(void)
 		&sd_write_data
 	};
 	ABORT_IF_NOT(fat_init(ops));
+	dump_root_dir();
+
+	fat_file_t file;
+	fat_open(&file, "LOWHIG~1.txt/file.txt");
+	fat_open(&file, "folder3/emptydir/doesntexist.txt");
+	fat_open(&file, "folder3/emptydir");
+	fat_open(&file, "fold/hiyo~1.bat");
+
 #else
 	sd_read_mbr_test();
 #endif

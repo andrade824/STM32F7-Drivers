@@ -18,3 +18,71 @@
 --- The GET() macro can then take in "x" and automatically do "x->REGISTER"
 --- #define BIT_FIELD2(field, lsb_pos, msb_pos)
 --- static inline uint32_t MODULE ## _ ## REGISTER ## _ ## field()
+
+FAT32 filesystem
+
+Create new struct fat_dir_entry_t that contains name, file_size, cluster, and is_dir.
+
+1. fat_status_t find_dir_entry(char[12] name, uint32_t dir_cluster, fat_dir_entry_t *entry)
+   This loops through every cluster/sector/directory entry to find an entry
+   inside of a directory. If it finds the entry, it populates `entry`
+   and returns FAT_SUCCESS. Otherwise, it returns FAT_FILE_NOT_FOUND.
+
+2. fat_status_t parse_path(const char *path, fat_dir_entry_t *entry)
+   This function parses an absolute path starting at the root directory.
+
+   This method only works with standard short filenames (8.3 format) so each token
+   in a path can only be 11 characters long maximum. This should be case insensitive
+   so create a str_to_uppercase() method that uses toupper() for all comparisons.
+
+   This method will have to parse the path using "/" as the delimiter and will
+   skip any characters after the 11th character in each string. It will call
+   find_dir_entry() on every path token until it reaches the end of the path
+   or it fails to find a token.
+
+   If it finds the file, it populates entry and returns FAT_SUCCESS. Otherwise
+   it returns FAT_FILE_NOT_FOUND.
+
+3. fat_status_t fat_open(fat_file_t *file, const char *path);
+   This will call parse_path to get the file data and then populate the `file`
+   structure.
+
+   If i implement the "file buffer cache" it could be useful to have files be
+   read-only or write-only, so maybe pass in the mode? RW would be difficult
+   with the buffer. In read mode, the buffer would buffer the rest of the bytes
+   in the sector that was read (up to the buffer size) and read out of that if it
+   can. In write mode, the cache would buffer any writes done until the cache
+   was full or sync was called. In both cases, the cache would be flushed when a
+   seek occurred (since the buffer wouldnt be accurate to the current position).
+
+   Maybe include metadata as to what position the buffer cache represents?
+
+4. uint32_t fat_read(fat_file_t *file, void* buf, uint32_t size);
+   Reads data from the file and returns the number of bytes that was read (which
+   maybe less than what you request if you hit the end of the file).
+
+5. uint32_t fat_write(fat_file_t *file, void* buf, uint32_t size);
+   Writes data into a file and returns how many bytes it wrote. This can potentially
+   expand the size of the file if you write past the end of the file (if position > size).
+
+   In that case it may potentially need to allocate a new cluster, but will almost
+   certainly have to at least parse the directory that contains it and update the size
+   in the record. Maybe keep a pointer to the directory record?
+
+   This can have performance implications so maybe implement a file buffer (with
+   a config option determining the size) and you only flush the buffer when its
+   full or you call a new "fat_sync" method. The read function can also use this.
+   Should probably fat_sync the buffer when fat_seek is called as well.
+
+Enum seek_origin_t {
+	SEEK_SET,
+	SEEK_CUR,
+	SEEK_END /* Offset does nothing when this is passed in */
+}
+
+6. uint32_t fat_seek(fat_file_t *file, int32_t offset, enum file_seek_origin_t origin);
+   Offset is always clipped to the end of the file (`position = size`, where the max
+   byte in the file is `size - 1`)
+
+7. bool is_eof(file_t *file);
+   Check whether file->position >= file->size
