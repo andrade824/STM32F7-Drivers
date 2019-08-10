@@ -6,6 +6,8 @@
 #include "stm32f7_tests.h"
 #include "system.h"
 
+#include <string.h>
+
 int main(void)
 {
 	init_system();
@@ -34,13 +36,23 @@ int main(void)
 		&sd_write_data
 	};
 	ABORT_IF_NOT(fat_init(ops));
-	dump_root_dir();
 
 	fat_file_t file;
-	fat_open(&file, "LOWHIG~1.txt/file.txt");
-	fat_open(&file, "folder3/emptydir/doesntexist.txt");
-	fat_open(&file, "folder3/emptydir");
-	fat_open(&file, "fold/hiyo~1.bat");
+	char *path = "test2.txt";
+	fat_open(&file, path, FAT_READ_MODE);
+	dbprintf("----Opened file %s %lu:----\n", path, file.size);
+	#define BUFSIZE 10000
+	char temp[BUFSIZE];
+	memset((void*)temp, 0, BUFSIZE);
+	uint32_t bytes_read = 0;
+	while((bytes_read = fat_read(&file, (void*)&temp, BUFSIZE)) > 0) {
+		for(int i = 0; (i < BUFSIZE) && (temp[i] != '\0'); ++i) {
+			dbprintf("%c", temp[i]);
+		}
+		memset((void*)temp, 0, BUFSIZE);
+	}
+	dbprintf("Done reading...\n");
+
 
 #else
 	sd_read_mbr_test();
