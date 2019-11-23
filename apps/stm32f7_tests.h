@@ -10,6 +10,10 @@ void sd_read_write_test(void);
 void sd_read_mbr_test(void);
 #endif /* INCLUDE_SDMMC_DRIVER */
 
+#if defined(INCLUDE_SDMMC_DRIVER) && defined(INCLUDE_FAT_DRIVER)
+void fat_dump_file_test(char *path);
+#endif /* defined(INCLUDE_SDMMC_DRIVER) && defined(INCLUDE_FAT_DRIVER) */
+
 #if defined(INCLUDE_GRAPHICS_MODULE) && defined(INCLUDE_USART_DRIVER) && defined(INCLUDE_SDRAM_DRIVER)
 void usart_gfx_test(void);
 #endif /* defined(INCLUDE_GRAPHICS_MODULE) && defined(INCLUDE_USART_DRIVER) && defined(INCLUDE_SDRAM_DRIVER) */

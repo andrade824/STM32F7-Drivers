@@ -1,5 +1,6 @@
 #include "config.h"
 #include "debug.h"
+#include "fat.h"
 #include "fmc_sdram.h"
 #include "gpio.h"
 #include "graphics.h"
@@ -150,6 +151,54 @@ void sd_read_mbr_test(void)
 	dbprintf("\n");
 }
 #endif /* INCLUDE_SDMMC_DRIVER */
+
+#if defined(INCLUDE_SDMMC_DRIVER) && defined(INCLUDE_FAT_DRIVER)
+
+/**
+ * Dump out the contents of the file located at "path" to the screen.
+ */
+void fat_dump_file_test(char *path)
+{
+	/* Initialize the SDMMC module */
+	gpio_request_alt(GPIO_USD_D0, AF12, GPIO_OSPEED_50MHZ);
+	gpio_set_pullstate(GPIO_USD_D0, GPIO_PULL_UP);
+	gpio_request_alt(GPIO_USD_D1, AF12, GPIO_OSPEED_50MHZ);
+	gpio_set_pullstate(GPIO_USD_D1, GPIO_PULL_UP);
+	gpio_request_alt(GPIO_USD_D2, AF12, GPIO_OSPEED_50MHZ);
+	gpio_set_pullstate(GPIO_USD_D2, GPIO_PULL_UP);
+	gpio_request_alt(GPIO_USD_D3, AF12, GPIO_OSPEED_50MHZ);
+	gpio_set_pullstate(GPIO_USD_D3, GPIO_PULL_UP);
+	gpio_request_alt(GPIO_USD_CLK, AF12, GPIO_OSPEED_50MHZ);
+	gpio_request_alt(GPIO_USD_CMD, AF12, GPIO_OSPEED_50MHZ);
+	gpio_set_pullstate(GPIO_USD_CMD, GPIO_PULL_UP);
+	ABORT_IF_NOT(sdmmc_init());
+	dbprintf("SDMMC appears to have initialized!\n");
+
+	fat_ops_t ops = {
+		.total_size = sd_get_card_info().total_size,
+		.total_sectors = sd_get_card_info().total_blocks,
+		&sd_read_data,
+		&sd_write_data
+	};
+	ABORT_IF_NOT(fat_init(ops));
+
+	fat_file_t file;
+	fat_open(&file, path, FAT_READ_MODE);
+	dbprintf("----Opened file %s %lu:----\n", path, file.size);
+	#define BUFSIZE 1024
+	char temp[BUFSIZE];
+	memset((void*)temp, 0, BUFSIZE);
+	uint32_t bytes_read = 0;
+	while((bytes_read = fat_read(&file, (void*)&temp, BUFSIZE)) > 0) {
+		for(int i = 0; (i < BUFSIZE) && (temp[i] != '\0'); ++i) {
+			dbprintf("%c", temp[i]);
+		}
+		memset((void*)temp, 0, BUFSIZE);
+	}
+	dbprintf("Done reading...\n");
+}
+
+#endif /* defined(INCLUDE_SDMMC_DRIVER) && defined(INCLUDE_FAT_DRIVER) */
 
 #if defined(INCLUDE_GRAPHICS_MODULE) && defined(INCLUDE_USART_DRIVER) && defined(INCLUDE_SDRAM_DRIVER)
 /**
