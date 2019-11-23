@@ -60,7 +60,7 @@ void gpio_request_input(GpioReg *reg, GpioPin pin, GpioPull pull)
 	/**
 	 * Set GPIO mode to input (MODE = 0x0).
 	 */
-	reg->MODER &= ~(0x3 << (GPIO_GET_PIN(pin) * 2));
+	reg->MODER &= ~(0x3U << (GPIO_GET_PIN(pin) * 2U));
 
 	gpio_set_pullstate(reg, pin, pull);
 }
@@ -81,7 +81,7 @@ void gpio_request_output(GpioReg *reg,
 	/**
 	 * Set GPIO mode to output (MODE = 0x1).
 	 */
-	reg->MODER |= (GPIO_OUTPUT << (GPIO_GET_PIN(pin) * 2));
+	reg->MODER |= (GPIO_OUTPUT << (GPIO_GET_PIN(pin) * 2U));
 
 	gpio_set_otype(reg, pin, GPIO_PUSH_PULL);
 	gpio_set_ospeed(reg, pin, GPIO_OSPEED_4MHZ);
@@ -109,10 +109,10 @@ void gpio_request_alt(GpioReg *reg,
 	 * are split between two different registers. Pins 0-7 on the first register
 	 * and pins 8-15 on the second.
 	 */
-	if(GPIO_GET_PIN(pin) < 8) {
-		reg->AFR[0] |= alt << (GPIO_GET_PIN(pin) * 4);
+	if(GPIO_GET_PIN(pin) < 8U) {
+		reg->AFR[0] |= alt << (GPIO_GET_PIN(pin) * 4U);
 	} else {
-		reg->AFR[1] |= alt << (((GPIO_GET_PIN(pin) - 8) * 4));
+		reg->AFR[1] |= alt << (((GPIO_GET_PIN(pin) - 8U) * 4U));
 	}
 
 	gpio_set_otype(reg, pin, GPIO_PUSH_PULL);
@@ -122,7 +122,7 @@ void gpio_request_alt(GpioReg *reg,
 	/**
 	 * Set GPIO mode to alternate function (MODE = 0x2).
 	 */
-	reg->MODER |= (GPIO_ALT_FUNC << (GPIO_GET_PIN(pin) * 2));
+	reg->MODER |= (GPIO_ALT_FUNC << (GPIO_GET_PIN(pin) * 2U));
 }
 
 /**
@@ -134,7 +134,7 @@ void gpio_request_alt(GpioReg *reg,
  */
 void gpio_set_otype(GpioReg *reg, GpioPin pin, GpioOType type)
 {
-	reg->OTYPER &= ~(1 << GPIO_GET_PIN(pin));
+	reg->OTYPER &= ~(1U << GPIO_GET_PIN(pin));
 	reg->OTYPER |= type << GPIO_GET_PIN(pin);
 }
 
@@ -147,8 +147,8 @@ void gpio_set_otype(GpioReg *reg, GpioPin pin, GpioOType type)
  */
 void gpio_set_ospeed(GpioReg *reg, GpioPin pin, GpioOSpeed speed)
 {
-	reg->OSPEEDR &= ~(3 << (GPIO_GET_PIN(pin) * 2));
-	reg->OSPEEDR |= speed << (GPIO_GET_PIN(pin) * 2);
+	reg->OSPEEDR &= ~(3U << (GPIO_GET_PIN(pin) * 2U));
+	reg->OSPEEDR |= speed << (GPIO_GET_PIN(pin) * 2U);
 }
 
 /**
@@ -160,8 +160,8 @@ void gpio_set_ospeed(GpioReg *reg, GpioPin pin, GpioOSpeed speed)
  */
 void gpio_set_pullstate(GpioReg *reg, GpioPin pin, GpioPull pull)
 {
-	reg->PUPDR &= ~(3 << (GPIO_GET_PIN(pin) * 2));
-	reg->PUPDR |= pull << (GPIO_GET_PIN(pin) * 2);
+	reg->PUPDR &= ~(3U << (GPIO_GET_PIN(pin) * 2U));
+	reg->PUPDR |= pull << (GPIO_GET_PIN(pin) * 2U);
 }
 
 /**
@@ -174,9 +174,9 @@ void gpio_set_pullstate(GpioReg *reg, GpioPin pin, GpioPull pull)
 void gpio_set_output(GpioReg *reg, GpioPin pin, DigitalState state)
 {
 	if(state == high) {
-		reg->BSRR |= 1 << GPIO_GET_PIN(pin);
+		reg->BSRR |= 1U << GPIO_GET_PIN(pin);
 	} else {
-		reg->BSRR |= 1 << (GPIO_GET_PIN(pin) + 16);
+		reg->BSRR |= 1U << (GPIO_GET_PIN(pin) + 16U);
 	}
 }
 
@@ -190,5 +190,5 @@ void gpio_set_output(GpioReg *reg, GpioPin pin, DigitalState state)
  */
 DigitalState gpio_get_input(GpioReg *reg, GpioPin pin)
 {
-	return (DigitalState)((reg->IDR >> GPIO_GET_PIN(pin)) & 0x1);
+	return (DigitalState)((reg->IDR >> GPIO_GET_PIN(pin)) & 0x1U);
 }

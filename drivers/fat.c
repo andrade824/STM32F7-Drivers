@@ -444,6 +444,7 @@ fat_status_t fat_init(fat_ops_t ops)
 	dbprintf("[FAT] SD total_sectors: 0x%lx | fat_bpb_lba: 0x%lx | FAT total_sectors: 0x%lx | fat_begin_lba: 0x%lx | cluster_begin_lba: 0x%lx | sectors_per_cluster: 0x%x | cluster_size: 0x%lx | root_dir_first_cluster: 0x%lx\n",
 	    part.ops.total_sectors, fat_bpb_lba, part.total_sectors, part.fat_begin_lba, part.cluster_begin_lba, part.sectors_per_cluster, part.cluster_size, part.root_dir_first_cluster);
 
+#ifdef DEBUG_ON
 	char vol_label[BBP_VOL_LABEL_SIZE + 1];
 	for(size_t i = 0; i < BBP_VOL_LABEL_SIZE; ++i) {
 		vol_label[i] = temp_sector[FAT_BPB_VOL_LABEL + i];
@@ -451,6 +452,7 @@ fat_status_t fat_init(fat_ops_t ops)
 	vol_label[BBP_VOL_LABEL_SIZE] = '\0';
 
 	dbprintf("[FAT] Volume Label: %s\n", vol_label);
+#endif
 
 	return FAT_SUCCESS;
 }

@@ -34,7 +34,7 @@ void die(void);
 #define ABORT(msg,...)                                                  \
 	do                                                                  \
 	{                                                                   \
-		dbprintf("[ABORT] %s:%s():%d -- " msg "\n",                      \
+		dbprintf("[ABORT] %s:%s():%d -- " msg "\n",                     \
 				 __FILE__, __func__, __LINE__, ##__VA_ARGS__);          \
 		die();                                                          \
 	} while(0)

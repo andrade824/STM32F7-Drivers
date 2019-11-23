@@ -35,10 +35,16 @@ CC=arm-none-eabi-gcc
 DBG=arm-none-eabi-gdb
 OBJCOPY=arm-none-eabi-objcopy
 
-CFLAGS  = -Wall -Wextra -Werror -flto -Tplatform/$(PLATFORM)/linker-$(CONFIG).ld
+CFLAGS  = -Wall -Wextra -Werror -Tplatform/$(PLATFORM)/linker-$(CONFIG).ld
 CFLAGS += -mlittle-endian -mthumb -mcpu=cortex-m7 -mthumb-interwork
 CFLAGS += -mfloat-abi=hard -mfpu=fpv5-sp-d16
 CFLAGS += -Iconfigs/ -Iplatform/ -Iplatform/$(PLATFORM)/ -Idrivers/$(PLATFORM)/ -Idrivers/ -Iapps/
+
+# Extra warnings to enable that -Wall -Wextra don't enable.
+CFLAGS += -Wshadow -Wdouble-promotion -Wformat=2 -Wformat-truncation=2 -fno-common
+
+# Place every function in it's own section, and prune unused sections (saves lots of TEXT space).
+CFLAGS += -ffunction-sections -Wl,--gc-sections #-Wl,--print-gc-sections
 
 # Include files from CMSIS
 CFLAGS += -Iplatform/CMSIS/Include

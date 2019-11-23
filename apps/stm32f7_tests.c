@@ -75,9 +75,9 @@ void sd_read_write_test(void)
 	dbprintf("SDMMC appears to have initialized!\n");
 
 	uint8_t write_data[2048];
-	for(int i = 0; i < 8; i++) {
-		for(int j = 0; j < 256; j++) {
-			write_data[(i * 256) + j] = j;
+	for(unsigned int i = 0; i < 8; i++) {
+		for(unsigned int j = 0; j < 256; j++) {
+			write_data[(i * 256) + j] = (uint8_t)j;
 		}
 	}
 
@@ -94,8 +94,8 @@ void sd_read_write_test(void)
 	}
 
 	dbprintf("------Checking Data at %lu...-------\n", sd_get_card_info().total_blocks - 5);
-	for(int i = 0; i < 8; i++) {
-		for(int j = 0; j < 256; j++) {
+	for(unsigned int i = 0; i < 8; i++) {
+		for(unsigned int j = 0; j < 256; j++) {
 			const size_t index = (i * 256) + j;
 			if(read_data[index] != write_data[index]) {
 				ABORT("DATA MISMATCH AT INDEX %d, %d != %d\n", index, read_data[index], write_data[index]);
@@ -137,7 +137,7 @@ void sd_read_mbr_test(void)
 	}
 	dbprintf("\n");
 
-	uint32_t fat32_lba = (data[457] << 24) | (data[456] << 16) | (data[455] << 8) | data[454];
+	uint32_t fat32_lba = (data[457] << 24U) | (data[456] << 16U) | (data[455] << 8U) | data[454];
 	printf("Logical block address: 0x%lx\n", fat32_lba);
 	status = sd_read_data(data, fat32_lba, 1);
 	if(status != SD_SUCCESS) {
