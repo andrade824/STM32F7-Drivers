@@ -40,6 +40,10 @@ CFLAGS += -mlittle-endian -mthumb -mcpu=cortex-m7 -mthumb-interwork
 CFLAGS += -mfloat-abi=hard -mfpu=fpv5-sp-d16
 CFLAGS += -Iconfigs/ -Iplatform/ -Iplatform/$(PLATFORM)/ -Idrivers/$(PLATFORM)/ -Idrivers/ -Iapps/
 
+# Both Release/Debug builds should have debug information in the ELF file and
+# use the nano version of newlib (removes features but saves space).
+CFLAGS += -g3 --specs=nano.specs
+
 # Extra warnings to enable that -Wall -Wextra don't enable.
 CFLAGS += -Wshadow -Wdouble-promotion -Wformat=2 -Wformat-truncation=2 -fno-common
 
@@ -64,10 +68,10 @@ endif
 
 # Potentially use semihosting and enable debug features when in debug mode. Only
 # perform optimizations that don't disturb debugging.
-CFLAGS_DEBUG = -Og -g3 --specs=nano.specs $(CFLAGS_SEMIHOSTING) -Wl,-Map,$(PROJ_PATH)-dbg.map -DDEBUG_ON
+CFLAGS_DEBUG = -Og $(CFLAGS_SEMIHOSTING) -Wl,-Map,$(PROJ_PATH)-dbg.map -DDEBUG_ON
 
 # No semihosting or debug features in release mode. Use better optimizations.
-CFLAGS_RELEASE = -O2 --specs=nano.specs --specs=nosys.specs -Wl,-Map,$(PROJ_PATH).map
+CFLAGS_RELEASE = -O2 --specs=nosys.specs -Wl,-Map,$(PROJ_PATH).map
 
 OBJS = $(SRCS:.c=.o)
 

@@ -2,7 +2,8 @@
  * @author Devon Andrade
  * @created 5/11/2019
  *
- * FAT32 Filesystem Driver.
+ * FAT32 Filesystem Driver. Currently only supports opening files (path parsing)
+ * and reading files sequentially.
  */
 #if INCLUDE_FAT_DRIVER
 
@@ -372,6 +373,10 @@ static fat_status_t parse_path(const char *path, fat_dir_entry_t *entry)
  *
  * This involves parsing the MBR partition to find the first FAT32 partition,
  * and then parsing the FAT32 Volume ID (BIOS partition block).
+ *
+ * @param ops Information and methods coming from the underlying backing store
+ *            that describe the total size of the backing store and functions
+ *            to read/write sectors of data.
  */
 fat_status_t fat_init(fat_ops_t ops)
 {
