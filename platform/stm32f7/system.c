@@ -85,7 +85,7 @@ static void clocks_init(void)
 
 	SET_FIELD(RCC->CR, RCC_CR_PLLON());
 
-#ifdef INCLUDE_LCD_CTRL_DRIVER
+#if ENABLE_LCD_GRAPHICS
 	/* Configure and enable PLLSAI (used to drive the LCD pixel clock). */
 	CLEAR_FIELD(RCC->PLLSAICFGR, RCC_PLLSAICFGR_PLLN() |
 	                             RCC_PLLSAICFGR_PLLSAIR());
@@ -98,7 +98,7 @@ static void clocks_init(void)
 
 	/* Wait for PLLSAI to lock. */
 	while(GET_RCC_CR_PLLSAIRDY(RCC->CR) == 0) { }
-#endif /* INCLUDE_LCD_CTRL_DRIVER */
+#endif /* ENABLE_LCD_GRAPHICS */
 
 	/**
 	 * Enable overdrive mode on the voltage regulator to allow the chip to

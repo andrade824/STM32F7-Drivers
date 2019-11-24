@@ -4,8 +4,7 @@
  *
  * Definitions and functions used to manipulate the FMC SDRAM module.
  */
-#ifdef INCLUDE_SDRAM_DRIVER
-
+#include "config.h"
 #include "debug.h"
 #include "fmc_sdram.h"
 #include "gpio.h"
@@ -13,6 +12,8 @@
 
 #include "registers/fmc_sdram_reg.h"
 #include "registers/rcc_reg.h"
+
+#if ENABLE_SDRAM
 
 /* Maximum amount of time to wait for an SDRAM command to complete. */
 #define SDRAM_TIMEOUT MSECS(1)
@@ -28,7 +29,7 @@
  */
 void fmc_sdram_init(void)
 {
-	/*  Request all of the required GPIOs. */
+	/* Request all of the required GPIOs. */
 	gpio_request_alt(GPIO_FMC_A0, SDRAM_ALT_FUNC, GPIO_OSPEED_100MHZ);
 	gpio_request_alt(GPIO_FMC_A1, SDRAM_ALT_FUNC, GPIO_OSPEED_100MHZ);
 	gpio_request_alt(GPIO_FMC_A2, SDRAM_ALT_FUNC, GPIO_OSPEED_100MHZ);
@@ -129,4 +130,4 @@ void fmc_sdram_init(void)
 	CLEAR_FIELD(SDRAM->SDCR[SDRAM_FMC_BANK], SDRAM_SDCR_WP());
 }
 
-#endif
+#endif /* ENABLE_SDRAM */

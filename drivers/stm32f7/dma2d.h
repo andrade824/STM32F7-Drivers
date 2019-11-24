@@ -6,8 +6,6 @@
  */
 #pragma once
 
-#ifdef INCLUDE_DMA2D_DRIVER
-
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -21,5 +19,3 @@ void dma2d_mem_to_mem(
 	void (*callback) (void));
 
 bool is_dma2d_complete(void);
-
-#endif /*INCLUDE_DMA2D_DRIVER */

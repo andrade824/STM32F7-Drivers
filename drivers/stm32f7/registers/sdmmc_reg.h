@@ -6,8 +6,6 @@
  */
 #pragma once
 
-#ifdef INCLUDE_SDMMC_DRIVER
-
 #include "bitfield.h"
 #include "mem_map.h"
 
@@ -211,5 +209,3 @@ BIT_FIELD2(SDMMC_FIFOCNT_FIFOCOUNT, 0, 23);
 
 /* SDMMC Data FIFO Register. */
 BIT_FIELD2(SDMMC_FIFO_FIFODATA, 0, 31);
-
-#endif /* INCLUDE_SDMMC_DRIVER */

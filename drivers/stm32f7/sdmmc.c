@@ -4,8 +4,6 @@
  *
  * Definitions and functions used to manipulate the SDMMC.
  */
-#if INCLUDE_SDMMC_DRIVER
-
 #include "config.h"
 #include "debug.h"
 #include "sdmmc.h"
@@ -783,5 +781,3 @@ SdStatus sd_write_data(void *data, uint32_t block_addr, uint16_t num_blocks)
 
 	return SD_SUCCESS;
 }
-
-#endif /* INCLUDE_SDMMC_DRIVER */

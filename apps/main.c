@@ -14,7 +14,7 @@ int main(void)
 #if 1
 	fat_dump_file_test("test2.txt");
 #else
-	usart_gfx_test();
+	gfx_text_test();
 #endif
 
 #ifdef config_stm32f7_dev_board

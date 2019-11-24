@@ -6,11 +6,11 @@
  */
 #pragma once
 
-#ifdef INCLUDE_FONT_TABLE
-
 #include "config.h"
 
 #include <stdint.h>
+
+#if ENABLE_LCD_GRAPHICS
 
 /**
  * The size of the font in pixels.
@@ -50,4 +50,4 @@
 
 extern const uint8_t font_table[];
 
-#endif /* INCLUDE_FONT_TABLE */
+#endif /* ENABLE_LCD_GRAPHICS */

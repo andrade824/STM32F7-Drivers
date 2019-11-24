@@ -6,8 +6,6 @@
  */
 #pragma once
 
-#ifdef INCLUDE_DMA2D_DRIVER
-
 #include "bitfield.h"
 #include "mem_map.h"
 
@@ -157,5 +155,3 @@ BIT_FIELD(DMA2D_LWR_LW,  0, 0x0000FFFF);
 /* DMA2D AHB Master Timer Configuration Register Bit Definitions. */
 BIT_FIELD(DMA2D_AMTCR_EN, 0, 0x00000001);
 BIT_FIELD(DMA2D_AMTCR_DT, 8, 0x0000FF00);
-
-#endif /* INCLUDE_DMA2D_DRIVER */

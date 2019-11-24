@@ -167,6 +167,11 @@ typedef enum
 	IRQ_END
 } IRQn_Type;
 
+/***** DISABLED HARDWARE DRIVERS *****/
+
+#define ENABLE_LCD_GRAPHICS 0
+#define ENABLE_SDRAM        0
+
 /***** INCLUDE GENERIC STM32F7 CONFIGURATION *****/
 
 /**

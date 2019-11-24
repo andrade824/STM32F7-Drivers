@@ -4,7 +4,6 @@
  *
  * FAT32 Filesystem Driver.
  */
-#if INCLUDE_FAT_DRIVER
 #pragma once
 
 #include "sdmmc.h"
@@ -64,5 +63,3 @@ uint32_t fat_read(FatFile *file, void *buf, uint32_t size);
 #if 0
 void fat_dump_root_dir(void);
 #endif
-
-#endif /* INCLUDE_FAT_DRIVER */

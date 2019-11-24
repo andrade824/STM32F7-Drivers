@@ -6,8 +6,6 @@
  */
 #pragma once
 
-#ifdef INCLUDE_LCD_CTRL_DRIVER
-
 #include "bitfield.h"
 #include "mem_map.h"
 
@@ -205,5 +203,3 @@ BIT_FIELD(LTDC_CLUTWR_BLUE,      0, 0x000000FF);
 BIT_FIELD(LTDC_CLUTWR_GREEN,     8, 0x0000FF00);
 BIT_FIELD(LTDC_CLUTWR_RED,      16, 0x00FF0000);
 BIT_FIELD(LTDC_CLUTWR_CLUTADDR, 24, 0xFF000000);
-
-#endif /* INCLUDE_LCD_CTRL_DRIVER */

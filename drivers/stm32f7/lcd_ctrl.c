@@ -6,8 +6,7 @@
  *
  * Don't call into this module directly, use the dedicated "graphics" module.
  */
-#ifdef INCLUDE_LCD_CTRL_DRIVER
-
+#include "config.h"
 #include "debug.h"
 #include "gpio.h"
 #include "interrupt.h"
@@ -17,6 +16,8 @@
 #include "registers/rcc_reg.h"
 
 #include <stdint.h>
+
+#if ENABLE_LCD_GRAPHICS
 
 /**
  * The GPIO alternate functions for the LCD pins. Check section 3 of the
@@ -200,4 +201,4 @@ void lcd_ctrl_init(uint32_t framebuffer, void (*callback) (void))
 	gpio_set_output(GPIO_LCD_DISP, GPIO_HIGH);
 }
 
-#endif
+#endif /* ENABLE_LCD_GRAPHICS */

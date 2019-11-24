@@ -6,8 +6,6 @@
  */
 #pragma once
 
-#ifdef INCLUDE_SDRAM_DRIVER
-
 #include "bitfield.h"
 #include "mem_map.h"
 
@@ -80,5 +78,3 @@ typedef enum {
 	SDSR_READY = 0x0,
 	SDSR_BUSY  = 0x1
 } SDRAM_SDSR_BUSY_BIT;
-
-#endif /* INCLUDE_SDRAM_DRIVER */

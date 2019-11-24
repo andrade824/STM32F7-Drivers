@@ -4,9 +4,7 @@
  *
  * Definitions and functions used to manipulate the LCD Controller [18].
  */
-#ifdef INCLUDE_LCD_CTRL_DRIVER
-#ifndef LCD_CTRL_H
-#define LCD_CTRL_H
+#pragma once
 
 #include "gpio.h"
 #include "interrupt.h"
@@ -24,6 +22,3 @@ typedef enum {
 } LcdPolarity;
 
 void lcd_ctrl_init(uint32_t framebuffer, void (*callback) (void));
-
-#endif
-#endif

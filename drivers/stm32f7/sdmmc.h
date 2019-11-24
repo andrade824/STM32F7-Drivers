@@ -6,8 +6,6 @@
  */
 #pragma once
 
-#if INCLUDE_SDMMC_DRIVER
-
 #include "registers/sdmmc_reg.h"
 
 #include <stdint.h>
@@ -78,5 +76,3 @@ SdStatus sd_read_data(void *data, uint32_t block_addr, uint16_t num_blocks);
 SdStatus sd_write_data(void *data, uint32_t block_addr, uint16_t num_blocks);
 
 SdCard sd_get_card_info(void);
-
-#endif /* INCLUDE_SDMMC_DRIVER */

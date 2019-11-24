@@ -6,8 +6,7 @@
  *
  * Don't call into this module directly, use the dedicated "graphics" module.
  */
-#ifdef INCLUDE_DMA2D_DRIVER
-
+#include "config.h"
 #include "debug.h"
 #include "dma2d.h"
 #include "interrupt.h"
@@ -18,6 +17,8 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+
+#if ENABLE_LCD_GRAPHICS
 
 /* Flag that gets set to true when the DMA is not performing transfers. */
 static volatile bool dma_complete = true;
@@ -118,4 +119,4 @@ bool is_dma2d_complete(void)
 	return dma_complete;
 }
 
-#endif
+#endif /* ENABLE_LCD_GRAPHICS */

@@ -4,8 +4,6 @@
  *
  * Definitions and functions used to manipulate the USART [31].
  */
-#if INCLUDE_USART_DRIVER
-
 #include "config.h"
 #include "debug.h"
 #include "usart.h"
@@ -142,5 +140,3 @@ uint8_t usart_receive(UsartReg *usart)
 
 	return (uint8_t)usart->RDR;
 }
-
-#endif /* INCLUDE_USART_DRIVER */

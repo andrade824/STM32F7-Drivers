@@ -4,12 +4,12 @@
  *
  * Font data for various sizes of the Courier New font.
  */
-#ifdef INCLUDE_FONT_TABLE
-
 #include "config.h"
 #include "font.h"
 
 #include <stdint.h>
+
+#if ENABLE_LCD_GRAPHICS
 
 #if FONT_CONFIG == 6
 /**
@@ -4032,4 +4032,4 @@ const uint8_t font_table[] =
 #error Unsupported font size selected in config file.
 #endif /* FONT selection */
 
-#endif /* INCLUDE_FONT_TABLE */
+#endif /* ENABLE_LCD_GRAPHICS */

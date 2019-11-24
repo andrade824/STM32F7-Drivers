@@ -5,12 +5,6 @@
  * A single software module used to draw graphics onto the STM32F7 Discovery
  * board's LCD module. This module encapsulates the LCD and 2D DMA controllers.
  */
-#ifdef INCLUDE_GRAPHICS_MODULE
-
-#if !defined(INCLUDE_DMA2D_DRIVER) || !defined(INCLUDE_LCD_CTRL_DRIVER) || !defined(INCLUDE_FONT_TABLE)
-#error Need to include the DMA2D, LCD Controller, and Font Table drivers for graphics module support.
-#endif
-
 #include "config.h"
 #include "debug.h"
 #include "dma2d.h"
@@ -23,6 +17,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
+
+#if ENABLE_LCD_GRAPHICS
 
 /* Number of characters per line. */
 #define NUM_CHARS (LCD_CONFIG_WIDTH / (FONT_WIDTH + 1U))
@@ -322,4 +318,4 @@ uint8_t gfx_num_lines(void)
 	return NUM_LINES;
 }
 
-#endif /* INCLUDE_GRAPHICS_MODULE */
+#endif /* ENABLE_LCD_GRAPHICS */

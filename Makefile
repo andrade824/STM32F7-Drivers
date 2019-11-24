@@ -6,10 +6,6 @@ CONFIG ?= stm32f7_dev_board
 # The device that JLink thinks it's connecting to.
 JLINK_DEVICE ?= STM32F730R8
 
-# This file determines which drivers are enabled for a specific platform/config.
-# This file should create a "DRIVERS" variable with the correct "-D" defines.
-include configs/$(PLATFORM)/$(CONFIG).mk
-
 # Put your source files here (or *.c, etc)
 SRCS += platform/*.c
 SRCS += platform/$(PLATFORM)/*.s
@@ -52,9 +48,6 @@ CFLAGS += -ffunction-sections -Wl,--gc-sections #-Wl,--print-gc-sections
 
 # Include files from CMSIS
 CFLAGS += -Iplatform/CMSIS/Include
-
-# Include any needed drivers
-CFLAGS += $(DRIVERS)
 
 # Create defines for the CONFIG and PLATFORM
 CFLAGS += -Dplatform_$(PLATFORM) -Dconfig_$(CONFIG)

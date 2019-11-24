@@ -6,8 +6,6 @@
  */
 #pragma once
 
-#ifdef INCLUDE_USART_DRIVER
-
 #include "bitfield.h"
 #include "mem_map.h"
 
@@ -166,5 +164,3 @@ BIT_FIELD2(USART_RDR_RDR, 0, 8);
 
 /* Transmit Data Register. */
 BIT_FIELD2(USART_TDR_TDR, 0, 8);
-
-#endif /* INCLUDE_USART_DRIVER */

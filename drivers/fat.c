@@ -5,8 +5,6 @@
  * FAT32 Filesystem Driver. Currently only supports opening files (path parsing)
  * and reading files sequentially.
  */
-#if INCLUDE_FAT_DRIVER
-
 #include "config.h"
 #include "debug.h"
 #include "fat.h"
@@ -690,5 +688,3 @@ void fat_dump_root_dir(void)
 	dump_dir(part.root_dir_first_cluster, 0);
 }
 #endif
-
-#endif /* INCLUDE_FAT_DRIVER */

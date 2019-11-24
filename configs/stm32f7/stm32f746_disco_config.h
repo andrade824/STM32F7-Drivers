@@ -349,9 +349,9 @@ typedef enum
  * Timings and settings used for the SDRAM chip (MT48LC4M32B2) on the STM32F7
  * Discovery board.
  */
-#ifdef INCLUDE_SDRAM_DRIVER
-
 #include "system_timer.h"
+
+#define ENABLE_SDRAM 1
 
 /**
  *  The SDRAM chip on the STM32F7 Discovery board is connected to the first
@@ -410,11 +410,9 @@ typedef enum
  */
 #define SDRTR_COUNT 1667
 
-#endif /* INCLUDE_SDRAM_DRIVER */
-
 /***** LCD TIMING CONFIGURATION *****/
 
-#ifdef INCLUDE_LCD_CTRL_DRIVER
+#define ENABLE_LCD_GRAPHICS 1
 
 /* Required for polarity declarations. */
 #include "lcd_ctrl.h"
@@ -445,15 +443,10 @@ typedef uint16_t pixel_t;
 #error Unsupported pixel format selected.
 #endif /* LCD_CONFIG_PIXEL_FORMAT */
 
-#endif /* INCLUDE_LCD_CTRL_DRIVER */
-
 /***** FONT CONFIGURATION *****/
-#ifdef INCLUDE_FONT_TABLE
 
 /* The size of the wanted font in points (check font.h for supported sizes). */
 #define FONT_CONFIG 9
-
-#endif /* INCLUDE_FONT_TABLE */
 
 /***** INCLUDE GENERIC STM32F7 CONFIGURATION *****/
 

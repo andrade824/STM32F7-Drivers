@@ -7,8 +7,6 @@
  */
 #pragma once
 
-#ifdef INCLUDE_SDRAM_DRIVER
-
 #include "gpio.h"
 
 /**
@@ -18,5 +16,3 @@
 #define SDRAM_BASE 0xC0000000U
 
 void fmc_sdram_init(void);
-
-#endif /* INCLUDE_SDRAM_DRIVER */

@@ -6,8 +6,6 @@
  */
 #pragma once
 
-#if INCLUDE_USART_DRIVER
-
 #include "gpio.h"
 
 #include "registers/usart_reg.h"
@@ -27,5 +25,3 @@ void usart_send_byte(UsartReg *usart, uint8_t data);
 void usart_send(UsartReg *usart, uint8_t *data, uint32_t num_bytes);
 
 uint8_t usart_receive(UsartReg *usart);
-
-#endif /* INCLUDE_USART_DRIVER */

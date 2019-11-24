@@ -7,8 +7,6 @@
  */
 #pragma once
 
-#if INCLUDE_GRAPHICS_MODULE
-
 #include "config.h"
 
 #include <stdint.h>
@@ -19,6 +17,7 @@
 /**
  * Create a compact pixel value out of three separate color values.
  */
+#if ENABLE_LCD_GRAPHICS
 #if LCD_CONFIG_PIXEL_FORMAT == PF_ARGB8888
 #define PIXEL(r,g,b) (0xFF000000 | ((r & 0xFF) << 16) | ((g & 0xFF) << 8) | (b & 0xFF))
 #elif LCD_CONFIG_PIXEL_FORMAT == PF_RGB565
@@ -26,6 +25,7 @@
 #else
 #error Unsupported pixel format selected.
 #endif /* LCD_CONFIG_PIXEL_FORMAT */
+#endif /* ENABLE_LCD_GRAPHICS */
 
 void gfx_init(uint32_t frontbuf, uint32_t backbuf);
 
@@ -47,5 +47,3 @@ uint16_t gfx_height(void);
 uint8_t gfx_pixel_size(void);
 uint8_t gfx_num_chars(void);
 uint8_t gfx_num_lines(void);
-
-#endif /* INCLUDE_GRAPHICS_MODULE */

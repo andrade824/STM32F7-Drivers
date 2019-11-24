@@ -16,7 +16,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef INCLUDE_SDRAM_DRIVER
+#if ENABLE_SDRAM
 /**
  * Perform a basic memory check on the external SDRAM.
  */
@@ -50,9 +50,8 @@ void fmc_memcheck_test(void)
 
 	dbprintf("Memcheck complete!!\n");
 }
-#endif /* INCLUDE_SDRAM_DRIVER */
+#endif /* ENABLE_SDRAM */
 
-#ifdef INCLUDE_SDMMC_DRIVER
 /**
  * Write multiple blocks of data, then read the blocks back and make sure the
  * data matches.
@@ -149,9 +148,6 @@ void sd_read_mbr_test(void)
 	}
 	dbprintf("\n");
 }
-#endif /* INCLUDE_SDMMC_DRIVER */
-
-#if defined(INCLUDE_SDMMC_DRIVER) && defined(INCLUDE_FAT_DRIVER)
 
 /**
  * Dump out the contents of the file located at "path" to the screen.
@@ -197,9 +193,7 @@ void fat_dump_file_test(char *path)
 	dbprintf("Done reading...\n");
 }
 
-#endif /* defined(INCLUDE_SDMMC_DRIVER) && defined(INCLUDE_FAT_DRIVER) */
-
-#if defined(INCLUDE_GRAPHICS_MODULE) && defined(INCLUDE_USART_DRIVER) && defined(INCLUDE_SDRAM_DRIVER)
+#if ENABLE_SDRAM && ENABLE_LCD_GRAPHICS
 /**
  * Print characters received over USART onto the screen.
  */
@@ -239,9 +233,7 @@ void usart_gfx_test(void)
 		}
 	}
 }
-#endif /* defined(INCLUDE_GRAPHICS_MODULE) && defined(INCLUDE_USART_DRIVER) && defined(INCLUDE_SDRAM_DRIVER) */
 
-#if defined(INCLUDE_GRAPHICS_MODULE) && defined(INCLUDE_SDRAM_DRIVER)
 /**
  * Draw multiple rectangles on the screen at once.
  */
@@ -322,4 +314,4 @@ void gfx_text_test(void)
 		gfx_swap_buffers();
 	}
 }
-#endif /* defined(INCLUDE_GRAPHICS_MODULE) && defined(INCLUDE_SDRAM_DRIVER) */
+#endif /* ENABLE_LCD_GRAPHICS */
