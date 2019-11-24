@@ -2,22 +2,19 @@
  * @author Devon Andrade
  * @created 6/16/2018
  *
- * Definitions and functions used to manipulate the FMC SDRAM module [13].
+ * Definitions and functions used to manipulate the FMC SDRAM module.
  */
 #ifdef INCLUDE_SDRAM_DRIVER
 
 #include "debug.h"
 #include "fmc_sdram.h"
 #include "gpio.h"
-#include "status.h"
 #include "system_timer.h"
 
 #include "registers/fmc_sdram_reg.h"
 #include "registers/rcc_reg.h"
 
-/**
- * Maximum amount of time to wait for an SDRAM command to complete.
- */
+/* Maximum amount of time to wait for an SDRAM command to complete. */
 #define SDRAM_TIMEOUT MSECS(1)
 
 /**
@@ -29,11 +26,9 @@
 /**
  * Initialize the SDRAM Controller.
  */
-void init_fmc_sdram(void)
+void fmc_sdram_init(void)
 {
-	/**
-	 * Request all of the required GPIOs.
-	 */
+	/*  Request all of the required GPIOs. */
 	gpio_request_alt(GPIO_FMC_A0, SDRAM_ALT_FUNC, GPIO_OSPEED_100MHZ);
 	gpio_request_alt(GPIO_FMC_A1, SDRAM_ALT_FUNC, GPIO_OSPEED_100MHZ);
 	gpio_request_alt(GPIO_FMC_A2, SDRAM_ALT_FUNC, GPIO_OSPEED_100MHZ);
@@ -77,78 +72,60 @@ void init_fmc_sdram(void)
 	gpio_request_alt(GPIO_FMC_SDCKE0, SDRAM_ALT_FUNC, GPIO_OSPEED_100MHZ);
 	gpio_request_alt(GPIO_FMC_SDCLK, SDRAM_ALT_FUNC, GPIO_OSPEED_100MHZ);
 
-	/**
-	 * Enable the FMC clock.
-	 */
+	/* Enable the FMC clock. */
 	SET_FIELD(RCC->AHB3ENR, RCC_AHB3ENR_FMCEN());
 	__asm("dsb");
 
-	/**
-	 * Configure the SDRAM bank (memory features and timing).
-	 */
+	/* Configure the SDRAM bank (memory features and timing). */
 	SDRAM->SDCR[SDRAM_FMC_BANK] = SET_SDRAM_SDCR_NC(SDCR_NC) |
-								  SET_SDRAM_SDCR_NR(SDCR_NR) |
-								  SET_SDRAM_SDCR_MWID(SDCR_MWID) |
-								  SET_SDRAM_SDCR_NB(SDCR_NB) |
-								  SET_SDRAM_SDCR_CAS(SDCR_CAS) |
-								  SET_SDRAM_SDCR_SDCLK(SDCR_SDCLK) |
-								  SDRAM_SDCR_RBURST();
+	                              SET_SDRAM_SDCR_NR(SDCR_NR) |
+	                              SET_SDRAM_SDCR_MWID(SDCR_MWID) |
+	                              SET_SDRAM_SDCR_NB(SDCR_NB) |
+	                              SET_SDRAM_SDCR_CAS(SDCR_CAS) |
+	                              SET_SDRAM_SDCR_SDCLK(SDCR_SDCLK) |
+	                              SDRAM_SDCR_RBURST();
 
 	SDRAM->SDTR[SDRAM_FMC_BANK] = SET_SDRAM_SDTR_TMRD(SDTR_TMRD) |
-								  SET_SDRAM_SDTR_TXSR(SDTR_TXSR) |
-								  SET_SDRAM_SDTR_TRAS(SDTR_TRAS) |
-								  SET_SDRAM_SDTR_TRC(SDTR_TRC) |
-								  SET_SDRAM_SDTR_TWR(SDTR_TWR) |
-								  SET_SDRAM_SDTR_TRP(SDTR_TRP) |
-								  SET_SDRAM_SDTR_TRCD(SDTR_TRCD);
+	                              SET_SDRAM_SDTR_TXSR(SDTR_TXSR) |
+	                              SET_SDRAM_SDTR_TRAS(SDTR_TRAS) |
+	                              SET_SDRAM_SDTR_TRC(SDTR_TRC) |
+	                              SET_SDRAM_SDTR_TWR(SDTR_TWR) |
+	                              SET_SDRAM_SDTR_TRP(SDTR_TRP) |
+	                              SET_SDRAM_SDTR_TRCD(SDTR_TRCD);
 
-	/**
-	 * Send the clock enable command.
-	 */
-	SET_FIELD(SDRAM->SDCMR, SET_SDRAM_SDCMR_MODE(SDCMR_CLOCK_CFG) |
-							SET_SDRAM_SDCMR_CTB2(SDCMR_CTB2) |
-							SET_SDRAM_SDCMR_CTB1(SDCMR_CTB1));
+	/* Send the clock enable command. */
+	SET_FIELD(SDRAM->SDCMR, SET_SDRAM_SDCMR_MODE(SDRAM_SDCMR_CLOCK_CFG) |
+	                        SET_SDRAM_SDCMR_CTB2(SDCMR_CTB2) |
+	                        SET_SDRAM_SDCMR_CTB1(SDCMR_CTB1));
 	ABORT_TIMEOUT(GET_SDRAM_SDSR_BUSY(SDRAM->SDSR) == SDSR_READY, SDRAM_TIMEOUT);
 
-	/**
-	 * Wait for the SDRAM to power up (usually 100us).
-	 */
+	/* Wait for the SDRAM to power up (usually 100us). */
 	sleep(SDRAM_INIT_DELAY);
 
-	/**
-	 * Send the Precharge-All command.
-	 */
-	SET_FIELD(SDRAM->SDCMR, SET_SDRAM_SDCMR_MODE(SDCMR_PALL) |
-							SET_SDRAM_SDCMR_CTB2(SDCMR_CTB2) |
-							SET_SDRAM_SDCMR_CTB1(SDCMR_CTB1));
+	/* Send the Precharge-All command. */
+	SET_FIELD(SDRAM->SDCMR, SET_SDRAM_SDCMR_MODE(SDRAM_SDCMR_PALL) |
+	                        SET_SDRAM_SDCMR_CTB2(SDCMR_CTB2) |
+	                        SET_SDRAM_SDCMR_CTB1(SDCMR_CTB1));
 	ABORT_TIMEOUT(GET_SDRAM_SDSR_BUSY(SDRAM->SDSR) == SDSR_READY, SDRAM_TIMEOUT);
 
-	/**
-	 * Send the Auto-Refresh command.
-	 */
-	SET_FIELD(SDRAM->SDCMR, SET_SDRAM_SDCMR_MODE(SDCMR_AUTO_REFRESH) |
-							SET_SDRAM_SDCMR_CTB2(SDCMR_CTB2) |
-							SET_SDRAM_SDCMR_CTB1(SDCMR_CTB1) |
-							SET_SDRAM_SDCMR_NRFS(SDCMR_NRFS));
+	/* Send the Auto-Refresh command. */
+	SET_FIELD(SDRAM->SDCMR, SET_SDRAM_SDCMR_MODE(SDRAM_SDCMR_AUTO_REFRESH) |
+	                        SET_SDRAM_SDCMR_CTB2(SDCMR_CTB2) |
+	                        SET_SDRAM_SDCMR_CTB1(SDCMR_CTB1) |
+	                        SET_SDRAM_SDCMR_NRFS(SDCMR_NRFS));
 	ABORT_TIMEOUT(GET_SDRAM_SDSR_BUSY(SDRAM->SDSR) == SDSR_READY, SDRAM_TIMEOUT);
 
-	/**
-	 * Send the Load Mode Register command.
-	 */
-	SET_FIELD(SDRAM->SDCMR, SET_SDRAM_SDCMR_MODE(SDCMR_LOAD_MODE_REG) |
-							SET_SDRAM_SDCMR_CTB2(SDCMR_CTB2) |
-							SET_SDRAM_SDCMR_CTB1(SDCMR_CTB1) |
-							SET_SDRAM_SDCMR_MRD(SDCMR_MRD));
+	/* Send the Load Mode Register command. */
+	SET_FIELD(SDRAM->SDCMR, SET_SDRAM_SDCMR_MODE(SDRAM_SDCMR_LOAD_MODE_REG) |
+	                        SET_SDRAM_SDCMR_CTB2(SDCMR_CTB2) |
+	                        SET_SDRAM_SDCMR_CTB1(SDCMR_CTB1) |
+	                        SET_SDRAM_SDCMR_MRD(SDCMR_MRD));
 	ABORT_TIMEOUT(GET_SDRAM_SDSR_BUSY(SDRAM->SDSR) == SDSR_READY, SDRAM_TIMEOUT);
 
-	/**
-	 * Set the refresh rate.
-	 */
+	/* Set the refresh rate. */
 	SET_FIELD(SDRAM->SDCMR, SET_SDRAM_SDRTR_COUNT(SDRTR_COUNT));
 
-	/**
-	 * Ensure that write protection is disabled.
-	 */
+	/* Ensure that write protection is disabled. */
 	CLEAR_FIELD(SDRAM->SDCR[SDRAM_FMC_BANK], SDRAM_SDCR_WP());
 }
 

@@ -4,9 +4,9 @@
  *
  * Font data for various sizes of the Courier New font.
  */
+#pragma once
+
 #ifdef INCLUDE_FONT_TABLE
-#ifndef FONT_H
-#define FONT_H
 
 #include "config.h"
 
@@ -46,10 +46,8 @@
  * Given an ASCII value, generate an index into the font table that points to
  * the first byte that represents that character.
  */
-
 #define FONT_ASCII_INDEX(x) ((x - FONT_ASCII_OFFSET) * FONT_LINE_LENGTH * FONT_HEIGHT)
 
 extern const uint8_t font_table[];
 
-#endif /* FONT_H */
 #endif /* INCLUDE_FONT_TABLE */

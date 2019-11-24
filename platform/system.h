@@ -5,11 +5,6 @@
  * Contains initialization functions used to get the system into a usable
  * state after startup.
  */
-#ifndef SYSTEM_H
-#define SYSTEM_H
+#pragma once
 
-#include "status.h"
-
-void init_system(void);
-
-#endif
+void system_init(void);

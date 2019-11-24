@@ -4032,4 +4032,4 @@ const uint8_t font_table[] =
 #error Unsupported font size selected in config file.
 #endif /* FONT selection */
 
-#endif
+#endif /* INCLUDE_FONT_TABLE */

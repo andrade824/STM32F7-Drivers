@@ -10,7 +10,6 @@
 
 #include "gpio.h"
 #include "interrupt.h"
-#include "status.h"
 
 #include "registers/lcd_ctrl_reg.h"
 
@@ -20,11 +19,11 @@
  * Polarity settings used for HSPOL, VSPOL, DEPOL, and PCPOL in LTDC_GCR.
  */
 typedef enum {
-	ACTIVE_LOW = 0,
-	ACTIVE_HIGH = 1
+	LCD_POL_ACTIVE_LOW = 0,
+	LCD_POL_ACTIVE_HIGH = 1
 } LcdPolarity;
 
-void init_lcd_ctrl(uint32_t framebuffer, void (*callback) (void));
+void lcd_ctrl_init(uint32_t framebuffer, void (*callback) (void));
 
 #endif
 #endif

@@ -4,24 +4,22 @@
  *
  * Definitions and functions used to manipulate the DMA2D Controller [9].
  */
-#ifdef INCLUDE_DMA2D_DRIVER
-#ifndef DMA2D_H
-#define DMA2D_H
+#pragma once
 
-#include "status.h"
+#ifdef INCLUDE_DMA2D_DRIVER
 
 #include <stdbool.h>
 #include <stdint.h>
 
-void init_dma2d(void);
+void dma2d_init(void);
 
-void dma2d_mem_to_mem(uint32_t src_addr,
-                      uint32_t dst_addr,
-                      uint16_t width,
-                      uint16_t height,
-                      void (*callback) (void));
+void dma2d_mem_to_mem(
+	uint32_t src_addr,
+	uint32_t dst_addr,
+	uint16_t width,
+	uint16_t height,
+	void (*callback) (void));
 
 bool is_dma2d_complete(void);
 
-#endif
-#endif
+#endif /*INCLUDE_DMA2D_DRIVER */

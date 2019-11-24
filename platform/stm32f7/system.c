@@ -8,7 +8,6 @@
 #include "config.h"
 #include "debug.h"
 #include "interrupt.h"
-#include "status.h"
 #include "system_timer.h"
 
 #include "registers/flash_reg.h"
@@ -26,7 +25,7 @@ extern void initialise_monitor_handles(void);
 /**
  * Enable the caches using the CMSIS-provided methods.
  */
-static void init_caches(void)
+static void caches_init(void)
 {
 	SCB_EnableICache();
 	SCB_EnableDCache();
@@ -39,12 +38,12 @@ static void init_caches(void)
  * You MUST call this function before setting up the clocks. This ensures that
  * the wait states are properly initialized before boosting the clock up.
  */
-static void init_flash(void)
+static void flash_init(void)
 {
 	SET_FIELD(FLASH->ACR, FLASH_ACR_ARTRST());
 	SET_FIELD(FLASH->ACR, SET_FLASH_ACR_LATENCY(FLASH_WAIT_STATES) |
-						  FLASH_ACR_PRFTEN() |
-						  FLASH_ACR_ARTEN());
+	                      FLASH_ACR_PRFTEN() |
+	                      FLASH_ACR_ARTEN());
 
 	ABORT_IF_NOT(GET_FLASH_ACR_LATENCY(FLASH->ACR) == FLASH_WAIT_STATES);
 }
@@ -52,16 +51,12 @@ static void init_flash(void)
 /**
  * Initialize the clock generator to utilize the external clock and PLL.
  */
-static void init_clocks(void)
+static void clocks_init(void)
 {
-	/**
-	 * Disable all RCC interrupts.
-	 */
+	/* Disable all RCC interrupts. */
 	RCC->CIR = 0x0;
 
-	/**
-	 * Configure and enable the high-speed external (HSE) clock.
-	 */
+	/* Configure and enable the high-speed external (HSE) clock. */
 #if HSE_BYPASS
 	SET_FIELD(RCC->CR, RCC_CR_HSEBYP());
 #endif
@@ -70,9 +65,9 @@ static void init_clocks(void)
 	while(GET_RCC_CR_HSERDY(RCC->CR) == 0);
 
 	/* Configure the 48MHz clock. */
-#ifdef ENABLE_48MHZ_CLOCK
+#if ENABLE_48MHZ_CLOCK
 	SET_FIELD(RCC->DCKCFGR2, SET_RCC_DCKCFGR2_CK48MSEL(CLK_CK48MSEL) |
-	                        SET_RCC_DCKCFGR2_SDMMC1SEL(CLK_SDMMCSEL));
+	                         SET_RCC_DCKCFGR2_SDMMC1SEL(CLK_SDMMCSEL));
 #endif /* ENABLE_48MHZ_CLOCK */
 
 	/**
@@ -83,19 +78,19 @@ static void init_clocks(void)
 	 * fInput is 25MHz on the STM32F7 discovery board.
 	 */
 	RCC->PLLCFGR = SET_RCC_PLLCFGR_PLLQ(CLK_PLLQ) |
-				   RCC_PLLCFGR_PLLSRC() |
-				   SET_RCC_PLLCFGR_PLLM(CLK_PLLM) |
-				   SET_RCC_PLLCFGR_PLLN(CLK_PLLN) |
-				   SET_RCC_PLLCFGR_PLLP(CLK_PLLP);
+	               RCC_PLLCFGR_PLLSRC() |
+	               SET_RCC_PLLCFGR_PLLM(CLK_PLLM) |
+	               SET_RCC_PLLCFGR_PLLN(CLK_PLLN) |
+	               SET_RCC_PLLCFGR_PLLP(CLK_PLLP);
 
 	SET_FIELD(RCC->CR, RCC_CR_PLLON());
 
 #ifdef INCLUDE_LCD_CTRL_DRIVER
 	/* Configure and enable PLLSAI (used to drive the LCD pixel clock). */
 	CLEAR_FIELD(RCC->PLLSAICFGR, RCC_PLLSAICFGR_PLLN() |
-								 RCC_PLLSAICFGR_PLLSAIR());
+	                             RCC_PLLSAICFGR_PLLSAIR());
 	SET_FIELD(RCC->PLLSAICFGR, SET_RCC_PLLSAICFGR_PLLN(CLK_PLLSAI_PLLN) |
-							   SET_RCC_PLLSAICFGR_PLLSAIR(CLK_PLLSAIR));
+	                           SET_RCC_PLLSAICFGR_PLLSAIR(CLK_PLLSAIR));
 
 	SET_FIELD(RCC->DCKCFGR1, SET_RCC_DCKCFGR1_PLLSAIDIVR(CLK_PLLSAIDIVR));
 
@@ -119,38 +114,27 @@ static void init_clocks(void)
 	SET_FIELD(PWR->CR1, PWR_CR1_ODSWEN());
 	while(GET_PWR_CSR1_ODSWRDY(PWR->CSR1) == 0) { }
 
-	/**
-	 * Configure the bus clocks.
-	 */
+	/* Configure the bus clocks. */
 	SET_FIELD(RCC->CFGR, SET_RCC_CFGR_PPRE1(CLK_APB1_DIV) |
-						 SET_RCC_CFGR_PPRE2(CLK_APB2_DIV));
+	                     SET_RCC_CFGR_PPRE2(CLK_APB2_DIV));
 
-	/**
-	 * Wait for the PLL to lock.
-	 */
+	/* Wait for the PLL to lock. */
 	while(GET_RCC_CR_PLLRDY(RCC->CR) == 0) { }
 
-	/**
-	 * Switch the system clock to use the main PLL.
-	 */
+	/* Switch the system clock to use the main PLL. */
 	SET_FIELD(RCC->CFGR, SET_RCC_CFGR_SW(0x2));
 
-	/**
-	 * Disable the high-speed internal (HSI) clock.
-	 */
+	/* Disable the high-speed internal (HSI) clock. */
 	CLEAR_FIELD(RCC->CR, RCC_CR_HSION());
 
-	/**
-	 * Ensure the system clock was switched to the main PLL successfully.
-	 */
+	/* Ensure the system clock was switched to the main PLL successfully. */
 	ABORT_IF_NOT(GET_RCC_CFGR_SWS(RCC->CFGR) == 0x2);
 }
 
 /**
-  * Setup the clocks, caches, memory protection unit (MPU), and other low-level
-  * systems.
-  */
-void init_system(void)
+ * Setup the clocks, caches, interrupts, and other low-level systems.
+ */
+void system_init(void)
 {
 	/**
 	 * Initialize FPU. The weird macro checking is done to ensure that you setup
@@ -167,9 +151,9 @@ void init_system(void)
 	initialise_monitor_handles();
 #endif
 
-	init_caches();
-	init_flash();
-	init_clocks();
-	init_interrupts();
-	init_system_timer();
+	caches_init();
+	flash_init();
+	clocks_init();
+	interrupt_init();
+	system_timer_init();
 }

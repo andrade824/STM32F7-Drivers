@@ -4,11 +4,9 @@
  *
  * Definitions and functions used to manipulate the SDMMC.
  */
-#if INCLUDE_SDMMC_DRIVER
-#ifndef SDMMC_H
-#define SDMMC_H
+#pragma once
 
-#include "status.h"
+#if INCLUDE_SDMMC_DRIVER
 
 #include "registers/sdmmc_reg.h"
 
@@ -25,12 +23,12 @@ typedef enum {
 	SD_TRANSFER_STATE,
 	SD_READ_STATE,
 	SD_WRITE_STATE
-} sd_state_t;
+} SdState;
 
 /* Custom error values for SDMMC functions. */
 typedef enum {
-	SD_SUCCESS              = 0,
-	SD_FAIL                 = 1,
+	SD_FAIL                 = 0,
+	SD_SUCCESS              = 1,
 
 	/* Errors generated sending commands */
 	SD_STATUS_CCRCFAIL      = 2,
@@ -57,11 +55,11 @@ typedef enum {
 	SD_CID_CSD_OVERWRITE    = 21,
 	SD_WP_ERASE_SKIP        = 22,
 	SD_AKE_SEQ_ERROR        = 23
-} sd_status_t;
+} SdStatus;
 
 /* SD Card Properties. */
 typedef struct {
-	sd_state_t state;
+	SdState state;
 	uint32_t rca;                /* Relative Card Address */
 	uint8_t manufacturer_id;
 	char oem_id[3];
@@ -74,12 +72,11 @@ typedef struct {
 	uint16_t block_len;          /* Block length */
 } SdCard;
 
-status_t sdmmc_init();
+SdStatus sdmmc_init();
 
-sd_status_t sd_read_data(void *data, uint32_t block_addr, uint16_t num_blocks);
-sd_status_t sd_write_data(void *data, uint32_t block_addr, uint16_t num_blocks);
+SdStatus sd_read_data(void *data, uint32_t block_addr, uint16_t num_blocks);
+SdStatus sd_write_data(void *data, uint32_t block_addr, uint16_t num_blocks);
 
 SdCard sd_get_card_info(void);
 
-#endif /* SDMMC_H */
 #endif /* INCLUDE_SDMMC_DRIVER */

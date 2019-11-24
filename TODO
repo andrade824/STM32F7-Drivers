@@ -1,34 +1,22 @@
-- Write FAT32 filesystem driver.
+
 - Write SPI controller driver.
 - Write RFM69 (radio module) driver.
 - Convert every "register" header file to BITFIELD2.
 - Maybe write a script/program that converts an SVD file into a "register" header file.
 - Refactor build system to be more modular? (Maybe recursive make files or ninja)
 - Remove dependency on CMSIS by creating custom cache enable and interrupt code.
-- Enforce code style
---- singe line comments using /* */
---- Success -> SUCCESS
---- UsartStopBits -> usart_stop_bits_t?
---- Put function doc comments in header file
---- Use #pragma once
-- New bitfield macro idea:
---- #define MODULE SDMMC, #define REGISTER <put reg name here>
---- Inside the bitfield macro, use MODULE and REGISTER to generate the names
---- #undef the MODULE at the end of the file and #undef the REGISTER inbetween register definitions
---- The GET() macro can then take in "x" and automatically do "x->REGISTER"
---- #define BIT_FIELD2(field, lsb_pos, msb_pos)
---- static inline uint32_t MODULE ## _ ## REGISTER ## _ ## field()
+- Figure out why FAT32 filesystem adds 4-5KiB of text.
 
 FAT32 filesystem
 
-Create new struct fat_dir_entry_t that contains name, file_size, cluster, and is_dir.
+Create new struct FatDirEntry that contains name, file_size, cluster, and is_dir.
 
-1. fat_status_t find_dir_entry(char[12] name, uint32_t dir_cluster, fat_dir_entry_t *entry)
+1. FatStatus find_dir_entry(char[12] name, uint32_t dir_cluster, FatDirEntry *entry)
    This loops through every cluster/sector/directory entry to find an entry
    inside of a directory. If it finds the entry, it populates `entry`
    and returns FAT_SUCCESS. Otherwise, it returns FAT_FILE_NOT_FOUND.
 
-2. fat_status_t parse_path(const char *path, fat_dir_entry_t *entry)
+2. FatStatus parse_path(const char *path, FatDirEntry *entry)
    This function parses an absolute path starting at the root directory.
 
    This method only works with standard short filenames (8.3 format) so each token
@@ -43,7 +31,7 @@ Create new struct fat_dir_entry_t that contains name, file_size, cluster, and is
    If it finds the file, it populates entry and returns FAT_SUCCESS. Otherwise
    it returns FAT_FILE_NOT_FOUND.
 
-3. fat_status_t fat_open(fat_file_t *file, const char *path);
+3. FatStatus fat_open(FatFile *file, const char *path);
    This will call parse_path to get the file data and then populate the `file`
    structure.
 
@@ -57,11 +45,11 @@ Create new struct fat_dir_entry_t that contains name, file_size, cluster, and is
 
    Maybe include metadata as to what position the buffer cache represents?
 
-4. uint32_t fat_read(fat_file_t *file, void* buf, uint32_t size);
+4. uint32_t fat_read(FatFile *file, void* buf, uint32_t size);
    Reads data from the file and returns the number of bytes that was read (which
    maybe less than what you request if you hit the end of the file).
 
-5. uint32_t fat_write(fat_file_t *file, void* buf, uint32_t size);
+5. uint32_t fat_write(FatFile *file, void* buf, uint32_t size);
    Writes data into a file and returns how many bytes it wrote. This can potentially
    expand the size of the file if you write past the end of the file (if position > size).
 
@@ -80,7 +68,7 @@ Enum seek_origin_t {
 	SEEK_END /* Offset does nothing when this is passed in */
 }
 
-6. uint32_t fat_seek(fat_file_t *file, int32_t offset, enum file_seek_origin_t origin);
+6. uint32_t fat_seek(FatFile *file, int32_t offset, enum file_seek_origin_t origin);
    Offset is always clipped to the end of the file (`position = size`, where the max
    byte in the file is `size - 1`)
 

@@ -5,22 +5,17 @@
  * Contains methods for initializaing and controlling interrupts and the
  * vector table.
  */
-
-#ifndef INTERRUPT_H
-#define INTERRUPT_H
+#pragma once
 
 #include "config.h"
-#include "status.h"
 
 /**
  * Type for pointers to Interrupt Service Routines.
  */
 typedef void (*ISR_Type) (void);
 
-void init_interrupts(void);
+void interrupt_init(void);
 
-void request_interrupt(IRQn_Type irq, ISR_Type isr);
+void interrupt_request(IRQn_Type irq, ISR_Type isr);
 
 /* TODO: Add methods for setting priorities and enabling/disabling ISRs */
-
-#endif

@@ -5,30 +5,25 @@
  * Contains methods for controlling the system timer (the builtin SysTick
  * timer common to all ARM microcontrollers).
  */
-
-#ifndef SYSTEM_TIMER_H
-#define SYSTEM_TIMER_H
+#pragma once
 
 #include "config.h"
-#include "status.h"
 
 #include <stdbool.h>
 #include <stdint.h>
 
 /**
- * Converts between ticks and seconds.
+ * Converts between cycles and seconds.
  *
  * Example usage (delay for 25ms):
- * start_timer(MSECS(25));
+ * sleep(MSECS(25));
  */
 #define SECS(x)  (x * (CPU_HZ))
 #define MSECS(x) (x * (CPU_HZ / 1000))
 #define USECS(x) (x * (CPU_HZ / 1000000))
 
-void init_system_timer(void);
+void system_timer_init(void);
 
 void sleep(uint64_t cycles);
 
 uint64_t get_cycles(void);
-
-#endif

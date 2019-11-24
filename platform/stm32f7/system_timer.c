@@ -28,7 +28,6 @@
 #include "config.h"
 #include "debug.h"
 #include "interrupt.h"
-#include "status.h"
 #include "system_timer.h"
 
 #include "registers/systick_reg.h"
@@ -52,16 +51,16 @@ static volatile uint64_t total_cycles = 0;
  * Initialize the system timer to update the `total_cycles` count during each
  * SYSTIMER_TICK granularity defined in the config file.
  */
-void init_system_timer(void)
+void system_timer_init(void)
 {
-	request_interrupt(SysTick_IRQn, systick_interrupt);
+	interrupt_request(SysTick_IRQn, systick_interrupt);
 
 	/**
 	 * Disable the timer, use processor clock, and enable SysTick interrupt.
 	 */
 	CLEAR_FIELD(SYSTICK->CTRL, SYSTICK_CTRL_ENABLE());
 	SET_FIELD(SYSTICK->CTRL, SYSTICK_CTRL_TICKINT() |
-							 SYSTICK_CTRL_CLKSOURCE());
+	                         SYSTICK_CTRL_CLKSOURCE());
 
 	SYSTICK->LOAD = SET_SYSTICK_LOAD_RELOAD(SYSTIMER_TICK);
 	SYSTICK->VAL = 0;

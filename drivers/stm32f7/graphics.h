@@ -5,12 +5,11 @@
  * A single software module used to draw graphics onto the STM32F7 Discovery
  * board's LCD module. This module encapsulates the LCD and 2D DMA controllers.
  */
+#pragma once
+
 #if INCLUDE_GRAPHICS_MODULE
-#ifndef GRAPHICS_H
-#define GRAPHICS_H
 
 #include "config.h"
-#include "status.h"
 
 #include <stdint.h>
 
@@ -28,7 +27,7 @@
 #error Unsupported pixel format selected.
 #endif /* LCD_CONFIG_PIXEL_FORMAT */
 
-void init_graphics(uint32_t frontbuf, uint32_t backbuf);
+void gfx_init(uint32_t frontbuf, uint32_t backbuf);
 
 void gfx_swap_buffers(void);
 
@@ -49,5 +48,4 @@ uint8_t gfx_pixel_size(void);
 uint8_t gfx_num_chars(void);
 uint8_t gfx_num_lines(void);
 
-#endif /* GRAPHICS_H */
 #endif /* INCLUDE_GRAPHICS_MODULE */

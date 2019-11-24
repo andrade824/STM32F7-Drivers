@@ -1,7 +1,6 @@
 #include "config.h"
 #include "debug.h"
 #include "gpio.h"
-#include "status.h"
 #include "stm32f7_tests.h"
 #include "system.h"
 
@@ -9,13 +8,13 @@
 
 int main(void)
 {
-	init_system();
+	system_init();
 	dbprintf("System Initialized\n");
 
 #if 1
 	fat_dump_file_test("test2.txt");
 #else
-	sd_read_mbr_test();
+	usart_gfx_test();
 #endif
 
 #ifdef config_stm32f7_dev_board
@@ -24,16 +23,16 @@ int main(void)
 #endif
 
 	gpio_request_input(GPIO_B_USER, GPIO_NO_PULL);
-	gpio_request_output(GPIO_ARD_D13, low);
+	gpio_request_output(GPIO_ARD_D13, GPIO_LOW);
 
-	DigitalState led_ctrl = low;
+	DigitalState led_ctrl = GPIO_LOW;
 
 	while(1) {
-		if(gpio_get_input(GPIO_B_USER) == low) {
-			if(led_ctrl == low) {
-				led_ctrl = high;
+		if(gpio_get_input(GPIO_B_USER) == GPIO_LOW) {
+			if(led_ctrl == GPIO_LOW) {
+				led_ctrl = GPIO_HIGH;
 			} else {
-				led_ctrl = low;
+				led_ctrl = GPIO_LOW;
 			}
 		} else {
 			dbprintf("Button pressed!\n");

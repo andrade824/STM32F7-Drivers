@@ -2,36 +2,28 @@
  * @author Devon Andrade
  * @created 12/26/2016
  *
- * Definitions and functions used to manipulate the Power Controller [4].
+ * Definitions and functions used to manipulate the Power Controller.
  */
-#ifndef PWR_REG_H
-#define PWR_REG_H
+#pragma once
 
 #include "bitfield.h"
 #include "mem_map.h"
 
 #include <stdint.h>
 
-/**
- * Type defining the Power Controller module register map.
- */
-typedef struct
-{
-	volatile uint32_t CR1;   /*!< PWR power control register 1,        Address offset: 0x00 */
-	volatile uint32_t CSR1;  /*!< PWR power control/status register 1, Address offset: 0x04 */
-	volatile uint32_t CR2;   /*!< PWR power control register 2,        Address offset: 0x08 */
-	volatile uint32_t CSR2;  /*!< PWR power control/status register 2, Address offset: 0x0C */
+/* Type defining the Power Controller module register map. */
+typedef struct {
+	volatile uint32_t CR1;  /* PWR power control register 1,        Address offset: 0x00 */
+	volatile uint32_t CSR1; /* PWR power control/status register 1, Address offset: 0x04 */
+	volatile uint32_t CR2;  /* PWR power control register 2,        Address offset: 0x08 */
+	volatile uint32_t CSR2; /* PWR power control/status register 2, Address offset: 0x0C */
 } PowerReg;
 
-/**
- * Define the Power Controller register map accessor.
- */
+/* Define the Power Controller register map accessor. */
 #define PWR_BASE (APB1PERIPH_BASE + 0x7000U)
 #define PWR ((PowerReg *) PWR_BASE)
 
-/**
- * Power Control Register 1 Bit Definitions [4.4.1].
- */
+/* Power Control Register 1 Bit Definitions. */
 BIT_FIELD(PWR_CR1_LPDS,    0, 0x00000001);
 BIT_FIELD(PWR_CR1_PDDS,    1, 0x00000002);
 BIT_FIELD(PWR_CR1_CSBF,    3, 0x00000008);
@@ -47,9 +39,7 @@ BIT_FIELD(PWR_CR1_ODEN,   16, 0x00010000);
 BIT_FIELD(PWR_CR1_ODSWEN, 17, 0x00020000);
 BIT_FIELD(PWR_CR1_UDEN,   18, 0x000C0000);
 
-/**
- * Power Control/Status Register 1 Bit Definitions [4.4.2].
- */
+/* Power Control/Status Register 1 Bit Definitions. */
 BIT_FIELD(PWR_CSR1_WUIF,     0, 0x00000001);
 BIT_FIELD(PWR_CSR1_SBF,      1, 0x00000002);
 BIT_FIELD(PWR_CSR1_PVDO,     2, 0x00000004);
@@ -60,5 +50,3 @@ BIT_FIELD(PWR_CSR1_VOSRDY,  14, 0x00004000);
 BIT_FIELD(PWR_CSR1_ODRDY,   16, 0x00010000);
 BIT_FIELD(PWR_CSR1_ODSWRDY, 17, 0x00020000);
 BIT_FIELD(PWR_CSR1_UDRDY,   18, 0x000C0000);
-
-#endif

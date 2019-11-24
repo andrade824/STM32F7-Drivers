@@ -2,60 +2,44 @@
  * @author Devon Andrade
  * @created 12/25/2016 (Merry Christmas!)
  *
- * Definitions and functions used to manipulate the GPIO module [6].
+ * Definitions and functions used to manipulate the GPIO module.
  */
-#ifndef GPIO_H
-#define GPIO_H
-
-#include "status.h"
+#pragma once
 
 #include "registers/gpio_reg.h"
 
 /**
- * Defines a digital state for a pin where a low == 0V, and high == VDD.
+ * Defines a digital state for a pin where a GPIO_LOW == 0V, and GPIO_HIGH == VDD.
  */
-typedef enum
-{
-	low = 0x0,
-	high = 0x1
+typedef enum {
+	GPIO_LOW = 0x0,
+	GPIO_HIGH = 0x1
 } DigitalState;
 
-/**
- * GPIO Mode type defintions [6.4.1].
- */
-typedef enum
-{
+/* GPIO Mode type defintions. */
+typedef enum {
 	GPIO_INPUT = 0x0,
 	GPIO_OUTPUT = 0x1,
 	GPIO_ALT_FUNC = 0x2,
 	GPIO_ANALOG = 0x3
 } GpioMode;
 
-/**
- * GPIO Output type definitions [6.4.2].
- */
-typedef enum
-{
+/* GPIO Output type definitions. */
+typedef enum {
 	GPIO_PUSH_PULL = 0x0,
 	GPIO_OPEN_DRAIN = 0x1
 } GpioOType;
 
-/**
- * GPIO Output speed definitions [6.4.3].
- */
-typedef enum
-{
+/* GPIO Output speed definitions. */
+typedef enum {
 	GPIO_OSPEED_4MHZ = 0x0,
 	GPIO_OSPEED_25MHZ = 0x1,
 	GPIO_OSPEED_50MHZ = 0x2,
 	GPIO_OSPEED_100MHZ = 0x3
 } GpioOSpeed;
 
-/**
- * GPIO Pull state definitions [6.4.4].
- */
-typedef enum
-{
+/* GPIO Pull state definitions. */
+typedef enum 	{
 	GPIO_NO_PULL = 0x0,
 	GPIO_PULL_UP = 0x1,
 	GPIO_PULL_DOWN = 0x2
@@ -66,8 +50,7 @@ typedef enum
  *
  * Check the datasheet for the exact pin to alternate function mapping.
  */
-typedef enum
-{
+typedef enum {
 	AF0 = 0x0,
 	AF1,
 	AF2,
@@ -94,8 +77,7 @@ typedef enum
  *           0x8 = Port 8 (aka, Port I)
  *           0xB = Pin 11
  */
-typedef enum
-{
+typedef enum {
 	PA0  = 0x00,
 	PA1  = 0x01,
 	PA2  = 0x02,
@@ -277,9 +259,7 @@ typedef enum
 	NUM_GPIO_PINS
 } GpioPin;
 
-/**
- * Macros for retrieving the port and pin numbers from the above enumerations.
- */
+/* Macros for retrieving the port and pin numbers from the above enumerations. */
 #define GPIO_GET_PORT(x) (((uint8_t)x) >> 4)
 #define GPIO_GET_PIN(x) (((uint8_t)x) & 0x0F)
 
@@ -289,11 +269,11 @@ typedef enum
  * without the user having to specify the port twice (e.g., PA12 implies Port A
  * already). So, the user can do either of the following:
  *
- * gpio_set_output(GPIO_PA12, high)
+ * gpio_set_output(GPIO_PA12, GPIO_HIGH)
  *
  * OR
  *
- * gpio_set_output(GPIOA, PA12, high)
+ * gpio_set_output(GPIOA, PA12, GPIO_HIGH)
  */
 #define GPIO_PA0  GPIOA, PA0
 #define GPIO_PA1  GPIOA, PA1
@@ -475,13 +455,12 @@ typedef enum
 #define GPIO_PK7  GPIOK, PK7
 
 void gpio_request_input(GpioReg *reg, GpioPin pin, GpioPull pull);
-void gpio_request_output(GpioReg *reg,
-                         GpioPin pin,
-                         DigitalState default_state);
-void gpio_request_alt(GpioReg *reg,
-                      GpioPin pin,
-                      GpioAlternateFunction alt,
-                      GpioOSpeed speed);
+void gpio_request_output(GpioReg *reg, GpioPin pin, DigitalState default_state);
+void gpio_request_alt(
+	GpioReg *reg,
+	GpioPin pin,
+	GpioAlternateFunction alt,
+	GpioOSpeed speed);
 
 void gpio_set_otype(GpioReg *reg, GpioPin pin, GpioOType type);
 void gpio_set_ospeed(GpioReg *reg, GpioPin pin, GpioOSpeed speed);
@@ -489,5 +468,3 @@ void gpio_set_pullstate(GpioReg *reg, GpioPin pin, GpioPull pull);
 
 void gpio_set_output(GpioReg *reg, GpioPin pin, DigitalState state);
 DigitalState gpio_get_input(GpioReg *reg, GpioPin pin);
-
-#endif

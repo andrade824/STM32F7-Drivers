@@ -4,20 +4,19 @@
  *
  * Configuration settings common to all STM32F7 based devices.
  */
-#ifndef STM32F7_GENERIC_H
-#define STM32F7_GENERIC_H
+#pragma once
 
 /***** CLOCK SETTINGS *****/
 
 /**
- * Clock settings. The user needs to ensure that init_clocks() in "system.c"
+ * Clock settings. The user needs to ensure that clocks_init() in "system.c"
  * generates clocks with these frequencies.
  */
-#define CPU_HZ 216000000UL
-#define APB2_HZ 108000000UL
-#define APB1_HZ 54000000UL
-#define AHB_HZ CPU_HZ
-#define SDMMC_HZ 48000000UL
+#define CPU_HZ            216000000UL
+#define APB2_HZ           108000000UL
+#define APB1_HZ           54000000UL
+#define AHB_HZ            CPU_HZ
+#define SDMMC_HZ          48000000UL
 #define FLASH_WAIT_STATES 7U
 
 /**
@@ -53,7 +52,7 @@
 #define CLK_PLLSAIDIVR  1 /* Divide by 4 */
 
 /* 48MHz (SDMMC/USB) Clock Settings */
-#define ENABLE_48MHZ_CLOCK
+#define ENABLE_48MHZ_CLOCK 1
 #define CLK_CK48MSEL 0U /* Use the PLLQ output as the 48MHz */
 #define CLK_SDMMCSEL 0U /* Use the 48MHz clock as the SDMMC clock source */
 
@@ -73,15 +72,13 @@
  * "core_cm7.h" requires the IRQn_Type enum located in the device-specific
  * config file, so make sure to include this file after that is defined.
  */
-#define __CM7_REV                 0x0001U  /*!< Cortex-M7 revision r0p1                      */
-#define __MPU_PRESENT             1        /*!< CM7 provides an MPU                          */
-#define __NVIC_PRIO_BITS          4        /*!< CM7 uses 4 Bits for the Priority Levels      */
-#define __Vendor_SysTickConfig    0        /*!< Set to 1 if different SysTick Config is used */
-#define __FPU_PRESENT             1        /*!< FPU present                                  */
-#define __ICACHE_PRESENT          1        /*!< CM7 instruction cache present                */
-#define __DCACHE_PRESENT          1        /*!< CM7 data cache present                       */
-#include "core_cm7.h"                      /*!< Cortex-M7 processor and core peripherals     */
+#define __CM7_REV              0x0001U /* Cortex-M7 revision r0p1                      */
+#define __MPU_PRESENT          1       /* CM7 provides an MPU                          */
+#define __NVIC_PRIO_BITS       4       /* CM7 uses 4 Bits for the Priority Levels      */
+#define __Vendor_SysTickConfig 0       /* Set to 1 if different SysTick Config is used */
+#define __FPU_PRESENT          1       /* FPU present                                  */
+#define __ICACHE_PRESENT       1       /* CM7 instruction cache present                */
+#define __DCACHE_PRESENT       1       /* CM7 data cache present                       */
+#include "core_cm7.h"                  /* Cortex-M7 processor and core peripherals     */
 
 #include "stm32f7/stm32f7_mem_map.h"
-
-#endif /* STM32F7_GENERIC_H */

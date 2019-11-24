@@ -12,7 +12,6 @@
 #include "gpio.h"
 #include "interrupt.h"
 #include "lcd_ctrl.h"
-#include "status.h"
 
 #include "registers/lcd_ctrl_reg.h"
 #include "registers/rcc_reg.h"
@@ -50,14 +49,12 @@ void lcd_ctrl_error_isr(void)
 {
 	if(GET_LTDC_ISR_FUIF(LTDC->ISR)) {
 		SET_FIELD(LTDC->ICR, LTDC_ICR_CFUIF());
-		dbprintf("LCD Error: FIFO Underrun error\n");
-		while(1) { }
+		ABORT("LCD Error: FIFO Underrun error\n");
 	}
 
 	if(GET_LTDC_ISR_TERRIF(LTDC->ISR)) {
 		SET_FIELD(LTDC->ICR, LTDC_ICR_CTERRIF());
-		dbprintf("LCD Error: Transfer error\n");
-		while(1) { }
+		ABORT("LCD Error: Transfer error\n");
 	}
 }
 
@@ -70,17 +67,13 @@ void lcd_ctrl_error_isr(void)
  * @param callback A callback function to trigger during every vertical blanking
  *                 period (or NULL for no callback).
  */
-void init_lcd_ctrl(uint32_t framebuffer, void (*callback) (void))
+void lcd_ctrl_init(uint32_t framebuffer, void (*callback) (void))
 {
-	/**
-	 * Enable the LCD APB2 clock.
-	 */
+	/* Enable the LCD APB2 clock. */
 	SET_FIELD(RCC->APB2ENR, RCC_APB2ENR_LTDCEN());
 	__asm("dsb");
 
-	/**
-	 * Request all of the required GPIOs.
-	 */
+	/* Request all of the required GPIOs. */
 	gpio_request_alt(GPIO_LCD_R0, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ);
 	gpio_request_alt(GPIO_LCD_R1, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ);
 	gpio_request_alt(GPIO_LCD_R2, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ);
@@ -112,13 +105,11 @@ void init_lcd_ctrl(uint32_t framebuffer, void (*callback) (void))
 	gpio_request_alt(GPIO_LCD_HSYNC, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ);
 	gpio_request_alt(GPIO_LCD_VSYNC, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ);
 	gpio_request_alt(GPIO_LCD_DE, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ);
-	gpio_request_output(GPIO_LCD_DISP, low);
-	gpio_request_output(GPIO_LCD_BL_CTRL, low);
+	gpio_request_output(GPIO_LCD_DISP, GPIO_LOW);
+	gpio_request_output(GPIO_LCD_BL_CTRL, GPIO_LOW);
 	gpio_set_otype(GPIO_LCD_BL_CTRL, GPIO_OPEN_DRAIN);
 
-	/**
-	 * Set the LCD timing parameters.
-	 */
+	/* Set the LCD timing parameters. */
 	const uint16_t vsync = LCD_CONFIG_VSYNC - 1;
 	const uint16_t hsync = LCD_CONFIG_HSYNC - 1;
 	SET_FIELD(LTDC->SSCR, SET_LTDC_SSCR_VSH(vsync) |
@@ -139,86 +130,74 @@ void init_lcd_ctrl(uint32_t framebuffer, void (*callback) (void))
 	SET_FIELD(LTDC->TWCR, SET_LTDC_TWCR_TOTALH(total_height) |
 	                      SET_LTDC_TWCR_TOTALW(total_width));
 
-	/**
-	 * Set signal polarities.
-	 */
+	/* Set signal polarities. */
 	SET_FIELD(LTDC->GCR, SET_LTDC_GCR_PCPOL(LCD_CONFIG_CLK_POL) |
 	                     SET_LTDC_GCR_DEPOL(LCD_CONFIG_DE_POL) |
 	                     SET_LTDC_GCR_VSPOL(LCD_CONFIG_VSYNC_POL) |
 	                     SET_LTDC_GCR_HSPOL(LCD_CONFIG_HSYNC_POL) |
 	                     LTDC_GCR_DEN());
 
-	/**
-	 * Set default background color.
-	 */
+	/* Set default background color. */
 	SET_FIELD(LTDC->BCCR, SET_LTDC_BCCR_BCGREEN(0) |
 	                      SET_LTDC_BCCR_BCBLUE(0) |
 	                      SET_LTDC_BCCR_BCRED(0));
 
-	/**
-	 * Setup LCD vblank and error interrupts.
-	 */
+	/* Setup LCD vblank and error interrupts. */
 	vblank_callback = callback;
 	if(vblank_callback) {
-		request_interrupt(LTDC_IRQn, vblank_isr);
+		interrupt_request(LTDC_IRQn, vblank_isr);
 		SET_FIELD(LTDC->LIPCR, SET_LTDC_LIPCR_LIPOS(LCD_CONFIG_HEIGHT));
 		SET_FIELD(LTDC->IER, LTDC_IER_LIE());
 	}
 
-	request_interrupt(LTDC_ER_IRQn, lcd_ctrl_error_isr);
+	interrupt_request(LTDC_ER_IRQn, lcd_ctrl_error_isr);
 	SET_FIELD(LTDC->IER, LTDC_IER_FUIE() | LTDC_IER_TERRIE());
 
 	/**
 	 * Set the default layer settings (one layer that spans the entire active
 	 * display area).
 	 */
-	SET_FIELD(LTDC_LAYER_REG(LAYER1)->WHPCR,
+	SET_FIELD(LTDC_LAYER_REG(LTDC_LAYER1)->WHPCR,
 	          SET_LTDC_LWHPCR_WHSTPOS(accumulated_hbp + 1) |
 	          SET_LTDC_LWHPCR_WHSPPOS(accumulated_active_width));
 
-	SET_FIELD(LTDC_LAYER_REG(LAYER1)->WVPCR,
+	SET_FIELD(LTDC_LAYER_REG(LTDC_LAYER1)->WVPCR,
 	          SET_LTDC_LWVPCR_WVSTPOS(accumulated_vbp + 1) |
 	          SET_LTDC_LWVPCR_WVSPPOS(accumulated_active_height));
 
-	SET_FIELD(LTDC_LAYER_REG(LAYER1)->PFCR, SET_LTDC_LPFCR_PF(LCD_CONFIG_PIXEL_FORMAT));
+	SET_FIELD(LTDC_LAYER_REG(LTDC_LAYER1)->PFCR, SET_LTDC_LPFCR_PF(LCD_CONFIG_PIXEL_FORMAT));
 
-	SET_FIELD(LTDC_LAYER_REG(LAYER1)->CACR, SET_LTDC_LCACR_CONSTA(0xFF));
+	SET_FIELD(LTDC_LAYER_REG(LTDC_LAYER1)->CACR, SET_LTDC_LCACR_CONSTA(0xFF));
 
-	CLEAR_FIELD(LTDC_LAYER_REG(LAYER1)->BFCR, LTDC_LBFCR_BF1() |
-											  LTDC_LBFCR_BF2());
-	SET_FIELD(LTDC_LAYER_REG(LAYER1)->BFCR, SET_LTDC_LBFCR_BF1(0x4) |
-	                                        SET_LTDC_LBFCR_BF2(0x5));
+	CLEAR_FIELD(LTDC_LAYER_REG(LTDC_LAYER1)->BFCR, LTDC_LBFCR_BF1() |
+	                                               LTDC_LBFCR_BF2());
+	SET_FIELD(LTDC_LAYER_REG(LTDC_LAYER1)->BFCR, SET_LTDC_LBFCR_BF1(0x4) |
+	                                             SET_LTDC_LBFCR_BF2(0x5));
 
-	SET_FIELD(LTDC_LAYER_REG(LAYER1)->CFBAR, SET_LTDC_LCFBAR_CFBADD(framebuffer));
+	SET_FIELD(LTDC_LAYER_REG(LTDC_LAYER1)->CFBAR, SET_LTDC_LCFBAR_CFBADD(framebuffer));
 
-	/**
-	 * The screen width is multiplied by the sizeof a single pixel.
-	 */
-	SET_FIELD(LTDC_LAYER_REG(LAYER1)->CFBLR,
+	/* The screen width is multiplied by the sizeof a single pixel. */
+	SET_FIELD(LTDC_LAYER_REG(LTDC_LAYER1)->CFBLR,
 	          SET_LTDC_LCFBLR_CFBLL((LCD_CONFIG_WIDTH * LCD_CONFIG_PIXEL_SIZE) + 3) |
 	          SET_LTDC_LCFBLR_CFBP(LCD_CONFIG_WIDTH * LCD_CONFIG_PIXEL_SIZE));
 
-	SET_FIELD(LTDC_LAYER_REG(LAYER1)->CFBLNR,
+	SET_FIELD(LTDC_LAYER_REG(LTDC_LAYER1)->CFBLNR,
 	          SET_LTDC_LCFBLNR_CFBLNBR(LCD_CONFIG_HEIGHT));
 
-	SET_FIELD(LTDC_LAYER_REG(LAYER1)->CR, LTDC_LCR_LEN());
+	SET_FIELD(LTDC_LAYER_REG(LTDC_LAYER1)->CR, LTDC_LCR_LEN());
 
-	/**
-	 * Reload the LTDC registers immediately instead of waiting for vblank.
-	 */
+	/* Reload the LTDC registers immediately instead of waiting for vblank. */
 	SET_FIELD(LTDC->SRCR, LTDC_SRCR_IMR());
 
-	/**
-	 * Enable the LTDC controller.
-	 */
+	/* Enable the LTDC controller. */
 	SET_FIELD(LTDC->GCR, LTDC_GCR_LTDCEN());
 
 	/**
 	 * Enable backlight and set the LCD_DISP pin high (which tells the LCD
 	 * module to start displaying data).
 	 */
-	gpio_set_output(GPIO_LCD_BL_CTRL, high);
-	gpio_set_output(GPIO_LCD_DISP, high);
+	gpio_set_output(GPIO_LCD_BL_CTRL, GPIO_HIGH);
+	gpio_set_output(GPIO_LCD_DISP, GPIO_HIGH);
 }
 
 #endif

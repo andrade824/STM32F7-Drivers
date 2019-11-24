@@ -11,7 +11,6 @@
 #include "debug.h"
 #include "dma2d.h"
 #include "interrupt.h"
-#include "status.h"
 
 #include "registers/dma2d_reg.h"
 #include "registers/lcd_ctrl_reg.h"
@@ -40,37 +39,32 @@ void dma2d_isr(void)
 		}
 	} else if(GET_DMA2D_ISR_TEIF(DMA2D->ISR)) {
 		SET_FIELD(DMA2D->IFCR, DMA2D_IFCR_CTEIF());
-		dbprintf("DMA2D Error: Transfer Error\n");
-		while(1) { }
+		ABORT("DMA2D Error: Transfer Error\n");
 	} else if(GET_DMA2D_ISR_CAEIF(DMA2D->ISR)) {
 		SET_FIELD(DMA2D->IFCR, DMA2D_IFCR_CCAEIF());
-		dbprintf("DMA2D Error: CLUT Access Error\n");
-		while(1) { }
+		ABORT("DMA2D Error: CLUT Access Error\n");
 	} else if(GET_DMA2D_ISR_CEIF(DMA2D->ISR)) {
 		SET_FIELD(DMA2D->IFCR, DMA2D_IFCR_CCEIF());
-		dbprintf("DMA2D Error: Configuration Error\n");
-		while(1) { }
+		ABORT("DMA2D Error: Configuration Error\n");
 	}
 }
 
 /**
  * Initialize the DMA2D Controller.
  */
-void init_dma2d(void)
+void dma2d_init(void)
 {
-	/**
-	 * Enable the DMA2D clock.
-	 */
+	/* Enable the DMA2D clock. */
 	SET_FIELD(RCC->AHB1ENR, RCC_AHB1ENR_DMA2DEN());
 	__asm("dsb");
 
-	// Setup interrupt service routine
+	/* Setup interrupt service routine. */
 	SET_FIELD(DMA2D->CR, DMA2D_CR_TCIE() |
-						 DMA2D_ISR_TEIF() |
-						 DMA2D_ISR_CAEIF() |
-						 DMA2D_ISR_CEIF());
+	                     DMA2D_ISR_TEIF() |
+	                     DMA2D_ISR_CAEIF() |
+	                     DMA2D_ISR_CEIF());
 
-	request_interrupt(DMA2D_IRQn, dma2d_isr);
+	interrupt_request(DMA2D_IRQn, dma2d_isr);
 }
 
 /**
@@ -83,41 +77,34 @@ void init_dma2d(void)
  * @param callback Function to call when transfer is complete or NULL for no
  *                 callback.
  */
-void dma2d_mem_to_mem(uint32_t src_addr,
-                      uint32_t dst_addr,
-                      uint16_t width,
-                      uint16_t height,
-                      void (*callback) (void))
+void dma2d_mem_to_mem(
+	uint32_t src_addr,
+	uint32_t dst_addr,
+	uint16_t width,
+	uint16_t height,
+	void (*callback) (void))
 {
-	/**
-	 * Abort early if the DMA is already running.
-	 */
+	/* Abort early if the DMA is already running. */
 	ABORT_IF_NOT(is_dma2d_complete());
 
-	/**
-	 * Set the transfer mode to memory-to-memory.
-	 */
+	/* Set the transfer mode to memory-to-memory. */
 	CLEAR_FIELD(DMA2D->CR, DMA2D_CR_MODE());
 	SET_FIELD(DMA2D->CR, SET_DMA2D_CR_MODE(DMA2D_MEM_MEM));
 
-	/**
-	 * Setup the transaction parameters.
-	 */
+	/* Setup the transaction parameters. */
 	DMA2D->FGMAR = src_addr;
 	DMA2D->FGOR = 0;
 	DMA2D->FGPFCCR = SET_DMA2D_FGPFCCR_CM(LCD_CONFIG_PIXEL_FORMAT) |
-	                 SET_DMA2D_FGPFCCR_AM(AM_REPLACE) |
+	                 SET_DMA2D_FGPFCCR_AM(DMA2D_AM_REPLACE) |
 	                 SET_DMA2D_FGPFCCR_ALPHA(0xFF);
 
 	DMA2D->OPFCCR = LCD_CONFIG_PIXEL_FORMAT;
 	DMA2D->OMAR = dst_addr;
 	DMA2D->OOR = 0;
 	DMA2D->NLR = SET_DMA2D_NLR_PL(width) |
-				 SET_DMA2D_NLR_NL(height);
+	             SET_DMA2D_NLR_NL(height);
 
-	/**
-	 * Start the transaction.
-	 */
+	/* Start the transaction. */
 	dma_callback = callback;
 	dma_complete = false;
 	SET_FIELD(DMA2D->CR, DMA2D_CR_START());

@@ -15,9 +15,9 @@
 typedef struct {
 	uint64_t total_size;         /* Total size in bytes */
 	uint32_t total_sectors;      /* Total sectors availables on device */
-	sd_status_t (*read_sectors)(void *data, uint32_t sec_addr, uint16_t num_sectors);
-	sd_status_t (*write_sectors)(void *data, uint32_t sec_addr, uint16_t num_sectors);
-} fat_ops_t;
+	SdStatus (*read_sectors)(void *data, uint32_t sec_addr, uint16_t num_sectors);
+	SdStatus (*write_sectors)(void *data, uint32_t sec_addr, uint16_t num_sectors);
+} FatOperations;
 
 /* FAT file status flags */
 typedef enum {
@@ -26,19 +26,19 @@ typedef enum {
 	FAT_FILE_NOT_FOUND = 2, /* The wanted file or directory was not found. */
 	FAT_IS_DIRECTORY   = 3, /* Wanted a file but a directory was found instead. */
 	FAT_NOT_DIRECTORY  = 4  /* Expected a directory but found a file instead. */
-} fat_status_t;
+} FatStatus;
 
 /* The mode to open a file in. Only FAT_READ_MODE is supported right now. */
 typedef enum {
 	FAT_READ_MODE,  /* Read-only mode. */
 	FAT_WRITE_MODE, /* Write-only mode. */
 	FAT_APPEND_MODE /* Similar to write-only mode except the position is EOF by default. */
-} fat_open_mode_t;
+} FatOpenMode;
 
 /* Structure representing a file in a FAT32 filesystem. */
 typedef struct {
 	/* What mode the file was opened in. */
-	fat_open_mode_t mode;
+	FatOpenMode mode;
 
 	/* Current seek position (in bytes), the next byte to read. */
 	uint32_t position;
@@ -51,18 +51,18 @@ typedef struct {
 
 	/* Size of file in bytes. */
 	uint32_t size;
-} fat_file_t;
+} FatFile;
 
-fat_status_t fat_init(fat_ops_t ops);
-fat_status_t fat_open(fat_file_t *file, const char *path, fat_open_mode_t mode);
-uint32_t fat_read(fat_file_t *file, void *buf, uint32_t size);
+FatStatus fat_init(FatOperations ops);
+FatStatus fat_open(FatFile *file, const char *path, FatOpenMode mode);
+uint32_t fat_read(FatFile *file, void *buf, uint32_t size);
 
 /**
  * I'm disabling this code but leaving it in the codebase since it can be useful
  * for debugging purposes.
  */
 #if 0
-void dump_root_dir(void);
+void fat_dump_root_dir(void);
 #endif
 
 #endif /* INCLUDE_FAT_DRIVER */

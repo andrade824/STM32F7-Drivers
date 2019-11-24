@@ -6,7 +6,6 @@
 #include "graphics.h"
 #include "interrupt.h"
 #include "sdmmc.h"
-#include "status.h"
 #include "system.h"
 #include "usart.h"
 
@@ -23,7 +22,7 @@
  */
 void fmc_memcheck_test(void)
 {
-	init_fmc_sdram();
+	fmc_sdram_init();
 
 	dbprintf("Beginning Memcheck...\n");
 
@@ -39,7 +38,7 @@ void fmc_memcheck_test(void)
 		if(value != uwIndex)
 		{
 			dbprintf("Memcheck failure: value 0x%lx != index 0x%lx\n", value, uwIndex);
-			gpio_set_output(GPIO_ARD_D13, high);
+			gpio_set_output(GPIO_ARD_D13, GPIO_HIGH);
 			while(1) { }
 		}
 
@@ -83,7 +82,7 @@ void sd_read_write_test(void)
 	}
 
 	dbprintf("------Writing Data at %lu...-------\n", sd_get_card_info().total_blocks - 5);
-	sd_status_t status = sd_write_data(write_data, sd_get_card_info().total_blocks - 5, 4);
+	SdStatus status = sd_write_data(write_data, sd_get_card_info().total_blocks - 5, 4);
 	if(status != SD_SUCCESS) {
 		ABORT("Here's the SD status for write %d\n", status);
 	}
@@ -128,7 +127,7 @@ void sd_read_mbr_test(void)
 	dbprintf("SDMMC appears to have initialized!\n");
 
 	uint8_t data[512];
-	sd_status_t status = sd_read_data(data, 0, 1);
+	SdStatus status = sd_read_data(data, 0, 1);
 	if(status != SD_SUCCESS) {
 		ABORT("Here's the SD status %d\n", status);
 	}
@@ -174,7 +173,7 @@ void fat_dump_file_test(char *path)
 	ABORT_IF_NOT(sdmmc_init());
 	dbprintf("SDMMC appears to have initialized!\n");
 
-	fat_ops_t ops = {
+	FatOperations ops = {
 		.total_size = sd_get_card_info().total_size,
 		.total_sectors = sd_get_card_info().total_blocks,
 		&sd_read_data,
@@ -182,7 +181,7 @@ void fat_dump_file_test(char *path)
 	};
 	ABORT_IF_NOT(fat_init(ops));
 
-	fat_file_t file;
+	FatFile file;
 	fat_open(&file, path, FAT_READ_MODE);
 	dbprintf("----Opened file %s %lu:----\n", path, file.size);
 	#define BUFSIZE 1024
@@ -209,8 +208,8 @@ void usart_gfx_test(void)
 	const uint32_t draw_buffer = SDRAM_BASE;
 	const uint32_t render_buffer = SDRAM_BASE + (LCD_CONFIG_WIDTH * LCD_CONFIG_HEIGHT * LCD_CONFIG_PIXEL_SIZE);
 
-	init_fmc_sdram();
-	init_graphics(render_buffer, draw_buffer);
+	fmc_sdram_init();
+	gfx_init(render_buffer, draw_buffer);
 
 	gfx_clear_screen(PIXEL(0,0,0));
 	gfx_text_set_cursor(20, 10);
@@ -230,7 +229,7 @@ void usart_gfx_test(void)
 
 	while(1) {
 		ascii = usart_receive(USART6);
-		dbprintf("%d\n", ascii);
+		//dbprintf("%d\n", ascii);
 		usart_send_byte(USART6, ascii);
 		if(ascii >= 32 && ascii < 127) {
 			gfx_draw_char(ascii);
@@ -251,8 +250,8 @@ void gfx_drawing_test(void)
 	const uint32_t draw_buffer = SDRAM_BASE;
 	const uint32_t render_buffer = SDRAM_BASE + (LCD_CONFIG_WIDTH * LCD_CONFIG_HEIGHT * LCD_CONFIG_PIXEL_SIZE);
 
-	init_fmc_sdram();
-	init_graphics(render_buffer, draw_buffer);
+	fmc_sdram_init();
+	gfx_init(render_buffer, draw_buffer);
 
 	gfx_clear_screen(PIXEL(0,0,0));
 	gfx_swap_buffers();
@@ -303,8 +302,8 @@ void gfx_text_test(void)
 	const uint32_t draw_buffer = SDRAM_BASE;
 	const uint32_t render_buffer = SDRAM_BASE + (LCD_CONFIG_WIDTH * LCD_CONFIG_HEIGHT * LCD_CONFIG_PIXEL_SIZE);
 
-	init_fmc_sdram();
-	init_graphics(render_buffer, draw_buffer);
+	fmc_sdram_init();
+	gfx_init(render_buffer, draw_buffer);
 
 	gfx_clear_screen(PIXEL(0,0,0));
 	gfx_text_set_cursor(20, 10);

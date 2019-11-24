@@ -2,30 +2,26 @@
  * @author Devon Andrade
  * @created 12/25/2016 (Merry Christmas!)
  *
- * GPIO Register map [6].
+ * GPIO Register map.
  */
-#ifndef GPIO_REG_H
-#define GPIO_REG_H
+#pragma once
 
 #include "bitfield.h"
 #include "mem_map.h"
 
 #include <stdint.h>
 
-/**
- * Type defining the GPIO module register map.
- */
-typedef struct
-{
-	volatile uint32_t MODER;    /*!< GPIO port mode register,               Address offset: 0x00      */
-	volatile uint32_t OTYPER;   /*!< GPIO port output type register,        Address offset: 0x04      */
-	volatile uint32_t OSPEEDR;  /*!< GPIO port output speed register,       Address offset: 0x08      */
-	volatile uint32_t PUPDR;    /*!< GPIO port pull-up/pull-down register,  Address offset: 0x0C      */
-	volatile uint32_t IDR;      /*!< GPIO port input data register,         Address offset: 0x10      */
-	volatile uint32_t ODR;      /*!< GPIO port output data register,        Address offset: 0x14      */
-	volatile uint32_t BSRR;     /*!< GPIO port bit set/reset register,      Address offset: 0x18      */
-	volatile uint32_t LCKR;     /*!< GPIO port configuration lock register, Address offset: 0x1C      */
-	volatile uint32_t AFR[2];   /*!< GPIO alternate function registers,     Address offset: 0x20-0x24 */
+/* Type defining the GPIO module register map. */
+typedef struct {
+	volatile uint32_t MODER;   /* GPIO port mode register,               Address offset: 0x00      */
+	volatile uint32_t OTYPER;  /* GPIO port output type register,        Address offset: 0x04      */
+	volatile uint32_t OSPEEDR; /* GPIO port output speed register,       Address offset: 0x08      */
+	volatile uint32_t PUPDR;   /* GPIO port pull-up/pull-down register,  Address offset: 0x0C      */
+	volatile uint32_t IDR;     /* GPIO port input data register,         Address offset: 0x10      */
+	volatile uint32_t ODR;     /* GPIO port output data register,        Address offset: 0x14      */
+	volatile uint32_t BSRR;    /* GPIO port bit set/reset register,      Address offset: 0x18      */
+	volatile uint32_t LCKR;    /* GPIO port configuration lock register, Address offset: 0x1C      */
+	volatile uint32_t AFR[2];  /* GPIO alternate function registers,     Address offset: 0x20-0x24 */
 } GpioReg;
 
 /**
@@ -53,5 +49,3 @@ typedef struct
 #define GPIOI ((GpioReg *) GPIOI_BASE)
 #define GPIOJ ((GpioReg *) GPIOJ_BASE)
 #define GPIOK ((GpioReg *) GPIOK_BASE)
-
-#endif

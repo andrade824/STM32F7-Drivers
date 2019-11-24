@@ -4,8 +4,7 @@
  *
  * Definitions useful in debugging firmware.
  */
-#ifndef DEBUG_H
-#define DEBUG_H
+#pragma once
 
 #include "system_timer.h"
 
@@ -35,7 +34,7 @@ void die(void);
 	do                                                                  \
 	{                                                                   \
 		dbprintf("[ABORT] %s:%s():%d -- " msg "\n",                     \
-				 __FILE__, __func__, __LINE__, ##__VA_ARGS__);          \
+		         __FILE__, __func__, __LINE__, ##__VA_ARGS__);          \
 		die();                                                          \
 	} while(0)
 
@@ -53,7 +52,7 @@ void die(void);
 		while(!(expr) && !(get_cycles() <= target_cycles));         \
 		if(get_cycles() > target_cycles) {                          \
 			dbprintf("[ABORT] %s:%s():%d -- %s\n",                  \
-					 __FILE__, __func__, __LINE__, #expr);          \
+			         __FILE__, __func__, __LINE__, #expr);          \
 			die();                                                  \
 		}                                                           \
 	} while(0)
@@ -69,7 +68,7 @@ void die(void);
 		if((expr))                                                  \
 		{                                                           \
 			dbprintf("[ABORT] %s:%s():%d -- %s\n",                  \
-					 __FILE__, __func__, __LINE__, #expr);          \
+			         __FILE__, __func__, __LINE__, #expr);          \
 			die();                                                  \
 		}                                                           \
 	} while(0)
@@ -90,6 +89,4 @@ void die(void);
 #else
 	#define ASSERT(expr)
 	#define ASSERT_NOT(expr)
-#endif
-
 #endif

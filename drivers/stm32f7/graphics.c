@@ -17,7 +17,6 @@
 #include "font.h"
 #include "graphics.h"
 #include "lcd_ctrl.h"
-#include "status.h"
 
 #include "registers/lcd_ctrl_reg.h"
 
@@ -83,13 +82,13 @@ static void vblank_callback(void)
  * @param backbuf  Starting address of the framebuffer that the application
  *                 draws into.
  */
-void init_graphics(uint32_t frontbuf, uint32_t backbuf)
+void gfx_init(uint32_t frontbuf, uint32_t backbuf)
 {
 	frontbuffer = frontbuf;
 	backbuffer = backbuf;
 
-	init_dma2d();
-	init_lcd_ctrl(frontbuffer, &vblank_callback);
+	dma2d_init();
+	lcd_ctrl_init(frontbuffer, &vblank_callback);
 }
 
 /**

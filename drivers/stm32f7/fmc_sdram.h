@@ -3,14 +3,13 @@
  * @created 6/14/2018
  *
  * Definitions and functions used to manipulate the SDRAM Controller (located
- * within the Flexible Memory Controller peripheral) [13.7.5].
+ * within the Flexible Memory Controller peripheral).
  */
+#pragma once
+
 #ifdef INCLUDE_SDRAM_DRIVER
-#ifndef FMC_SDRAM_H
-#define FMC_SDRAM_H
 
 #include "gpio.h"
-#include "status.h"
 
 /**
  * The internal base address where the SDRAM controller starts generating
@@ -18,7 +17,6 @@
  */
 #define SDRAM_BASE 0xC0000000U
 
-void init_fmc_sdram(void);
+void fmc_sdram_init(void);
 
-#endif
-#endif
+#endif /* INCLUDE_SDRAM_DRIVER */

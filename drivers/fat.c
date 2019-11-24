@@ -92,6 +92,7 @@
 
 #define CLUSTER_MASK    0x0FFFFFFFU /* Only the bottom 28-bits of a cluster are valid. */
 #define INVALID_CLUSTER 0xFFFFFFFFU /* Invalid cluster marker in the FAT. */
+
 /**
  * Bits 7-31 of the cluster number is the sector offset into the FAT starting
  * from the fat_begin_lba.
@@ -110,21 +111,21 @@ typedef struct {
 	uint32_t size; /* Size in bytes of the record. */
 	uint32_t first_cluster;
 	bool is_dir;
-} fat_dir_entry_t;
+} FatDirEntry;
 
 /* Data structure representing a FAT32 partition. */
 typedef struct {
-	fat_ops_t ops;
+	FatOperations ops;
 	uint32_t total_sectors;          /* Total logical sectors */
 	uint32_t fat_begin_lba;          /* Partition_LBA_Begin + Number_Of_Reserved_Sectors */
 	uint32_t cluster_begin_lba;      /* fat_begin_lba + (Number_of_FATs * Sectors_Per_FAT) */
 	uint8_t sectors_per_cluster;
 	uint32_t cluster_size;           /* In bytes */
 	uint32_t root_dir_first_cluster;
-} fat_partition_t;
+} FatPartition;
 
 /* The currently loaded FAT partition. */
-static fat_partition_t part;
+static FatPartition part;
 
 /* Temporary sector-sized buffer used when reading/writing data across sectors. */
 static uint8_t temp_sector[FAT_SECTOR_SIZE];
@@ -180,7 +181,7 @@ static uint32_t get_next_cluster(uint32_t cluster)
  * @return If the entry is found, then populate `entry` and return FAT_SUCCESS.
  *         Otherwise, return FAT_FILE_NOT_FOUND.
  */
-static fat_status_t find_dir_entry(char *name, uint32_t dir_cluster, fat_dir_entry_t *entry)
+static FatStatus find_dir_entry(char *name, uint32_t dir_cluster, FatDirEntry *entry)
 {
 	ASSERT(name != NULL);
 	ASSERT(dir_cluster != INVALID_CLUSTER);
@@ -279,7 +280,7 @@ static fat_status_t find_dir_entry(char *name, uint32_t dir_cluster, fat_dir_ent
  *         FAT_IS_DIRECTORY depending on the error. The passed in `entry` will
  *         be clobbered in this case and should not be used.
  */
-static fat_status_t parse_path(const char *path, fat_dir_entry_t *entry)
+static FatStatus parse_path(const char *path, FatDirEntry *entry)
 {
 	ASSERT(path != NULL);
 	ASSERT(entry != NULL);
@@ -334,7 +335,7 @@ static fat_status_t parse_path(const char *path, fat_dir_entry_t *entry)
 
 		name[DIR_NAME_SIZE] = '\0';
 
-		fat_status_t ret = find_dir_entry(name, temp_cluster, entry);
+		FatStatus ret = find_dir_entry(name, temp_cluster, entry);
 
 		if(ret != FAT_SUCCESS) {
 			return ret;
@@ -378,7 +379,7 @@ static fat_status_t parse_path(const char *path, fat_dir_entry_t *entry)
  *            that describe the total size of the backing store and functions
  *            to read/write sectors of data.
  */
-fat_status_t fat_init(fat_ops_t ops)
+FatStatus fat_init(FatOperations ops)
 {
 	part.ops = ops;
 
@@ -487,12 +488,12 @@ fat_status_t fat_init(fat_ops_t ops)
  *         Otherwise, return FAT_FILE_NOT_FOUND, FAT_NOT_DIRECTORY, or
  *         FAT_IS_DIRECTORY depending on the error.
  */
-fat_status_t fat_open(fat_file_t *file, const char *path, fat_open_mode_t mode)
+FatStatus fat_open(FatFile *file, const char *path, FatOpenMode mode)
 {
 	ASSERT(file != NULL);
 
-	fat_dir_entry_t temp_entry;
-	fat_status_t ret = parse_path(path, &temp_entry);
+	FatDirEntry temp_entry;
+	FatStatus ret = parse_path(path, &temp_entry);
 
 	if(ret != FAT_SUCCESS) {
 		dbprintf("[FAT] Couldn't open \"%s\": %d\n", path, ret);
@@ -518,7 +519,7 @@ fat_status_t fat_open(fat_file_t *file, const char *path, fat_open_mode_t mode)
  * @return The number of bytes that was read (which maybe less than what you
  *         requested if the end of the file was hit).
  */
-uint32_t fat_read(fat_file_t *file, void *buf, uint32_t size)
+uint32_t fat_read(FatFile *file, void *buf, uint32_t size)
 {
 	ASSERT(file != NULL);
 	ASSERT(buf != NULL);
@@ -684,7 +685,7 @@ static void dump_dir(uint32_t dir_first_cluster, uint16_t level)
 /**
  * Loop through every record in the root directory and dump it to the console.
  */
-void dump_root_dir(void)
+void fat_dump_root_dir(void)
 {
 	dump_dir(part.root_dir_first_cluster, 0);
 }

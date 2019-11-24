@@ -9,14 +9,10 @@
  * to avoid header file circular dependencies (like in a few of the "register"
  * files).
  */
-
-#ifndef MEM_MAP_H
-#define MEM_MAP_H
+#pragma once
 
 #if defined(platform_stm32f7)
 	#include "stm32f7/stm32f7_mem_map.h"
 #else
 	#error "The platform doesn't exist"
 #endif
-
-#endif /* MEM_MAP_H */

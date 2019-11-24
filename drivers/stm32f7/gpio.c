@@ -2,12 +2,11 @@
  * @author Devon Andrade
  * @created 12/28/2016
  *
- * Definitions and functions used to manipulate the GPIO module [6].
+ * Definitions and functions used to manipulate the GPIO module.
  */
 #include "bitfield.h"
 #include "debug.h"
 #include "gpio.h"
-#include "status.h"
 
 #include "registers/gpio_reg.h"
 #include "registers/rcc_reg.h"
@@ -22,14 +21,10 @@
 static inline void gpio_setup_pin(GpioPin pin)
 {
 #ifdef DEBUG_ON
-	/**
-	 * Keeps track of which pins have already been requested.
-	 */
+	/* Keeps track of which pins have already been requested. */
 	static bool requested_gpios[NUM_GPIO_PINS];
 
-	/**
-	 * Abort if a pin was already requested.
-	 */
+	/* Abort if a pin was already requested. */
 	ABORT_IF(requested_gpios[pin] == true);
 	requested_gpios[pin] = true;
 #endif
@@ -49,17 +44,12 @@ static inline void gpio_setup_pin(GpioPin pin)
  * @param reg The port register to use.
  * @param pin The pin to set as an input.
  * @param pull The pull state for this pin.
- *
- * @return Fail if the pin was already requested, Success if the pin was
- *         configured correctly.
  */
 void gpio_request_input(GpioReg *reg, GpioPin pin, GpioPull pull)
 {
 	gpio_setup_pin(pin);
 
-	/**
-	 * Set GPIO mode to input (MODE = 0x0).
-	 */
+	/* Set GPIO mode to input (MODE = 0x0). */
 	reg->MODER &= ~(0x3U << (GPIO_GET_PIN(pin) * 2U));
 
 	gpio_set_pullstate(reg, pin, pull);
@@ -70,17 +60,13 @@ void gpio_request_input(GpioReg *reg, GpioPin pin, GpioPull pull)
  *
  * @param reg The port register to use.
  * @param pin The pin to set as an output.
- * @param default_state Default state of the pin (high or low).
+ * @param default_state Default state of the pin.
  */
-void gpio_request_output(GpioReg *reg,
-                         GpioPin pin,
-                         DigitalState default_state)
+void gpio_request_output(GpioReg *reg, GpioPin pin, DigitalState default_state)
 {
 	gpio_setup_pin(pin);
 
-	/**
-	 * Set GPIO mode to output (MODE = 0x1).
-	 */
+	/* Set GPIO mode to output (MODE = 0x1). */
 	reg->MODER |= (GPIO_OUTPUT << (GPIO_GET_PIN(pin) * 2U));
 
 	gpio_set_otype(reg, pin, GPIO_PUSH_PULL);
@@ -97,10 +83,11 @@ void gpio_request_output(GpioReg *reg,
  * @param alt The alternate function to set this pin to.
  * @param speed The wanted output speed.
  */
-void gpio_request_alt(GpioReg *reg,
-                      GpioPin pin,
-                      GpioAlternateFunction alt,
-                      GpioOSpeed speed)
+void gpio_request_alt(
+	GpioReg *reg,
+	GpioPin pin,
+	GpioAlternateFunction alt,
+	GpioOSpeed speed)
 {
 	gpio_setup_pin(pin);
 
@@ -119,9 +106,7 @@ void gpio_request_alt(GpioReg *reg,
 	gpio_set_ospeed(reg, pin, speed);
 	gpio_set_pullstate(reg, pin, GPIO_NO_PULL);
 
-	/**
-	 * Set GPIO mode to alternate function (MODE = 0x2).
-	 */
+	/* Set GPIO mode to alternate function (MODE = 0x2). */
 	reg->MODER |= (GPIO_ALT_FUNC << (GPIO_GET_PIN(pin) * 2U));
 }
 
@@ -173,7 +158,7 @@ void gpio_set_pullstate(GpioReg *reg, GpioPin pin, GpioPull pull)
  */
 void gpio_set_output(GpioReg *reg, GpioPin pin, DigitalState state)
 {
-	if(state == high) {
+	if(state == GPIO_HIGH) {
 		reg->BSRR |= 1U << GPIO_GET_PIN(pin);
 	} else {
 		reg->BSRR |= 1U << (GPIO_GET_PIN(pin) + 16U);

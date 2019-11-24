@@ -8,7 +8,6 @@
 
 #include "config.h"
 #include "debug.h"
-#include "status.h"
 #include "usart.h"
 
 #include "registers/rcc_reg.h"
@@ -28,10 +27,11 @@
  * @param data_bits The wanted number of data bits.
  * @param stop_bits The wanted number of stop bits.
  */
-void usart_init(UsartReg *usart,
-                uint32_t baud,
-                UsartWordLength data_bits,
-                UsartStopBits stop_bits)
+void usart_init(
+	UsartReg *usart,
+	uint32_t baud,
+	UsartWordLength data_bits,
+	UsartStopBits stop_bits)
 {
 	uint8_t usart_num = 0;
 

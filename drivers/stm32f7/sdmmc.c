@@ -9,7 +9,6 @@
 #include "config.h"
 #include "debug.h"
 #include "sdmmc.h"
-#include "status.h"
 #include "system_timer.h"
 
 #include "registers/rcc_reg.h"
@@ -52,7 +51,7 @@ typedef enum {
 	SD_CMD24_WRITE_BLOCK          = 24,
 	SD_CMD25_WRITE_MULTIPLE_BLOCK = 25,
 	SD_CMD55_APP_CMD              = 55
-} sd_cmd_t;
+} SdCmd;
 
 /* SD Card Application-Specific Commands */
 typedef enum {
@@ -61,7 +60,7 @@ typedef enum {
 	SD_ACMD22_SEND_NUM_WR_BLOCKS     = 22,
 	SD_ACMD23_SET_WR_BLK_ERASE_COUNT = 23,
 	SD_ACMD41_SEND_OP_COND           = 41
-} sd_app_cmd_t;
+} SdAppCmd;
 
 /* Fields within an R1 response */
 #define R1_ALL_ERRORS           0xFDF98008U
@@ -88,7 +87,7 @@ typedef enum {
  * How long for the SD data path to wait for data to be received from the card
  * (in card bus clock cycles).
  */
-#define SDMMC_DATA_TIMEOUT 0xFFFF
+#define SDMMC_DATA_TIMEOUT 0xFFFFU
 
 /**
  * CMD8 Fields.
@@ -155,10 +154,12 @@ static void clear_all_flags(void)
  * @note If there is no expected response, set "resp" to NULL. A "short" response
  * must be a uint32_t. A "long" response must be an array of four uint32_t's.
  */
-sd_status_t send_cmd(uint8_t cmd_index,
-                     uint32_t arg,
-                     sd_resp_t type,
-                     uint32_t *resp) {
+static SdStatus send_cmd(
+	uint8_t cmd_index,
+	uint32_t arg,
+	SdResp type,
+	uint32_t *resp)
+{
 	if(type != SD_NO_RESP) {
 		ASSERT(resp != NULL);
 	}
@@ -216,7 +217,7 @@ sd_status_t send_cmd(uint8_t cmd_index,
  * Check the error bits in an R1 response and return an error if any of them
  * are set.
  */
-static sd_status_t check_r1_resp(uint32_t resp)
+static SdStatus check_r1_resp(uint32_t resp)
 {
 	if((resp & R1_ALL_ERRORS) == 0)         { return SD_SUCCESS; }
 	else if(resp & R1_ADDRESS_OUT_OF_RANGE) { return SD_ADDRESS_OUT_OF_RANGE; }
@@ -245,9 +246,9 @@ static sd_status_t check_r1_resp(uint32_t resp)
  * determine whether a card supports the v1 or v2 protocols. If there's no
  * response, then version 1 is assumed.
  */
-static sd_status_t send_cmd8_send_if_cond(void)
+static SdStatus send_cmd8_send_if_cond(void)
 {
-	sd_status_t status = SD_SUCCESS;
+	SdStatus status = SD_SUCCESS;
 	uint32_t resp = 0;
 
 	ASSERT(card.state == SD_IDENT_STATE);
@@ -272,9 +273,9 @@ static sd_status_t send_cmd8_send_if_cond(void)
  * be sent until the SD Card is finished powering up (as indicated by a status
  * bit in the response).
  */
-static sd_status_t send_acmd41_send_op_cond(void)
+static SdStatus send_acmd41_send_op_cond(void)
 {
-	sd_status_t status = SD_SUCCESS;
+	SdStatus status = SD_SUCCESS;
 	uint32_t resp = 0;
 
 	ASSERT(card.state == SD_DETERMINE_VERSION_STATE);
@@ -328,7 +329,7 @@ static sd_status_t send_acmd41_send_op_cond(void)
 /**
  * Retrieve the Card Identification register and parse it.
  */
-static sd_status_t send_cmd2_all_send_cid(void)
+static SdStatus send_cmd2_all_send_cid(void)
 {
 	uint32_t resp[4] = { 0 };
 
@@ -370,7 +371,7 @@ static void dump_cid(void)
 /**
  * Retrieve the Relative Card Address (RCA).
  */
-static sd_status_t send_cmd3_send_relative_addr(void)
+static SdStatus send_cmd3_send_relative_addr(void)
 {
 	uint32_t resp = 0;
 
@@ -389,7 +390,7 @@ static sd_status_t send_cmd3_send_relative_addr(void)
 /**
  * Retrieve the Card-Specific-Data register and parse it.
  */
-static sd_status_t send_cmd9_send_csd(void)
+static SdStatus send_cmd9_send_csd(void)
 {
 	uint32_t resp[4] = { 0 };
 
@@ -412,7 +413,7 @@ static sd_status_t send_cmd9_send_csd(void)
 /**
  * Move an SD Card into the Transfer state.
  */
-static sd_status_t send_cmd7_select_card(void)
+static SdStatus send_cmd7_select_card(void)
 {
 	uint32_t resp = 0;
 
@@ -433,9 +434,9 @@ static sd_status_t send_cmd7_select_card(void)
 /**
  * Set the bus width to 4-bits wide.
  */
-static sd_status_t send_acmd6_set_bus_width(void)
+static SdStatus send_acmd6_set_bus_width(void)
 {
-	sd_status_t status = SD_SUCCESS;
+	SdStatus status = SD_SUCCESS;
 	uint32_t resp = 0;
 
 	ASSERT(card.state == SD_TRANSFER_STATE);
@@ -470,9 +471,9 @@ static sd_status_t send_acmd6_set_bus_width(void)
  *
  * @param card_status A 32-bit integer to hold the returned card status.
  */
-static sd_status_t send_cmd13_send_status(uint32_t *card_status)
+static SdStatus send_cmd13_send_status(uint32_t *card_status)
 {
-	sd_status_t status = send_cmd(SD_CMD13_SEND_STATUS, card.rca, SD_SHORT_RESP, card_status);
+	SdStatus status = send_cmd(SD_CMD13_SEND_STATUS, card.rca, SD_SHORT_RESP, card_status);
 	if(status != SD_SUCCESS) {
 		return status;
 	}
@@ -483,9 +484,9 @@ static sd_status_t send_cmd13_send_status(uint32_t *card_status)
 /**
  * Wait for the card to become ready to receive/send more data.
  */
-static sd_status_t wait_for_card_ready(void)
+static SdStatus wait_for_card_ready(void)
 {
-	sd_status_t status = SD_SUCCESS;
+	SdStatus status = SD_SUCCESS;
 	uint32_t card_status = 0;
 
 	do {
@@ -505,10 +506,10 @@ static sd_status_t wait_for_card_ready(void)
  *
  * @note Before usage, the SDMMC GPIOs and 48MHz clock will need to be setup.
  *
- * @retval Fail if an SD card isn't present, Success otherwise.
+ * @retval SD_FAIL if an SD card isn't present, SD_SUCCESS otherwise.
  */
-status_t sdmmc_init() {
-	sd_status_t status = 0;
+SdStatus sdmmc_init() {
+	SdStatus status = 0;
 
 	/**
 	 * Enable the SDMMC APB2 clock.
@@ -543,7 +544,7 @@ status_t sdmmc_init() {
 	 * handle the case when an SD card doesn't exist.
 	 */
 	if(send_cmd8_send_if_cond() != SD_SUCCESS) {
-		return Fail;
+		return SD_FAIL;
 	}
 
 	/* Send ACMD41 to verify voltage and wait for the card to power up. */
@@ -581,7 +582,7 @@ status_t sdmmc_init() {
 		ABORT("[SDMMC] ACMD6 failed to set bus width to 4-bits.\n");
 	}
 
-	return Success;
+	return SD_SUCCESS;
 }
 
 /**
@@ -593,10 +594,10 @@ status_t sdmmc_init() {
  *
  * @retval SD_SUCCESS if data was read correctly, otherwise an error value.
  */
-sd_status_t sd_read_data(void *data, uint32_t block_addr, uint16_t num_blocks)
+SdStatus sd_read_data(void *data, uint32_t block_addr, uint16_t num_blocks)
 {
 	uint32_t resp = 0;
-	sd_status_t status = SD_SUCCESS;
+	SdStatus status = SD_SUCCESS;
 	uint32_t *buffer = (uint32_t*)data;
 
 	ASSERT(card.state == SD_TRANSFER_STATE);
@@ -694,10 +695,10 @@ sd_status_t sd_read_data(void *data, uint32_t block_addr, uint16_t num_blocks)
  *
  * @retval SD_SUCCESS if data was written correctly, otherwise an error value.
  */
-sd_status_t sd_write_data(void *data, uint32_t block_addr, uint16_t num_blocks)
+SdStatus sd_write_data(void *data, uint32_t block_addr, uint16_t num_blocks)
 {
 	uint32_t resp = 0;
-	sd_status_t status = SD_SUCCESS;
+	SdStatus status = SD_SUCCESS;
 	uint32_t *buffer = (uint32_t*)data;
 
 	ASSERT(card.state == SD_TRANSFER_STATE);

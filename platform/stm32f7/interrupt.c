@@ -8,7 +8,6 @@
 #include "config.h"
 #include "debug.h"
 #include "interrupt.h"
-#include "status.h"
 
 #include "registers/scb_reg.h"
 
@@ -18,9 +17,7 @@
 
 static void nmi_exc(void)
 {
-	dbprintf("Non-Maskable Interrupt triggered... that's weird\n");
-
-	die();
+	ABORT("Non-Maskable Interrupt triggered... that's weird\n");
 }
 
 /**
@@ -175,7 +172,7 @@ static void usage_fault_exc(void)
 
 /**
  * Set a pointer to where the vector table will be relocated after
- * init_interrupts() is run.
+ * interrupt_init() is run.
  *
  * The reason we skip 16 words from the start of where the vector table is
  * copied is because the first word is the start value for the stack pointer
@@ -186,8 +183,8 @@ static void usage_fault_exc(void)
  * point to whatever interrupt has IRQ "0" (WWDG_IRQn in this case).
  */
 #define EXCEPTION_VECTORS_OFFSET (16 * 4)
-static ISR_Type *vector_table = (ISR_Type *)(VECTOR_TABLE_ADDR +
-											 EXCEPTION_VECTORS_OFFSET);
+static ISR_Type *vector_table =
+    (ISR_Type *)(VECTOR_TABLE_ADDR + EXCEPTION_VECTORS_OFFSET);
 
 /**
  * Copy the vector table from flash into RAM and change the Vector Table Offset
@@ -196,7 +193,7 @@ static ISR_Type *vector_table = (ISR_Type *)(VECTOR_TABLE_ADDR +
  * @note This method must be called before any of the interrupt methods,
  *       otherwise undefined behavior may occur.
  */
-void init_interrupts(void)
+void interrupt_init(void)
 {
 	/**
 	 * Linker script symbols defining where the default vector table located in
@@ -214,21 +211,19 @@ void init_interrupts(void)
 	#pragma GCC diagnostic push
 	#pragma GCC diagnostic ignored "-Wnonnull"
 
-	/**
-	 * Copy the vector table from FLASH to tightly coupled RAM.
-	 */
+	/* Copy the vector table from FLASH to tightly coupled RAM. */
 	memcpy((void *)VECTOR_TABLE_ADDR,
-		   (void *)&_start_vector,
-		   &_end_vector - &_start_vector);
+	       (void *)&_start_vector,
+	       &_end_vector - &_start_vector);
 
 	#pragma GCC diagnostic pop
 
 	/* Setup default exception handlers. */
-	vector_table[NonMaskableInt_IRQn] = &nmi_exc;
-	vector_table[HardFault_IRQn] = &hard_fault_exc;
+	vector_table[NonMaskableInt_IRQn]   = &nmi_exc;
+	vector_table[HardFault_IRQn]        = &hard_fault_exc;
 	vector_table[MemoryManagement_IRQn] = &mem_manage_exc;
-	vector_table[BusFault_IRQn] = &bus_fault_exc;
-	vector_table[UsageFault_IRQn] = &usage_fault_exc;
+	vector_table[BusFault_IRQn]         = &bus_fault_exc;
+	vector_table[UsageFault_IRQn]       = &usage_fault_exc;
 
 	/* Enable the exception handlers. */
 	SET_FIELD(SCB->SHCSR, SCB_SHCSR_MEMFAULTENA() |
@@ -249,14 +244,14 @@ void init_interrupts(void)
  * @param irq The interrupt request number for the ISR to set.
  * @param isr A pointer to a function to act as the interrupt service routine.
  */
-void request_interrupt(IRQn_Type irq, ISR_Type isr)
+void interrupt_request(IRQn_Type irq, ISR_Type isr)
 {
 #ifdef DEBUG_ON
 	ABORT_IF(irq <= IRQ_START || irq >= IRQ_END);
 
 	/**
 	 * Keep track of which interrupts have already been requested. This method
-	 * will Fail if the same interrupt is requested twice.
+	 * will ABORT if the same interrupt is requested twice.
 	 */
 	static bool requested_interrupts[IRQ_END - IRQ_START];
 	ABORT_IF(requested_interrupts[irq + 15] == true);
@@ -268,7 +263,7 @@ void request_interrupt(IRQn_Type irq, ISR_Type isr)
 	/**
 	 * Exceptions are enabled through a System Control Block register.
 	 *
-	 * Default exception handlers are enabled in the init_interrupts() method.
+	 * Default exception handlers are enabled in the interrupt_init() method.
 	 */
 	if(irq >= 0) {
 		NVIC_EnableIRQ(irq);

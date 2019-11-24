@@ -1,5 +1,4 @@
-#ifndef STM32F7_TESTS_H
-#define STM32F7_TESTS_H
+#pragma once
 
 #ifdef INCLUDE_SDRAM_DRIVER
 void fmc_memcheck_test(void);
@@ -22,5 +21,3 @@ void usart_gfx_test(void);
 void gfx_drawing_test(void);
 void gfx_text_test(void);
 #endif /* defined(INCLUDE_GRAPHICS_MODULE) && defined(INCLUDE_SDRAM_DRIVER) */
-
-#endif /* STM32F7_TESTS_H */
