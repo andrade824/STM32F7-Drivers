@@ -6,6 +6,7 @@
 #include "graphics.h"
 #include "interrupt.h"
 #include "sdmmc.h"
+#include "spi/pmod_jstk.h"
 #include "system.h"
 #include "usart.h"
 
@@ -315,3 +316,39 @@ void gfx_text_test(void)
 	}
 }
 #endif /* ENABLE_LCD_GRAPHICS */
+
+/**
+ * Dump out the joystick x/y-axis values over the console. BTN1 controls LED1
+ * and BTN2 controls LED2. Press the Joystick button to turn both LEDs on.
+ */
+void jstk_test(void)
+{
+#ifdef config_stm32f7_dev_board
+	/* SPI2 pins on the STM32F7 dev board. */
+	#define GPIO_ARD_D13 GPIO_PB13 /* SCK */
+	#define GPIO_ARD_D12 GPIO_PB14 /* MISO */
+	#define GPIO_ARD_D11 GPIO_PB15 /* MOSI */
+	#define GPIO_ARD_D5  GPIO_PB12 /* NSS */
+#endif
+
+	gpio_request_alt(GPIO_ARD_D13, AF5, GPIO_OSPEED_25MHZ); /* SPI2 SCK */
+	gpio_request_alt(GPIO_ARD_D12, AF5, GPIO_OSPEED_25MHZ); /* SPI2 MISO */
+	gpio_request_alt(GPIO_ARD_D11, AF5, GPIO_OSPEED_25MHZ); /* SPI2 MOSI */
+	gpio_request_alt(GPIO_ARD_D5, AF5, GPIO_OSPEED_25MHZ);  /* SPI2 NSS */
+
+	PmodJstkInst jstk;
+	jstk_init(&jstk, SPI2, true);
+	jstk_set_leds(&jstk, false, true);
+	while(1) {
+		uint16_t x, y;
+		uint8_t btns;
+		jstk_get_data(&jstk, &x, &y, &btns);
+
+		bool led1 = JSTK_BTN_BTN1(btns) | JSTK_BTN_JOYSTICK(btns);
+		bool led2 = JSTK_BTN_BTN2(btns) | JSTK_BTN_JOYSTICK(btns);
+		jstk_set_leds(&jstk, led1, led2);
+
+		dbprintf("X: %04d | Y: %04d | BTN1: %d | BTN2: %d | JSTK_BTN: %d\n",
+		         x, y, JSTK_BTN_BTN1(btns), JSTK_BTN_BTN2(btns), JSTK_BTN_JOYSTICK(btns));
+	}
+}

@@ -11,3 +11,5 @@ void usart_gfx_test(void);
 
 void gfx_drawing_test(void);
 void gfx_text_test(void);
+
+void jstk_test(void);

@@ -2,9 +2,8 @@
  * @author Devon Andrade
  * @created 12/27/2018
  *
- * Definitions and functions used to manipulate the USART [31].
+ * Definitions and functions used to manipulate the USART.
  */
-#include "config.h"
 #include "debug.h"
 #include "usart.h"
 
@@ -127,11 +126,11 @@ void usart_send(UsartReg *usart, uint8_t *data, uint32_t num_bytes)
 }
 
 /**
- * Block until a character is receiver over the USART and return it.
+ * Block until a character is received over the USART and return it.
  *
  * @param usart Pointer to the USART register map for the wanted USART module.
  *
- * @retval The received byte of data.
+ * @return The received byte of data.
  */
 uint8_t usart_receive(UsartReg *usart)
 {

@@ -504,7 +504,7 @@ static SdStatus wait_for_card_ready(void)
  *
  * @note Before usage, the SDMMC GPIOs and 48MHz clock will need to be setup.
  *
- * @retval SD_FAIL if an SD card isn't present, SD_SUCCESS otherwise.
+ * @return SD_FAIL if an SD card isn't present, SD_SUCCESS otherwise.
  */
 SdStatus sdmmc_init() {
 	SdStatus status = 0;
@@ -590,7 +590,7 @@ SdStatus sdmmc_init() {
  * @param block_addr Start address of the block to read.
  * @param num_blocks The number of blocks to read.
  *
- * @retval SD_SUCCESS if data was read correctly, otherwise an error value.
+ * @return SD_SUCCESS if data was read correctly, otherwise an error value.
  */
 SdStatus sd_read_data(void *data, uint32_t block_addr, uint16_t num_blocks)
 {
@@ -691,7 +691,7 @@ SdStatus sd_read_data(void *data, uint32_t block_addr, uint16_t num_blocks)
  * @param block_addr Start address of the block to write.
  * @param num_blocks The number of blocks to write.
  *
- * @retval SD_SUCCESS if data was written correctly, otherwise an error value.
+ * @return SD_SUCCESS if data was written correctly, otherwise an error value.
  */
 SdStatus sd_write_data(void *data, uint32_t block_addr, uint16_t num_blocks)
 {

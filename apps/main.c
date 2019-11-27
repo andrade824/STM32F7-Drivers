@@ -12,9 +12,9 @@ int main(void)
 	dbprintf("System Initialized\n");
 
 #if 1
-	fat_dump_file_test("test2.txt");
+	jstk_test();
 #else
-	gfx_text_test();
+	fat_dump_file_test("test2.txt");
 #endif
 
 #ifdef config_stm32f7_dev_board

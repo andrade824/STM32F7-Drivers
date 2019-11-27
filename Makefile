@@ -1,7 +1,7 @@
 # You can override these settings by passing them in as arguments
 PLATFORM ?= stm32f7
-CONFIG ?= stm32f7_dev_board
-#CONFIG ?= stm32f746_disco
+#CONFIG ?= stm32f7_dev_board
+CONFIG ?= stm32f746_disco
 
 # The device that JLink thinks it's connecting to.
 JLINK_DEVICE ?= STM32F730R8
@@ -11,6 +11,7 @@ SRCS += platform/*.c
 SRCS += platform/$(PLATFORM)/*.s
 SRCS += platform/$(PLATFORM)/*.c
 SRCS += drivers/*.c
+SRCS += drivers/spi/*.c
 SRCS += drivers/$(PLATFORM)/*.c
 SRCS += apps/*.c
 
