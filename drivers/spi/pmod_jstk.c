@@ -9,15 +9,15 @@
 #include "config.h"
 #include "debug.h"
 #include "gpio.h"
-#include "spi/pmod_jstk.h"
 #include "spi.h"
+#include "spi/pmod_jstk.h"
 #include "system_timer.h"
 
 #include "registers/spi_reg.h"
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
-#include <stdlib.h>
 
 /* How many bytes to retrieve from the joystick in one transaction. */
 #define JOYSTICK_DATA_LENGTH 5
@@ -47,7 +47,8 @@ void jstk_init(PmodJstkInst *inst, SpiReg *spi, bool use_hardware_ss)
 	inst->ss_pin = 0;
 
 	/* SPI2/3 are on APB1, all other SPI modules are on APB2. */
-	const uint32_t pclk = (((uintptr_t)spi == SPI2_BASE) || ((uintptr_t)spi == SPI3_BASE)) ? APB1_HZ : APB2_HZ;
+	const uint32_t pclk = (((uintptr_t)spi == SPI2_BASE) ||
+	    ((uintptr_t)spi == SPI3_BASE)) ? APB1_HZ : APB2_HZ;
 	const SpiBaudRateDiv div = (pclk == APB1_HZ) ? SPI_BR_DIV_64 : SPI_BR_DIV_128;
 
 	/* Enforce that the joystick serial clock is 1MHz or less. */
@@ -72,6 +73,30 @@ void jstk_set_ss_pin(PmodJstkInst *inst, GpioReg *ss_reg, GpioPin ss_pin)
 
 	inst->ss_reg = ss_reg;
 	inst->ss_pin = ss_pin;
+}
+
+/**
+ * Re-initialize the underlying SPI module with the same parameters used in
+ * jstk_init(). This is useful when two slaves are using the same SPI interface
+ * but require different SPI configurations.
+ *
+ * @note Make sure to call this function before calling any other joystick
+ *       functions after talking to a different device on the same SPI interface
+ *       as this one.
+ *
+ * @param inst The joystick instance to re-initialize.
+ */
+void jstk_reinit_spi(PmodJstkInst *inst)
+{
+	ASSERT(inst != NULL);
+	ASSERT(inst->spi != NULL);
+
+	/* SPI2/3 are on APB1, all other SPI modules are on APB2. */
+	const uint32_t pclk = (((uintptr_t)inst->spi == SPI2_BASE) ||
+	    ((uintptr_t)inst->spi == SPI3_BASE)) ? APB1_HZ : APB2_HZ;
+	const SpiBaudRateDiv div = (pclk == APB1_HZ) ? SPI_BR_DIV_64 : SPI_BR_DIV_128;
+
+	spi_init(inst->spi, SPI_CPHA_0, SPI_CPOL_0, div, SPI_MSBFIRST, SPI_DS_8BIT, inst->use_hardware_ss);
 }
 
 /**

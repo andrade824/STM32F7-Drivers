@@ -114,6 +114,25 @@ void spi_disable(SpiReg *spi)
 }
 
 /**
+ * Dynamically set the clock division when the SPI is disabled. This is useful
+ * when multiple slaves are connected to the same SPI interface but they require
+ * different clock speeds.
+ *
+ * @param spi Pointer to the SPI register map for the wanted SPI module.
+ * @param baud_div A divider for the peripheral clock used to generate the serial
+ *    clock (SCK). For SPI2/3, this is a divider on APB1. For SPI1/4/5/6, this is
+ *    a divider on APB2.
+ */
+void spi_set_clock_div(SpiReg *spi, SpiBaudRateDiv baud_div)
+{
+	/* You should only change the clock when the SPI is disabled. */
+	ASSERT(GET_SPI_CR1_SPE(spi->CR1) == 0);
+
+	CLEAR_FIELD(spi->CR1, SPI_CR1_BR());
+	SET_FIELD(spi->CR1, SET_SPI_CR1_BR(baud_div));
+}
+
+/**
  * Send a chunk of data over SPI without reading the response. This is useful
  * for supporting a transmit-only mode (where responses from the slave are
  * ignored).

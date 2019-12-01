@@ -22,6 +22,7 @@ void spi_init(
 	bool use_hardware_ss);
 void spi_enable(SpiReg *spi);
 void spi_disable(SpiReg *spi);
+void spi_set_clock_div(SpiReg *spi, SpiBaudRateDiv baud_div);
 
 void spi_write(SpiReg *spi, uint16_t data);
 uint16_t spi_send_receive(SpiReg *spi, uint16_t data);

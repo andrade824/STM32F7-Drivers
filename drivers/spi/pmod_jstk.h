@@ -34,6 +34,7 @@ typedef struct {
 
 void jstk_init(PmodJstkInst *inst, SpiReg *spi, bool use_hardware_ss);
 void jstk_set_ss_pin(PmodJstkInst *inst, GpioReg *ss_reg, GpioPin ss_pin);
+void jstk_reinit_spi(PmodJstkInst *inst);
 
 void jstk_get_data(PmodJstkInst *inst, uint16_t *x, uint16_t *y, uint8_t *btns);
 void jstk_set_leds(PmodJstkInst *inst, bool led1, bool led2);

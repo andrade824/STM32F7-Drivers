@@ -6,6 +6,7 @@
 #include "graphics.h"
 #include "interrupt.h"
 #include "sdmmc.h"
+#include "spi/nokia5110.h"
 #include "spi/pmod_jstk.h"
 #include "system.h"
 #include "usart.h"
@@ -350,5 +351,101 @@ void jstk_test(void)
 
 		dbprintf("X: %04d | Y: %04d | BTN1: %d | BTN2: %d | JSTK_BTN: %d\n",
 		         x, y, JSTK_BTN_BTN1(btns), JSTK_BTN_BTN2(btns), JSTK_BTN_JOYSTICK(btns));
+	}
+}
+
+/**
+ * Draw columns of pixels on a Nokia 5110 display using a joystick module as
+ * input. Press the joystick button in to clear the screen out.
+ *
+ * Both devices are expected to be connected to SPI2 but with different slave
+ * select lines.
+ */
+void nokia_jstk_test(void)
+{
+#ifdef config_stm32f7_dev_board
+	/* SPI2 pins on the STM32F7 dev board. */
+	#define GPIO_ARD_D13 GPIO_PB13 /* SCK */
+	#define GPIO_ARD_D12 GPIO_PB14 /* MISO */
+	#define GPIO_ARD_D11 GPIO_PB15 /* MOSI */
+	#define GPIO_ARD_D5  GPIO_PB12 /* NOKIA NSS */
+
+	#define GPIO_ARD_D0 GPIO_PB9  /* NOKIA CD */
+	#define GPIO_ARD_D1 GPIO_PB10 /* NOKIA RST */
+	#define GPIO_ARD_D2 GPIO_PB11 /* JOYSTICK NSS */
+#endif
+
+	gpio_request_alt(GPIO_ARD_D13, AF5, GPIO_OSPEED_25MHZ); /* SPI2 SCK */
+	gpio_request_alt(GPIO_ARD_D12, AF5, GPIO_OSPEED_25MHZ); /* SPI2 MISO */
+	gpio_request_alt(GPIO_ARD_D11, AF5, GPIO_OSPEED_25MHZ); /* SPI2 MOSI */
+	gpio_request_output(GPIO_ARD_D5, GPIO_HIGH); /* NOKIA NSS */
+	gpio_request_output(GPIO_ARD_D2, GPIO_HIGH); /* JOYSTICK NSS */
+
+	#define NOKIA_DC  GPIO_ARD_D0
+	#define NOKIA_RST GPIO_ARD_D1
+
+	gpio_request_output(NOKIA_DC, GPIO_LOW); /* Command/Data */
+	gpio_request_output(NOKIA_RST, GPIO_HIGH); /* RST */
+
+	Nokia5110Inst nokia;
+	nokia_init(&nokia, SPI2, NOKIA_DC, NOKIA_RST, false);
+	nokia_set_ss_pin(&nokia, GPIO_ARD_D5);
+	nokia_set_params(&nokia, 0xB1, 0, 0x14);
+	nokia_set_disp_mode(&nokia, NOKIA_DISP_INVERSE);
+	nokia_clear_screen(&nokia);
+	nokia_set_position(&nokia, 0, 0);
+	nokia_set_column(&nokia, 0xFF);
+
+	PmodJstkInst jstk;
+	jstk_init(&jstk, SPI2, false);
+	jstk_set_ss_pin(&jstk, GPIO_ARD_D2);
+	jstk_set_leds(&jstk, false, false);
+
+	uint8_t column = 0;
+	uint8_t bank = 0;
+	while(1) {
+		uint8_t new_column = column;
+		uint8_t new_bank = bank;
+
+		uint16_t x, y;
+		uint8_t btns;
+		jstk_reinit_spi(&jstk);
+		jstk_get_data(&jstk, &x, &y, &btns);
+
+		bool led1 = JSTK_BTN_BTN1(btns) | JSTK_BTN_JOYSTICK(btns);
+		bool led2 = JSTK_BTN_BTN2(btns) | JSTK_BTN_JOYSTICK(btns);
+		jstk_set_leds(&jstk, led1, led2);
+
+		if((x < 200) && (column > 0)) {
+			new_column--;
+		} else if((x > 600) && (column < (NOKIA_WIDTH_PIXELS - 1))) {
+			new_column++;
+		}
+
+		if((y < 200) && (bank < (NOKIA_HEIGHT_BANKS - 1))) {
+			new_bank++;
+		} else if((y > 600) && (bank > 0)) {
+			new_bank--;
+		}
+
+		if(JSTK_BTN_JOYSTICK(btns)) {
+			nokia_reinit_spi(&nokia);
+			nokia_clear_screen(&nokia);
+		}
+
+		if((new_column != column) || (new_bank != bank)) {
+			nokia_reinit_spi(&nokia);
+			// nokia_set_position(&nokia, column, bank);
+			// nokia_set_column(&nokia, 0);
+
+			nokia_set_position(&nokia, new_column, new_bank);
+			nokia_set_column(&nokia, 0xFF);
+
+			const uint64_t timer = (new_bank != bank) ? MSECS(150) : MSECS(50);
+			sleep(timer);
+
+			bank = new_bank;
+			column = new_column;
+		}
 	}
 }

@@ -4,6 +4,9 @@
 #include "stm32f7_tests.h"
 #include "system.h"
 
+#include "spi/nokia5110.h"
+#include "spi/pmod_jstk.h"
+
 #include <string.h>
 
 int main(void)
@@ -12,7 +15,7 @@ int main(void)
 	dbprintf("System Initialized\n");
 
 #if 1
-	jstk_test();
+	nokia_jstk_test();
 #else
 	fat_dump_file_test("test2.txt");
 #endif
