@@ -46,14 +46,7 @@ typedef enum {
 /* Structure used to represent a single Nokia 5110 display. */
 typedef struct {
 	/* SPI module the display is connected to. */
-	SpiReg *spi;
-
-	/* True to use hardware-managed slave select, false otherwise. */
-	bool use_hardware_ss;
-
-	/* If using software-managed slave select, this is the GPIO slave select pin. */
-	GpioReg *ss_reg;
-	GpioPin ss_pin;
+	SpiInst spi;
 
 	/* GPIO used to control the Data/Command (DC) line. */
 	GpioReg *dc_reg;
@@ -62,14 +55,12 @@ typedef struct {
 
 void nokia_init(
 	Nokia5110Inst *inst,
-	SpiReg *spi,
+	SpiReg *spi_reg,
 	GpioReg *dc_reg,
 	GpioPin dc_pin,
 	GpioReg *rst_reg,
-	GpioPin rst_pin,
-	bool use_hardware_ss);
-void nokia_set_ss_pin(Nokia5110Inst *inst, GpioReg *ss_reg, GpioPin ss_pin);
-void nokia_reinit_spi(Nokia5110Inst *inst);
+	GpioPin rst_pin);
+SpiInst* nokia_get_spi_inst(Nokia5110Inst *inst);
 
 void nokia_set_params(Nokia5110Inst *inst, uint8_t vop, uint8_t tc, uint8_t bs);
 void nokia_set_disp_mode(Nokia5110Inst *inst, Nokia5110DispMode mode);

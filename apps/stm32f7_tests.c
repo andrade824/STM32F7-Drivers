@@ -6,6 +6,7 @@
 #include "graphics.h"
 #include "interrupt.h"
 #include "sdmmc.h"
+#include "spi.h"
 #include "spi/nokia5110.h"
 #include "spi/pmod_jstk.h"
 #include "system.h"
@@ -338,7 +339,7 @@ void jstk_test(void)
 	gpio_request_alt(GPIO_ARD_D5, AF5, GPIO_OSPEED_25MHZ);  /* SPI2 NSS */
 
 	PmodJstkInst jstk;
-	jstk_init(&jstk, SPI2, true);
+	jstk_init(&jstk, SPI2);
 	jstk_set_leds(&jstk, false, true);
 	while(1) {
 		uint16_t x, y;
@@ -388,8 +389,8 @@ void nokia_jstk_test(void)
 	gpio_request_output(NOKIA_RST, GPIO_HIGH); /* RST */
 
 	Nokia5110Inst nokia;
-	nokia_init(&nokia, SPI2, NOKIA_DC, NOKIA_RST, false);
-	nokia_set_ss_pin(&nokia, GPIO_ARD_D5);
+	nokia_init(&nokia, SPI2, NOKIA_DC, NOKIA_RST);
+	spi_use_software_ss(nokia_get_spi_inst(&nokia), GPIO_ARD_D5);
 	nokia_set_params(&nokia, 0xB1, 0, 0x14);
 	nokia_set_disp_mode(&nokia, NOKIA_DISP_INVERSE);
 	nokia_clear_screen(&nokia);
@@ -397,8 +398,8 @@ void nokia_jstk_test(void)
 	nokia_set_column(&nokia, 0xFF);
 
 	PmodJstkInst jstk;
-	jstk_init(&jstk, SPI2, false);
-	jstk_set_ss_pin(&jstk, GPIO_ARD_D2);
+	jstk_init(&jstk, SPI2);
+	spi_use_software_ss(jstk_get_spi_inst(&jstk), GPIO_ARD_D2);
 	jstk_set_leds(&jstk, false, false);
 
 	uint8_t column = 0;
@@ -409,7 +410,7 @@ void nokia_jstk_test(void)
 
 		uint16_t x, y;
 		uint8_t btns;
-		jstk_reinit_spi(&jstk);
+		spi_reinit(jstk_get_spi_inst(&jstk));
 		jstk_get_data(&jstk, &x, &y, &btns);
 
 		bool led1 = JSTK_BTN_BTN1(btns) | JSTK_BTN_JOYSTICK(btns);
@@ -429,12 +430,12 @@ void nokia_jstk_test(void)
 		}
 
 		if(JSTK_BTN_JOYSTICK(btns)) {
-			nokia_reinit_spi(&nokia);
+			spi_reinit(nokia_get_spi_inst(&nokia));
 			nokia_clear_screen(&nokia);
 		}
 
 		if((new_column != column) || (new_bank != bank)) {
-			nokia_reinit_spi(&nokia);
+			spi_reinit(nokia_get_spi_inst(&nokia));
 			// nokia_set_position(&nokia, column, bank);
 			// nokia_set_column(&nokia, 0);
 

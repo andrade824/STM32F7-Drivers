@@ -15,7 +15,7 @@ int main(void)
 	dbprintf("System Initialized\n");
 
 #if 1
-	nokia_jstk_test();
+	jstk_test();
 #else
 	fat_dump_file_test("test2.txt");
 #endif

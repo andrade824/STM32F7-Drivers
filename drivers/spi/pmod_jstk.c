@@ -28,75 +28,44 @@
  *
  * @note Before usage, the GPIOs for the SPI module will need to be setup.
  *
+ * @note If software management of the slave select (NSS) line is preferred, then
+ *       spi_use_software_ss() must be called after the call to jstk_init() but
+ *       before any other functions.
+ *
  * @param inst The joystick instance to initialize. There should be one instance
  *             per physical joystick module.
- * @param spi The underlying SPI module the joystick module is connected to.
- * @param use_hardware_ss True to let the SPI module manage the slave select
- *                        line. False to let this PmodJstk module handle the
- *                        slave select. If you pass false here you must call
- *                        jstk_set_ss_pin() before any other method is called.
+ * @param spi_reg The underlying SPI module the joystick module is connected to.
  */
-void jstk_init(PmodJstkInst *inst, SpiReg *spi, bool use_hardware_ss)
+void jstk_init(PmodJstkInst *inst, SpiReg *spi_reg)
 {
 	ASSERT(inst != NULL);
-	ASSERT(spi != NULL);
-
-	inst->spi = spi;
-	inst->use_hardware_ss = use_hardware_ss;
-	inst->ss_reg = NULL;
-	inst->ss_pin = 0;
+	ASSERT(spi_reg != NULL);
 
 	/* SPI2/3 are on APB1, all other SPI modules are on APB2. */
-	const uint32_t pclk = (((uintptr_t)spi == SPI2_BASE) ||
-	    ((uintptr_t)spi == SPI3_BASE)) ? APB1_HZ : APB2_HZ;
+	const uint32_t pclk = spi_get_periph_clock(spi_reg);
 	const SpiBaudRateDiv div = (pclk == APB1_HZ) ? SPI_BR_DIV_64 : SPI_BR_DIV_128;
 
 	/* Enforce that the joystick serial clock is 1MHz or less. */
 	ASSERT((pclk / (1 << (div + 1))) <= 1000000U);
 
-	spi_init(spi, SPI_CPHA_0, SPI_CPOL_0, div, SPI_MSBFIRST, SPI_DS_8BIT, use_hardware_ss);
+	spi_init(&inst->spi, spi_reg, SPI_CPHA_0, SPI_CPOL_0, div, SPI_MSBFIRST, SPI_DS_8BIT);
 }
 
 /**
- * If software slave select management is being used, this sets the pin to be
- * used as the slave select (NSS) line.
+ * Return a pointer to the SPI instance used by this joystick instance. This is
+ * useful for setting a software managed slave select pin or reconfiguring the
+ * underlying SPI module between transactions when multiple devices are using
+ * the same SPI interface.
  *
- * @param inst The joystick instance to tie the pin to.
- * @param ss_reg The GPIO register that controls the wanted pin.
- * @param ss_pin The GPIO pin to use as a slave select.
+ * @param inst The joystick instance to extract the SPI instance from.
+ *
+ * @return The SPI instance used by the passed in Nokia instance.
  */
-void jstk_set_ss_pin(PmodJstkInst *inst, GpioReg *ss_reg, GpioPin ss_pin)
+SpiInst* jstk_get_spi_inst(PmodJstkInst *inst)
 {
 	ASSERT(inst != NULL);
-	ASSERT(ss_reg != NULL);
-	ASSERT(!inst->use_hardware_ss);
 
-	inst->ss_reg = ss_reg;
-	inst->ss_pin = ss_pin;
-}
-
-/**
- * Re-initialize the underlying SPI module with the same parameters used in
- * jstk_init(). This is useful when two slaves are using the same SPI interface
- * but require different SPI configurations.
- *
- * @note Make sure to call this function before calling any other joystick
- *       functions after talking to a different device on the same SPI interface
- *       as this one.
- *
- * @param inst The joystick instance to re-initialize.
- */
-void jstk_reinit_spi(PmodJstkInst *inst)
-{
-	ASSERT(inst != NULL);
-	ASSERT(inst->spi != NULL);
-
-	/* SPI2/3 are on APB1, all other SPI modules are on APB2. */
-	const uint32_t pclk = (((uintptr_t)inst->spi == SPI2_BASE) ||
-	    ((uintptr_t)inst->spi == SPI3_BASE)) ? APB1_HZ : APB2_HZ;
-	const SpiBaudRateDiv div = (pclk == APB1_HZ) ? SPI_BR_DIV_64 : SPI_BR_DIV_128;
-
-	spi_init(inst->spi, SPI_CPHA_0, SPI_CPOL_0, div, SPI_MSBFIRST, SPI_DS_8BIT, inst->use_hardware_ss);
+	return &inst->spi;
 }
 
 /**
@@ -110,32 +79,18 @@ void jstk_reinit_spi(PmodJstkInst *inst)
 static void jstk_spi_transfer(PmodJstkInst *inst, uint8_t *data)
 {
 	ASSERT(inst != NULL);
-	ASSERT(inst->spi != NULL);
 
-	spi_enable(inst->spi);
-
-	/**
-	 * If the SPI module is handling the NSS line, it will get asserted by
-	 * spi_enable. Otherwise, manually assert the NSS line.
-	 */
-	if(!inst->use_hardware_ss) {
-		ASSERT(inst->ss_reg != NULL);
-		gpio_set_output(inst->ss_reg, inst->ss_pin, GPIO_LOW);
-	}
+	spi_enable(&inst->spi);
 
 	/* Must wait 15uS after slave select line gets asserted. */
 	sleep(USECS(15));
 
 	for(int i = 0; i < JOYSTICK_DATA_LENGTH; ++i) {
-		data[i] = spi_send_receive(inst->spi, data[i]);
+		data[i] = spi_send_receive(&inst->spi, data[i]);
 		sleep(USECS(10)); /* Must wait 10uS between reading bytes. */
 	}
 
-	spi_disable(inst->spi);
-
-	if(!inst->use_hardware_ss) {
-		gpio_set_output(inst->ss_reg, inst->ss_pin, GPIO_HIGH);
-	}
+	spi_disable(&inst->spi);
 
 	/* Must wait 25uS after de-asserting SS line before it can get asserted again. */
 	sleep(USECS(25));
@@ -153,6 +108,8 @@ static void jstk_spi_transfer(PmodJstkInst *inst, uint8_t *data)
  */
 void jstk_get_data(PmodJstkInst *inst, uint16_t *x, uint16_t *y, uint8_t *btns)
 {
+	ASSERT(inst != NULL);
+
 	uint8_t data[JOYSTICK_DATA_LENGTH] = { 0 };
 	jstk_spi_transfer(inst, data);
 
@@ -169,6 +126,13 @@ void jstk_get_data(PmodJstkInst *inst, uint16_t *x, uint16_t *y, uint8_t *btns)
 	}
 }
 
+/**
+ * Set the LEDs on the joystick module.
+ *
+ * @param inst The joystick instance to set the LEDs on.
+ * @param led1 True to enable LED 1, false otherwise.
+ * @param led2 True to enable LED 2, false otherwise.
+ */
 void jstk_set_leds(PmodJstkInst *inst, bool led1, bool led2)
 {
 	ASSERT(inst != NULL);

@@ -93,13 +93,13 @@
  * @note Before usage, the GPIOs for the SPI module and the CD/RST lines will
  *       need to be setup.
  *
+ * @note If software management of the slave select (NSS) line is preferred, then
+ *       spi_use_software_ss() must be called after the call to nokia_init() but
+ *       before any other functions.
+ *
  * @param inst The nokia5110 instance to initialize. There should be one instance
  *             per physical display module.
- * @param spi The underlying SPI module the display module is connected to.
- * @param use_hardware_ss True to let the SPI module manage the slave select
- *                        line. False to let this Nokia5110 module handle the
- *                        slave select. If you pass false here you must call
- *                        nokia_set_ss_pin() before any other method is called.
+ * @param spi_reg The underlying SPI module the display module is connected to.
  * @param dc_reg GPIO register for the data/command line.
  * @param dc_pin GPIO pin to be used as the data/command line.
  * @param rst_reg GPIO register used for the reset line.
@@ -107,34 +107,28 @@
  */
 void nokia_init(
 	Nokia5110Inst *inst,
-	SpiReg *spi,
+	SpiReg *spi_reg,
 	GpioReg *dc_reg,
 	GpioPin dc_pin,
 	GpioReg *rst_reg,
-	GpioPin rst_pin,
-	bool use_hardware_ss)
+	GpioPin rst_pin)
 {
 	ASSERT(inst != NULL);
-	ASSERT(spi != NULL);
+	ASSERT(spi_reg != NULL);
 	ASSERT(dc_reg != NULL);
 	ASSERT(rst_reg != NULL);
 
-	inst->spi = spi;
-	inst->use_hardware_ss = use_hardware_ss;
-	inst->ss_reg = NULL;
-	inst->ss_pin = 0;
 	inst->dc_reg = dc_reg;
 	inst->dc_pin = dc_pin;
 
 	/* SPI2/3 are on APB1, all other SPI modules are on APB2. */
-	const uint32_t pclk = (((uintptr_t)spi == SPI2_BASE) ||
-	    ((uintptr_t)spi == SPI3_BASE)) ? APB1_HZ : APB2_HZ;
+	const uint32_t pclk = spi_get_periph_clock(spi_reg);
 	const SpiBaudRateDiv div = (pclk == APB1_HZ) ? SPI_BR_DIV_16 : SPI_BR_DIV_32;
 
 	/* Enforce that the Nokia 5110 serial clock is 4MHz or less. */
 	ASSERT((pclk / (1 << (div + 1))) <= 4000000U);
 
-	spi_init(spi, SPI_CPHA_0, SPI_CPOL_0, div, SPI_MSBFIRST, SPI_DS_8BIT, use_hardware_ss);
+	spi_init(&inst->spi, spi_reg, SPI_CPHA_0, SPI_CPOL_0, div, SPI_MSBFIRST, SPI_DS_8BIT);
 
 	/* Toggle the reset line before sending commands/data. */
 	gpio_set_output(rst_reg, rst_pin, GPIO_LOW);
@@ -143,45 +137,20 @@ void nokia_init(
 }
 
 /**
- * If software slave select management is being used, this sets the pin to be
- * used as the slave select (NSS) line.
+ * Return a pointer to the SPI instance used by this nokia instance. This is
+ * useful for setting a software managed slave select pin or reconfiguring the
+ * underlying SPI module between transactions when multiple devices are using
+ * the same SPI interface.
  *
- * @param inst The nokia5110 instance to tie the pin to.
- * @param ss_reg The GPIO register that controls the wanted pin.
- * @param ss_pin The GPIO pin to use as a slave select.
+ * @param inst The nokia5110 instance to extract the SPI instance from.
+ *
+ * @return The SPI instance used by the passed in Nokia instance.
  */
-void nokia_set_ss_pin(Nokia5110Inst *inst, GpioReg *ss_reg, GpioPin ss_pin)
+SpiInst* nokia_get_spi_inst(Nokia5110Inst *inst)
 {
 	ASSERT(inst != NULL);
-	ASSERT(ss_reg != NULL);
-	ASSERT(!inst->use_hardware_ss);
 
-	inst->ss_reg = ss_reg;
-	inst->ss_pin = ss_pin;
-}
-
-/**
- * Re-initialize the underlying SPI module with the same parameters used in
- * nokia_init(). This is useful when two slaves are using the same SPI interface
- * but require different SPI configurations.
- *
- * @note Make sure to call this function before calling any other Nokia5110
- *       functions after talking to a different device on the same SPI interface
- *       as this one.
- *
- * @param inst The nokia5110 instance to re-initialize.
- */
-void nokia_reinit_spi(Nokia5110Inst *inst)
-{
-	ASSERT(inst != NULL);
-	ASSERT(inst->spi != NULL);
-
-	/* SPI2/3 are on APB1, all other SPI modules are on APB2. */
-	const uint32_t pclk = (((uintptr_t)inst->spi == SPI2_BASE) ||
-	    ((uintptr_t)inst->spi == SPI3_BASE)) ? APB1_HZ : APB2_HZ;
-	const SpiBaudRateDiv div = (pclk == APB1_HZ) ? SPI_BR_DIV_64 : SPI_BR_DIV_128;
-
-	spi_init(inst->spi, SPI_CPHA_0, SPI_CPOL_0, div, SPI_MSBFIRST, SPI_DS_8BIT, inst->use_hardware_ss);
+	return &inst->spi;
 }
 
 /**
@@ -194,32 +163,18 @@ void nokia_reinit_spi(Nokia5110Inst *inst)
  */
 static void nokia_send_cmds(Nokia5110Inst *inst, bool dc, const uint8_t *cmds, uint8_t num_cmds)
 {
-	ASSERT(inst);
-	ASSERT(inst->spi);
+	ASSERT(inst != NULL);
 
 	/* Set the Command/Data line. */
 	gpio_set_output(inst->dc_reg, inst->dc_pin, dc ? GPIO_HIGH : GPIO_LOW);
 
-	spi_enable(inst->spi);
-
-	/**
-	 * If the SPI module is handling the NSS line, it will get asserted by
-	 * spi_enable. Otherwise, manually assert the NSS line.
-	 */
-	if(!inst->use_hardware_ss) {
-		ASSERT(inst->ss_reg != NULL);
-		gpio_set_output(inst->ss_reg, inst->ss_pin, GPIO_LOW);
-	}
+	spi_enable(&inst->spi);
 
 	for(int i = 0; i < num_cmds; ++i) {
-		spi_write(inst->spi, cmds[i]);
+		spi_write(&inst->spi, cmds[i]);
 	}
 
-	spi_disable(inst->spi);
-
-	if(!inst->use_hardware_ss) {
-		gpio_set_output(inst->ss_reg, inst->ss_pin, GPIO_HIGH);
-	}
+	spi_disable(&inst->spi);
 }
 
 /**

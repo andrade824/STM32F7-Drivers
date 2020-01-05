@@ -22,19 +22,11 @@
 /* Structure used to represent a single joystick module. */
 typedef struct {
 	/* SPI module the joystick is connected to. */
-	SpiReg *spi;
-
-	/* True to use hardware-managed slave select, false otherwise. */
-	bool use_hardware_ss;
-
-	/* If using software-managed slave select, this is the GPIO slave select pin. */
-	GpioReg *ss_reg;
-	GpioPin ss_pin;
+	SpiInst spi;
 } PmodJstkInst;
 
-void jstk_init(PmodJstkInst *inst, SpiReg *spi, bool use_hardware_ss);
-void jstk_set_ss_pin(PmodJstkInst *inst, GpioReg *ss_reg, GpioPin ss_pin);
-void jstk_reinit_spi(PmodJstkInst *inst);
+void jstk_init(PmodJstkInst *inst, SpiReg *spi_reg);
+SpiInst* jstk_get_spi_inst(PmodJstkInst *inst);
 
 void jstk_get_data(PmodJstkInst *inst, uint16_t *x, uint16_t *y, uint8_t *btns);
 void jstk_set_leds(PmodJstkInst *inst, bool led1, bool led2);
