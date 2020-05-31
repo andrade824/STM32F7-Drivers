@@ -22,6 +22,16 @@
  * @note Before usage, the GPIOs for this SPI will need to be setup. After
  *       this init function is called, the spi module will still need to be
  *       enabled using spi_enable().
+ *
+ * @note When software management of the slave select line is not used
+ *       (spi_use_software_ss() never gets called), then the SPI module will
+ *       drive the NSS line as open-drain. This means that if a strong enough
+ *       pull-up isn't used then the NSS line might not return high between
+ *       accesses which can cause issues. If ample delays aren't given between
+ *       accesses to account for this then it's recommended to use a software
+ *       managed slave select to avoid this problem completely (which will drive
+ *       the line as push-pull).
+ *
  * @param inst The SPI instance to tie this configuration to.
  * @param spi Pointer to the SPI register map for the wanted SPI module.
  * @param cpha The wanted clock phase.
@@ -247,7 +257,7 @@ uint16_t spi_send_receive(SpiInst *inst, uint16_t data)
 
 	/**
 	 * If the SPI data size is 8-bits or less, then performing a 16-bit write
-	 * will unitentionally fill up two entries in the TX FIFO.
+	 * will unintentionally fill up two entries in the TX FIFO.
 	 */
 	if(GET_SPI_CR2_DS(spi->CR2) > SPI_DS_8BIT) {
 		spi->DR = data;
