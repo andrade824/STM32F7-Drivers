@@ -14,3 +14,5 @@ void gfx_text_test(void);
 
 void jstk_test(void);
 void nokia_jstk_test(void);
+
+void rfm69_test(void);

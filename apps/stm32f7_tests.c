@@ -9,6 +9,7 @@
 #include "spi.h"
 #include "spi/nokia5110.h"
 #include "spi/pmod_jstk.h"
+#include "spi/rfm69_radio.h"
 #include "system.h"
 #include "usart.h"
 
@@ -449,4 +450,76 @@ void nokia_jstk_test(void)
 			column = new_column;
 		}
 	}
+}
+
+/**
+ * Send a single byte of data from one device to another using RFM69 radio
+ * modules. The receiver will send an acknowledgement after every packet it
+ * receives, and the transmitter will resend the packet if it doesn't get the
+ * ACK.
+ *
+ * Compile the transmitter: make gdb_[jlink/openocd] CPPFLAGS=-DTRANSMITTER
+ * Compile the receiver without the "TRANSMITTER" define.
+ */
+void rfm69_test(void)
+{
+	gpio_request_alt(GPIO_PB13, AF5, GPIO_OSPEED_25MHZ); /* SPI2 SCK */
+	gpio_request_alt(GPIO_PB14, AF5, GPIO_OSPEED_25MHZ); /* SPI2 MISO */
+	gpio_request_alt(GPIO_PB15, AF5, GPIO_OSPEED_25MHZ); /* SPI2 MOSI */
+	gpio_request_output(GPIO_PB12, GPIO_HIGH);           /* SPI2 NSS */
+	gpio_request_output(GPIO_PB11, GPIO_HIGH);           /* RFM69 RST */
+
+	Rfm69Inst radio;
+	rfm69_init_radio(&radio, SPI2, GPIO_PB11, GPIO_PB12);
+	rfm69_set_payload_length(&radio, RFM69_VARIABLE_LENGTH_PAYLOAD);
+	rfm69_set_power_mode(&radio, RFM69_PA1, 31); /* 13dBm */
+
+	#define DATA_SIZE 5
+
+#ifdef TRANSMITTER
+	dbprintf("Transmitter\n");
+	gpio_request_output(GPIO_LED_USER, GPIO_LOW);
+	DigitalState led_ctrl = GPIO_LOW;
+
+	uint8_t data[DATA_SIZE] = { 0, 0, 2, 3, 4 };
+	while(1) {
+		sleep(MSECS(100));
+
+		if(!rfm69_send_with_ack(&radio, data, DATA_SIZE, 2, MSECS(30))) {
+			dbprintf("Failed to send packet %d\n", data[0]);
+		}
+
+		data[0]++;
+
+		if(data[0] == 0) {
+			/* Keep track of how many times data[0] overflows. */
+			data[1]++;
+		}
+
+		if(led_ctrl == GPIO_LOW) {
+			led_ctrl = GPIO_HIGH;
+		} else {
+			led_ctrl = GPIO_LOW;
+		}
+
+		gpio_set_output(GPIO_LED_USER, led_ctrl);
+	}
+#else
+	dbprintf("Receiver\n");
+	uint8_t num_read = 0;
+	uint8_t data[DATA_SIZE] = { 0 };
+	while(1) {
+		uint8_t start_data = data[0];
+		num_read = rfm69_receive_with_ack(&radio, data, DATA_SIZE);
+		ASSERT(num_read == DATA_SIZE);
+
+		/* Make it easy to spot dropped packets. */
+		if(data[0] != (start_data + 1)) {
+			dbprintf("---");
+		}
+
+		dbprintf("Iter: %d | Data: %d %d %d %d | RSSI: %d dBm\n",
+			data[1], data[0], data[2], data[3], data[4], rfm69_get_last_rssi(&radio));
+	}
+#endif
 }

@@ -28,3 +28,8 @@ continue
 
 # Enable TUI (Text UI) mode because I find it easier to use.
 tui enable
+
+# Disable the "Quit anyway?" prompt
+define hook-quit
+    set confirm off
+end

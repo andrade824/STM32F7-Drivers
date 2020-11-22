@@ -1,13 +1,33 @@
+Need to build:
+- Fix style so that private static methods just start with an "_".
+- Write I2C driver
+- Write SSD1306 OLED display driver
+- Init-only, no free memory allocator
+- Create zone allocator (fixed size memory allocator)
+--- Going to need to re-write dbprintf to use a fixed size buffer (since printf
+    uses malloc, it'll corrupt the heap). So snprintf into a buffer, and then
+    call puts() on that buffer.
+- Task creation code
+- Context switching and round-robin cooperative scheduler code
+- Implement basic atomic operations, use C11 atomics?
+- Implement spinlocks and mutexes
+- Implement queues for cross-task communication
+- Remove dependency on CMSIS by creating custom cache enable and interrupt code.
+--- Expand interrupt handling code to set priorities and have context data for each ISR.
+- Update every driver to be interrupt driven where it makes sense
+--- SD card driver can be DMA driven in both reading/writing sectors
+--- RFM69 radio driver can put thread to sleep while waiting for receiving packet
+----- Implement GPIO interrupts and have receive() wait for the ISR instead of polling.
+--- Probably need to write hardware timer driver
+--- sleep() function will now block and place process on a wait queue
 
-- Write SPI controller driver.
-- Write RFM69 (radio module) driver.
+Nice to haves:
 - Convert every "register" header file to BITFIELD2.
 - Maybe write a script/program that converts an SVD file into a "register" header file.
 - Refactor build system to be more modular? (Maybe recursive make files or ninja)
-- Remove dependency on CMSIS by creating custom cache enable and interrupt code.
 - Figure out why FAT32 filesystem adds 4-5KiB of text.
 
-FAT32 filesystem
+Ideas for FAT32 filesystem
 
 Create new struct FatDirEntry that contains name, file_size, cluster, and is_dir.
 

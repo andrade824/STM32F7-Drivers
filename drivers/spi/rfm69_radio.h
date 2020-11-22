@@ -21,6 +21,9 @@
  */
 #define RFM69_MAX_PAYLOAD_LEN 61U
 
+/* Sentinel used to represent a variable length payload in Rfm69Inst->payload_length. */
+#define RFM69_VARIABLE_LENGTH_PAYLOAD 0U
+
 /**
  * Possible power modes.
  *
@@ -64,12 +67,16 @@ SpiInst* rfm69_get_spi_inst(Rfm69Inst *inst);
 void rfm69_set_payload_length(Rfm69Inst *inst, uint8_t length);
 void rfm69_set_power_mode(Rfm69Inst *inst, Rfm69PowerMode mode, uint8_t level);
 
-void rfm69_set_transmit_settings();
-void rfm69_set_receive_settings();
-void rfm69_set_packet_settings();
-
 void rfm69_send(Rfm69Inst *inst, uint8_t *data, uint8_t length);
 uint8_t rfm69_receive(Rfm69Inst *inst, uint8_t *data, uint8_t length);
-int16_t rfm69_get_last_rssi(Rfm69Inst *inst);
 
-void rfm69_dump_regs(Rfm69Inst *inst);
+bool rfm69_send_with_ack(
+	Rfm69Inst *inst,
+	uint8_t *data,
+	uint8_t length,
+	uint8_t max_retries,
+	uint32_t timeout);
+uint8_t rfm69_receive_with_ack(Rfm69Inst *inst, uint8_t *buffer, uint8_t buffer_len);
+
+int16_t rfm69_get_last_rssi(Rfm69Inst *inst);
+void rfm69_dump_regs(Rfm69Inst *inst, bool compact);

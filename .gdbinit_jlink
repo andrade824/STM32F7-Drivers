@@ -1,5 +1,4 @@
-# Connect to an already running JLinkGDBServer
-target extended-remote localhost:2331
+# Should already be connected to a JLink GDB Server before this script is run.
 
 # Enable semihosting support (let printf() print out to the debug console).
 monitor semihosting IOClient 3
@@ -20,4 +19,9 @@ b main
 continue
 
 # Enable TUI (Text UI) mode because I find it easier to use.
-tui enable
+#tui enable
+
+# Disable the "Quit anyway?" prompt
+define hook-quit
+    set confirm off
+end

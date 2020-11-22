@@ -49,7 +49,7 @@ void die(void);
 	do                                                              \
 	{                                                               \
 		const uint64_t target_cycles = get_cycles() + timeout;      \
-		while(!(expr) && !(get_cycles() <= target_cycles));         \
+		while(!(expr) && (get_cycles() <= target_cycles));          \
 		if(get_cycles() > target_cycles) {                          \
 			dbprintf("[ABORT] %s:%s():%d -- %s\n",                  \
 			         __FILE__, __func__, __LINE__, #expr);          \

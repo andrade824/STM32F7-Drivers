@@ -166,7 +166,7 @@ typedef enum {
 
 /* Possible values for RF_LNA_LNAGAINSELECT. */
 typedef enum {
-	RF_LNA_ZIN_50_OHM   = 0,
+	RF_LNA_ZIN_50_OHMS  = 0,
 	RF_LNA_ZIN_200_OHMS = 1
 } Rfm69LnaZin;
 

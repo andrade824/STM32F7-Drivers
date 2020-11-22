@@ -3,8 +3,11 @@ PLATFORM ?= stm32f7
 CONFIG ?= stm32f7_dev_board
 #CONFIG ?= stm32f746_disco
 
-# The device that JLink thinks it's connecting to.
+# The device that JLink tries connecting to.
 JLINK_DEVICE ?= STM32F730R8
+
+# The GDB port that the JLink GDB server will expose.
+JLINK_PORT ?= 2331
 
 # Put your source files here (or *.c, etc)
 SRCS += platform/*.c
@@ -53,6 +56,9 @@ CFLAGS += -Iplatform/CMSIS/Include
 # Create defines for the CONFIG and PLATFORM
 CFLAGS += -Dplatform_$(PLATFORM) -Dconfig_$(CONFIG)
 
+# Extra C preprocessor flags that can be passed in the make invocation.
+CFLAGS += $(CPPFLAGS)
+
 # Conditionally enable semihosting. Disable if your debugger doesn't support it.
 ifeq ($(SEMIHOSTING_SUPPORT), yes)
 CFLAGS_SEMIHOSTING = --specs=rdimon.specs -DSEMIHOSTING_ENABLED
@@ -97,7 +103,7 @@ gdb_openocd: debug
 	$(DBG) -x .gdbinit_openocd $(PROJ_PATH)-dbg.elf
 
 gdb_jlink: debug
-	$(DBG) -x .gdbinit_jlink $(PROJ_PATH)-dbg.elf
+	$(DBG) -ex "target extended-remote localhost:$(JLINK_PORT)" -x .gdbinit_jlink $(PROJ_PATH)-dbg.elf
 
 # Start an OpenOCD GDB server.
 #
@@ -109,9 +115,10 @@ gdb_jlink: debug
 openocd:
 	openocd -f board/stm32f7discovery.cfg
 
-# Start a JLink GDB server.
+# Start a JLink GDB server. JLINK_PORT can be set during the make invocation
+# like so: make jlink JLINK_PORT=2332. The port defaults to 2331.
 jlink:
-	JLinkGDBServer -device $(JLINK_DEVICE) -if SWD -speed 4000
+	JLinkGDBServer -device $(JLINK_DEVICE) -if SWD -speed 4000 -port $(JLINK_PORT)
 
 # Flash the STM32F7 with the "release" executable.
 burn_openocd: release

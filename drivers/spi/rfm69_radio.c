@@ -18,7 +18,10 @@
 #include <stdint.h>
 
 /* Maximum amount of time to wait when switching radio modes. */
-#define RFM69_MODE_CHANGE_TIMEOUT MSECS(50)
+#define RFM69_MODE_CHANGE_TIMEOUT MSECS(1)
+
+/* Magic value sent as a single-byte packet during an acknowledgement. */
+#define RFM69_ACK_MAGIC 0x42U
 
 /**
  * Return a pointer to the SPI instance used by this rfm69 instance. This is
@@ -81,6 +84,18 @@ static uint8_t rfm69_read_reg(Rfm69Inst *inst, uint8_t addr)
 }
 
 /**
+ * Clear out any existing data in the FIFO and any set status flags. This is done
+ * by writing the FifoOverrun bit to IRQFlags2.
+ *
+ * @param inst The radio instance to modify.
+ */
+static void _clear_fifo_flags(Rfm69Inst *inst)
+{
+	ASSERT(inst != NULL);
+	rfm69_write_reg(inst, REG_IRQ_FLAGS_2, RF_IRQ2_FIFO_OVERRUN());
+}
+
+/**
  * Initialize the radio with some default settings.
  *
  * @note Before usage, the GPIOs for the SPI module (alternate function), the
@@ -89,9 +104,9 @@ static uint8_t rfm69_read_reg(Rfm69Inst *inst, uint8_t addr)
  * @note Software management of the slave select line is always enabled. This is
  *       due to the fact that the radio module SPI runs at up to 10MHz, which is
  *       fast enough that the slave select line might not have enough time to
- *       float high between accesses (the SPI module drives the NSS as open-drain).
- *       By managing the slave select in software, it can be driven push-pull
- *       always ensuring the correct value is on the bus.
+ *       float high between accesses (the SPI module drives the NSS as
+ *       open-drain). By managing the slave select in software, it can be driven
+ *       push-pull always ensuring the correct value is on the bus.
  *
  * @note If using an RFM69HW/RFM69HCW module then rfm69_set_power_mode() MUST be
  *       called with a mode that uses PA1 or PA1/PA2 otherwise the transmitter
@@ -115,7 +130,7 @@ static uint8_t rfm69_read_reg(Rfm69Inst *inst, uint8_t addr)
  * - Sync Words: 2
  * -- Fixed prefix byte of 0x37, and default network ID of 0xAA
  * - Fixed Length packet size
- * -- Default length of two bytes.
+ * -- Default length of one byte.
  * - CRC enabled
  * - No address filtering
  * - InterPacketRxDelay: 35us
@@ -161,7 +176,7 @@ void rfm69_init_radio(
 	spi_init(&inst->spi, spi_reg, SPI_CPHA_0, SPI_CPOL_0, div, SPI_MSBFIRST, SPI_DS_8BIT);
 	spi_use_software_ss(&inst->spi, nss_reg, nss_pin);
 
-	inst->last_rssi = 0;
+	inst->last_rssi = -999;
 	inst->mode = RF_MODE_STANDBY;
 
 	/* Ensure we can communicate with the radio module correctly. */
@@ -228,7 +243,7 @@ void rfm69_init_radio(
 
 	/* Set receiver to automatically adjust the gain. */
 	rfm69_write_reg(inst, REG_LNA,
-		SET_RF_LNA_LNAZIN(RF_LNA_ZIN_200_OHMS) |
+		SET_RF_LNA_LNAZIN(RF_LNA_ZIN_50_OHMS) |
 		SET_RF_LNA_LNAGAINSELECT(RF_LNA_GAIN_AGC)
 	);
 
@@ -264,7 +279,7 @@ void rfm69_init_radio(
 		SET_RF_SYNCCONFIG_SYNC_TOL(0)
 	);
 
-	/* Set default Sync words (fixed prefix and user-changeable ID). */
+	/* Set default Sync words. */
 #define RFM69_DEFAULT_SYNC_PREFIX 0x37
 #define RFM69_DEFAULT_SYNC_ID 0xAA
 	rfm69_write_reg(inst, REG_SYNC_VALUE_1, RFM69_DEFAULT_SYNC_PREFIX);
@@ -278,8 +293,8 @@ void rfm69_init_radio(
 		SET_RF_PACKET1_CRC_AUTO_CLEAR_OFF(RF_CRC_AUTO_CLEAR_FIFO) |
 		SET_RF_PACKET1_ADDRESS_FILTERING(RF_ADDR_FILT_NONE));
 
-	/* Set default packet length to two bytes. */
-#define RFM69_DEFAULT_PAYLOAD_LENGTH 2
+	/* Set default packet length to one byte. */
+#define RFM69_DEFAULT_PAYLOAD_LENGTH 1
 	inst->payload_length = RFM69_DEFAULT_PAYLOAD_LENGTH;
 	rfm69_write_reg(inst, REG_PAYLOAD_LENGTH, RFM69_DEFAULT_PAYLOAD_LENGTH);
 
@@ -298,8 +313,8 @@ void rfm69_init_radio(
 	/* Enable Continuous Digital Automatic Gain Control (DAGC). */
 	rfm69_write_reg(inst, REG_TEST_DAGC, RF_TEST_DAGC_LOW_BETA_0);
 
-	/* The IrqFlags and FIFO are cleared out when FifoOverrun is written to. */
-	rfm69_write_reg(inst, REG_IRQ_FLAGS_2, SET_RF_IRQ2_FIFO_OVERRUN(1));
+	/* Aggressively clear out the FIFO and flags to get the module into a clean state. */
+	_clear_fifo_flags(inst);
 
 	/* Wait for ModeReady to confirm the radio has entered STANDBY mode. */
 	ABORT_TIMEOUT(
@@ -316,7 +331,8 @@ void rfm69_init_radio(
  *       configured with the same payload length.
  *
  * @param inst The radio instance to update.
- * @param length 0 for variable length, >0 for fixed length payloads.
+ * @param length RFM69_VARIABLE_LENGTH_PAYLOAD for variable length, >0 for fixed
+ *               length payloads.
  */
 void rfm69_set_payload_length(Rfm69Inst *inst, uint8_t length)
 {
@@ -327,7 +343,7 @@ void rfm69_set_payload_length(Rfm69Inst *inst, uint8_t length)
 
 	uint8_t packet_config = rfm69_read_reg(inst, REG_PACKET_CONFIG_1) & ~RF_PACKET1_PACKET_FORMAT();
 
-	if(length == 0) {
+	if(length == RFM69_VARIABLE_LENGTH_PAYLOAD) {
 		/* Set packet config to variable length. */
 		packet_config |= RF_PACKET1_PACKET_FORMAT();
 
@@ -395,11 +411,15 @@ void rfm69_set_power_mode(Rfm69Inst *inst, Rfm69PowerMode mode, uint8_t level)
  *
  * The power boost must be disabled during RX operation.
  *
+ * @note This is only applicable to the RFM69_PA1_PA2_BOOST power mode.
+ *
  * @param inst The radio instance to power boost.
  * @param enabled Whether to enable the power boost.
  */
-static void rfm69_set_power_boost(Rfm69Inst *inst, bool enabled)
+static void _set_power_boost(Rfm69Inst *inst, bool enabled)
 {
+	ASSERT(inst->power_mode == RFM69_PA1_PA2_BOOST);
+
 	rfm69_write_reg(inst, REG_TEST_PA_1, (enabled) ? RF_TEST_PA1_20DBM : RF_TEST_PA1_NORMAL);
 	rfm69_write_reg(inst, REG_TEST_PA_2, (enabled) ? RF_TEST_PA2_20DBM : RF_TEST_PA2_NORMAL);
 }
@@ -410,7 +430,7 @@ static void rfm69_set_power_boost(Rfm69Inst *inst, bool enabled)
  *
  * @param mode The new mode to switch to.
  */
-static void rfm69_switch_mode(Rfm69Inst *inst, Rfm69Mode mode)
+static void _switch_mode(Rfm69Inst *inst, Rfm69Mode mode)
 {
 	ASSERT(inst != NULL);
 
@@ -420,9 +440,9 @@ static void rfm69_switch_mode(Rfm69Inst *inst, Rfm69Mode mode)
 
 	/* Power boost (>17dBm output) must be disabled during RX and enabled during TX. */
 	if((inst->power_mode == RFM69_PA1_PA2_BOOST) && (mode == RF_MODE_RX)) {
-		rfm69_set_power_boost(inst, false);
+		_set_power_boost(inst, false);
 	} else if((inst->power_mode == RFM69_PA1_PA2_BOOST) && (mode == RF_MODE_TX)) {
-		rfm69_set_power_boost(inst, true);
+		_set_power_boost(inst, true);
 	}
 
 	const uint8_t opmode = rfm69_read_reg(inst, REG_OP_MODE) & ~RF_OPMODE_MODE();
@@ -438,7 +458,7 @@ static void rfm69_switch_mode(Rfm69Inst *inst, Rfm69Mode mode)
 
 /**
  * Send a packet of data over the radio. After the packet is sent, the radio
- * will be in transmit mode.
+ * will be in standby mode.
  *
  * @param inst The radio instance to transit over.
  * @param data The data to send.
@@ -450,11 +470,13 @@ void rfm69_send(Rfm69Inst *inst, uint8_t *data, uint8_t length)
 {
 	ASSERT(inst != NULL);
 	ASSERT(data != NULL);
-	ASSERT(((inst->payload_length == 0) && (length > 0)) || (inst->payload_length == length));
+	ASSERT(((inst->payload_length == RFM69_VARIABLE_LENGTH_PAYLOAD) && (length > 0)) ||
+	       (inst->payload_length == length));
 
-	if((inst->mode != RF_MODE_STANDBY) && (inst->mode != RF_MODE_TX)) {
-		rfm69_switch_mode(inst, RF_MODE_STANDBY);
-	}
+	_switch_mode(inst, RF_MODE_STANDBY);
+
+	/* Clear out any existing FIFO data. */
+	_clear_fifo_flags(inst);
 
 	/* Fill up the radio's FIFO while in standby or TX mode. */
 	spi_enable(&inst->spi);
@@ -464,7 +486,7 @@ void rfm69_send(Rfm69Inst *inst, uint8_t *data, uint8_t length)
 	 * In variable length packet mode, the first byte placed into the FIFO is
 	 * the length of the payload (not including the length byte).
 	 */
-	if(inst->payload_length == 0) {
+	if(inst->payload_length == RFM69_VARIABLE_LENGTH_PAYLOAD) {
 		spi_send_receive(&inst->spi, length);
 	}
 
@@ -474,54 +496,196 @@ void rfm69_send(Rfm69Inst *inst, uint8_t *data, uint8_t length)
 	spi_disable(&inst->spi);
 
 	/* Once the radio is switched to transmit, it will start sending data. */
-	if(inst->mode != RF_MODE_TX) {
-		rfm69_switch_mode(inst, RF_MODE_TX);
-	}
+	_switch_mode(inst, RF_MODE_TX);
 
 	/* Wait for the packet to send. */
 #define RFM69_TRANSMIT_TIMEOUT MSECS(2)
 	ABORT_TIMEOUT(
 		GET_RF_IRQ2_PACKET_SENT(rfm69_read_reg(inst, REG_IRQ_FLAGS_2)) == 1,
 		RFM69_TRANSMIT_TIMEOUT);
+
+	_switch_mode(inst, RF_MODE_STANDBY);
+}
+
+/**
+ * Read a payload from the radio FIFO after a payload has been readied. It's
+ * assumed that the radio is still in the RX mode.
+ *
+ * @param inst The radio instance to read from.
+ * @param buffer A buffer to fill with the received payload.
+ * @param buffer_len The maximum amount of bytes to read from the radio.
+ *
+ * @return The number of bytes read from the radio (will be buffer_len at max).
+ */
+uint8_t _read_payload(Rfm69Inst *inst, uint8_t *buffer, uint8_t buffer_len)
+{
+	ASSERT(inst != NULL);
+	ASSERT(buffer != NULL);
+	ASSERT(buffer_len != 0);
+	ASSERT(inst->mode == RF_MODE_RX);
+
+	_switch_mode(inst, RF_MODE_STANDBY);
+
+	/* If in variable length mode, interpret the first byte as the length of the payload. */
+	uint8_t msg_length = 0;
+	if(inst->payload_length == RFM69_VARIABLE_LENGTH_PAYLOAD) {
+		msg_length = rfm69_read_reg(inst, REG_FIFO);
+		ASSERT(msg_length != 0);
+	} else {
+		/* Otherwise, assume a fixed length packet and attempt to read that many bytes. */
+		msg_length = inst->payload_length;
+	}
+
+	/* Restrict number of bytes to read by the buffer length. */
+	msg_length = (buffer_len < msg_length) ? buffer_len : msg_length;
+
+	/* Read the data from the FIFO. */
+	uint8_t num_read = 0;
+	while((num_read < msg_length) &&
+	      GET_RF_IRQ2_FIFO_NOT_EMPTY(rfm69_read_reg(inst, REG_IRQ_FLAGS_2))) {
+		buffer[num_read++] = rfm69_read_reg(inst, REG_FIFO);
+	}
+
+	/* Clear out any leftover data in the FIFO. */
+	_clear_fifo_flags(inst);
+
+	inst->last_rssi = -(rfm69_read_reg(inst, REG_RSSI_VALUE)) / 2;
+
+	return num_read;
 }
 
 /**
  * Wait for a packet to be received and return the payload. After the packet is
- * received, the radio wil be in standby mode.
- *
- * @note For variable length payloads, the first byte is always the length of
- *       the length of the payload (not including the length byte).
+ * received, the radio will be in standby mode.
  *
  * @param inst The radio to receive the packet over.
- * @param data A buffer to fill with the received payload.
- * @param length The maximum amount of bytes to read from the radio.
+ * @param buffer A buffer to fill with the received payload.
+ * @param buffer_len The maximum amount of bytes to read from the radio.
  *
- * @return The number of bytes read from the radio.
+ * @return The number of bytes read from the radio (will be buffer_len at max).
  */
-uint8_t rfm69_receive(Rfm69Inst *inst, uint8_t *data, uint8_t length)
+uint8_t rfm69_receive(Rfm69Inst *inst, uint8_t *buffer, uint8_t buffer_len)
 {
 	ASSERT(inst != NULL);
-	ASSERT(data != NULL);
+	ASSERT(buffer != NULL);
 
-	rfm69_switch_mode(inst, RF_MODE_RX);
+	_switch_mode(inst, RF_MODE_RX);
 
 	/* Wait for a packet to be received. */
 	while(GET_RF_IRQ2_PAYLOAD_READY(rfm69_read_reg(inst, REG_IRQ_FLAGS_2)) == 0);
 
-	rfm69_switch_mode(inst, RF_MODE_STANDBY);
+	return _read_payload(inst, buffer, buffer_len);
+}
 
-	/* Read the data from the FIFO. */
-	uint8_t num_read = 0;
-	while(GET_RF_IRQ2_FIFO_NOT_EMPTY(rfm69_read_reg(inst, REG_IRQ_FLAGS_2))) {
-		if(num_read < length) {
-			data[num_read++] = rfm69_read_reg(inst, REG_FIFO);
-		} else {
-			/* Clear the FIFO of any outstanding data. */
-			rfm69_read_reg(inst, REG_FIFO);
+/**
+ * Send a packet of data and expect to receive an acknowledgement from the other
+ * device. The packet will be resent up to `max_retries` amount of times if an
+ * acknowledgement isn't received within the timeout.
+ *
+ * This is meant to be paired with the rfm69_receive_with_ack() function.
+ *
+ * @note The radio must be setup for variable length payloads because the
+ *       acknowledgement will most likely be a different length than the packet
+ *       payload.
+ *
+ * @param inst The radio instance to transit over.
+ * @param data The data to send.
+ * @param length The length of the payload.
+ * @param max_retries The maximum number of times to attempt to send the packet.
+ * @param timeout Number of CPU cycles to wait for an acknowledgement.
+ *
+ * @return True if the packet was sent successfully before the maximum number of
+ *         retries. False otherwise.
+ */
+bool rfm69_send_with_ack(
+	Rfm69Inst *inst,
+	uint8_t *data,
+	uint8_t length,
+	uint8_t max_retries,
+	uint32_t timeout)
+{
+	ASSERT(inst != NULL);
+	ASSERT(data != NULL);
+	ASSERT((inst->payload_length == RFM69_VARIABLE_LENGTH_PAYLOAD) && (length > 0));
+
+	uint8_t num_retries = 0;
+	while(num_retries < max_retries) {
+		/* Attempt to send the data. */
+		rfm69_send(inst, data, length);
+
+		_switch_mode(inst, RF_MODE_RX);
+
+		/* Wait for an ACK packet to be received or there's a timeout. */
+		const uint64_t target_cycles = get_cycles() + timeout;
+		while((GET_RF_IRQ2_PAYLOAD_READY(rfm69_read_reg(inst, REG_IRQ_FLAGS_2)) == 0) &&
+		      (get_cycles() <= target_cycles));
+
+		/* If there was a timeout, then retry again. */
+		if(get_cycles() > target_cycles) {
+			num_retries++;
+			continue;
 		}
+
+		/**
+		 * Otherwise, double-check the ACK was sent correctly.
+		 * Use a two byte buffer to check that only one byte was received.
+		 */
+		uint8_t buffer[2];
+		const uint8_t num_read = _read_payload(inst, buffer, 2);
+
+		/* An acknowledgement packet should only contain one byte, the RFM69_ACK_MAGIC. */
+		if((num_read != 1) || (buffer[0] != RFM69_ACK_MAGIC)) {
+			/* Some other packet was accidentally received, retry again. */
+			num_retries++;
+			continue;
+		}
+
+		/* The packet was sent and the acknowledgement was received successfully! */
+		return true;
 	}
 
-	inst->last_rssi = -(rfm69_read_reg(inst, REG_RSSI_VALUE)) / 2;
+	return false;
+}
+
+/**
+ * Wait for a packet to be received and return the payload. After the packet is
+ * received, an acknowledgement will automatically be sent. This is meant to be
+ * paired with the rfm69_send_with_ack() function.
+ *
+ * @note The radio must be setup for variable length payloads because the
+ *       acknowledgement will most likely be a different length than the packet
+ *       payload.
+ *
+ * @param inst The radio to receive the packet over.
+ * @param buffer A buffer to fill with the received payload.
+ * @param buffer_len The maximum amount of bytes to read from the radio.
+ *
+ * @return The number of bytes read from the radio (will be buffer_len at max).
+ */
+uint8_t rfm69_receive_with_ack(Rfm69Inst *inst, uint8_t *buffer, uint8_t buffer_len)
+{
+	ASSERT(inst != NULL);
+	ASSERT(buffer != NULL);
+	ASSERT(inst->payload_length == RFM69_VARIABLE_LENGTH_PAYLOAD);
+
+	_switch_mode(inst, RF_MODE_RX);
+
+	/* Wait for a packet to be received. */
+	while(GET_RF_IRQ2_PAYLOAD_READY(rfm69_read_reg(inst, REG_IRQ_FLAGS_2)) == 0);
+
+	uint8_t num_read = _read_payload(inst, buffer, buffer_len);
+
+	/**
+	 * Add a small delay to ensure the other device is in the RX state before
+	 * sending the acknowledgement. Entering RX is usually much slower than
+	 * entering TX, so without a delay we might send the ACK before the other
+	 * device has even entered RX.
+	 */
+	sleep(USECS(100));
+
+	/* Send an acknowledgemet. */
+	uint8_t ack = RFM69_ACK_MAGIC;
+	rfm69_send(inst, &ack, 1);
 
 	return num_read;
 }
@@ -540,57 +704,87 @@ int16_t rfm69_get_last_rssi(Rfm69Inst *inst)
 	return inst->last_rssi;
 }
 
-void rfm69_dump_regs(__attribute__((unused)) Rfm69Inst *inst)
+/**
+ * Diagnostic function for dumping all of the RFM69 registers.
+ *
+ * @param inst The radio instance who's registers to dump.
+ * @param compact Whether to dump a compact hex view of the registers or not.
+ */
+void rfm69_dump_regs(Rfm69Inst *inst, bool compact)
 {
-	dbprintf("REG_OP_MODE: 0x%x\n", rfm69_read_reg(inst, REG_OP_MODE));
-	dbprintf("REG_DATA_MODUL: 0x%x\n", rfm69_read_reg(inst, REG_DATA_MODUL));
-	dbprintf("REG_BITRATE_MSB: 0x%x\n", rfm69_read_reg(inst, REG_BITRATE_MSB));
-	dbprintf("REG_BITRATE_LSB: 0x%x\n", rfm69_read_reg(inst, REG_BITRATE_LSB));
-	dbprintf("REG_FDEV_MSB: 0x%x\n", rfm69_read_reg(inst, REG_FDEV_MSB));
-	dbprintf("REG_FDEV_LSB: 0x%x\n", rfm69_read_reg(inst, REG_FDEV_LSB));
-	dbprintf("REG_FRF_MSB: 0x%x\n", rfm69_read_reg(inst, REG_FRF_MSB));
-	dbprintf("REG_FRF_MID: 0x%x\n", rfm69_read_reg(inst, REG_FRF_MID));
-	dbprintf("REG_FRF_LSB: 0x%x\n", rfm69_read_reg(inst, REG_FRF_LSB));
-	dbprintf("REG_OSC1: 0x%x\n", rfm69_read_reg(inst, REG_OSC1));
-	dbprintf("REG_AFC_CTRL: 0x%x\n", rfm69_read_reg(inst, REG_AFC_CTRL));
-	dbprintf("REG_LISTEN1: 0x%x\n", rfm69_read_reg(inst, REG_LISTEN1));
-	dbprintf("REG_LISTEN2: 0x%x\n", rfm69_read_reg(inst, REG_LISTEN2));
-	dbprintf("REG_LISTEN3: 0x%x\n", rfm69_read_reg(inst, REG_LISTEN3));
-	dbprintf("REG_VERSION: 0x%x\n", rfm69_read_reg(inst, REG_VERSION));
-	dbprintf("REG_PA_LEVEL: 0x%x\n", rfm69_read_reg(inst, REG_PA_LEVEL));
-	dbprintf("REG_PA_RAMP: 0x%x\n", rfm69_read_reg(inst, REG_PA_RAMP));
-	dbprintf("REG_OCP: 0x%x\n", rfm69_read_reg(inst, REG_OCP));
-	dbprintf("REG_LNA: 0x%x\n", rfm69_read_reg(inst, REG_LNA));
-	dbprintf("REG_RX_BW: 0x%x\n", rfm69_read_reg(inst, REG_RX_BW));
-	dbprintf("REG_RSSI_CONFIG: 0x%x\n", rfm69_read_reg(inst, REG_RSSI_CONFIG));
-	dbprintf("REG_RSSI_VALUE: 0x%x\n", rfm69_read_reg(inst, REG_RSSI_VALUE));
-	dbprintf("REG_DIO_MAPPING_1: 0x%x\n", rfm69_read_reg(inst, REG_DIO_MAPPING_1));
-	dbprintf("REG_DIO_MAPPING_2: 0x%x\n", rfm69_read_reg(inst, REG_DIO_MAPPING_2));
-	dbprintf("REG_IRQ_FLAGS_1: 0x%x\n", rfm69_read_reg(inst, REG_IRQ_FLAGS_1));
-	dbprintf("REG_IRQ_FLAGS_2: 0x%x\n", rfm69_read_reg(inst, REG_IRQ_FLAGS_2));
-	dbprintf("REG_RSSI_THRESH: 0x%x\n", rfm69_read_reg(inst, REG_RSSI_THRESH));
-	dbprintf("REG_TIMEOUT_RX_START: 0x%x\n", rfm69_read_reg(inst, REG_TIMEOUT_RX_START));
-	dbprintf("REG_TIMEOUT_RSSI_THRESH: 0x%x\n", rfm69_read_reg(inst, REG_TIMEOUT_RSSI_THRESH));
-	dbprintf("REG_PREAMBLE_MSB: 0x%x\n", rfm69_read_reg(inst, REG_PREAMBLE_MSB));
-	dbprintf("REG_PREAMBLE_LSB: 0x%x\n", rfm69_read_reg(inst, REG_PREAMBLE_LSB));
-	dbprintf("REG_SYNC_CONFIG: 0x%x\n", rfm69_read_reg(inst, REG_SYNC_CONFIG));
-	dbprintf("REG_SYNC_VALUE_1: 0x%x\n", rfm69_read_reg(inst, REG_SYNC_VALUE_1));
-	dbprintf("REG_SYNC_VALUE_2: 0x%x\n", rfm69_read_reg(inst, REG_SYNC_VALUE_2));
-	dbprintf("REG_SYNC_VALUE_3: 0x%x\n", rfm69_read_reg(inst, REG_SYNC_VALUE_3));
-	dbprintf("REG_SYNC_VALUE_4: 0x%x\n", rfm69_read_reg(inst, REG_SYNC_VALUE_4));
-	dbprintf("REG_SYNC_VALUE_5: 0x%x\n", rfm69_read_reg(inst, REG_SYNC_VALUE_5));
-	dbprintf("REG_SYNC_VALUE_6: 0x%x\n", rfm69_read_reg(inst, REG_SYNC_VALUE_6));
-	dbprintf("REG_SYNC_VALUE_7: 0x%x\n", rfm69_read_reg(inst, REG_SYNC_VALUE_7));
-	dbprintf("REG_SYNC_VALUE_8: 0x%x\n", rfm69_read_reg(inst, REG_SYNC_VALUE_8));
-	dbprintf("REG_PACKET_CONFIG_1: 0x%x\n", rfm69_read_reg(inst, REG_PACKET_CONFIG_1));
-	dbprintf("REG_PAYLOAD_LENGTH: 0x%x\n", rfm69_read_reg(inst, REG_PAYLOAD_LENGTH));
-	dbprintf("REG_NODE_ADRS: 0x%x\n", rfm69_read_reg(inst, REG_NODE_ADRS));
-	dbprintf("REG_BROADCAST_ADRS: 0x%x\n", rfm69_read_reg(inst, REG_BROADCAST_ADRS));
-	dbprintf("REG_AUTO_MODES: 0x%x\n", rfm69_read_reg(inst, REG_AUTO_MODES));
-	dbprintf("REG_FIFO_THRESH: 0x%x\n", rfm69_read_reg(inst, REG_FIFO_THRESH));
-	dbprintf("REG_PACKET_CONFIG_2: 0x%x\n", rfm69_read_reg(inst, REG_PACKET_CONFIG_2));
-	dbprintf("REG_TEST_LNA: 0x%x\n", rfm69_read_reg(inst, REG_TEST_LNA));
-	dbprintf("REG_TEST_PA_1: 0x%x\n", rfm69_read_reg(inst, REG_TEST_PA_1));
-	dbprintf("REG_TEST_PA_2: 0x%x\n", rfm69_read_reg(inst, REG_TEST_PA_2));
-	dbprintf("REG_TEST_DAGC: 0x%x\n", rfm69_read_reg(inst, REG_TEST_DAGC));
+	(void)inst;
+
+	if(compact) {
+		/* Print the header row and first register entry */
+		dbprintf("\n     ");
+		for (uint8_t reg = 0x00; reg<0x10; reg++) {
+			dbprintf("%x  ", reg);
+		}
+		dbprintf("\n00: -- ");
+
+		/* Loop over the registers from 0x01 to 0x7F and print their values */
+		for(uint8_t reg = 0x01; reg < 0x80; reg++) {
+			/* Print the header column entries */
+			if(reg % 16 == 0) {
+				dbprintf("\n%x: ", reg);
+			}
+
+			/* Print the actual register values */
+			dbprintf("%02x ", rfm69_read_reg(inst, reg));
+		}
+
+		dbprintf("\n");
+	} else {
+		dbprintf("REG_OP_MODE: 0x%x\n", rfm69_read_reg(inst, REG_OP_MODE));
+		dbprintf("REG_DATA_MODUL: 0x%x\n", rfm69_read_reg(inst, REG_DATA_MODUL));
+		dbprintf("REG_BITRATE_MSB: 0x%x\n", rfm69_read_reg(inst, REG_BITRATE_MSB));
+		dbprintf("REG_BITRATE_LSB: 0x%x\n", rfm69_read_reg(inst, REG_BITRATE_LSB));
+		dbprintf("REG_FDEV_MSB: 0x%x\n", rfm69_read_reg(inst, REG_FDEV_MSB));
+		dbprintf("REG_FDEV_LSB: 0x%x\n", rfm69_read_reg(inst, REG_FDEV_LSB));
+		dbprintf("REG_FRF_MSB: 0x%x\n", rfm69_read_reg(inst, REG_FRF_MSB));
+		dbprintf("REG_FRF_MID: 0x%x\n", rfm69_read_reg(inst, REG_FRF_MID));
+		dbprintf("REG_FRF_LSB: 0x%x\n", rfm69_read_reg(inst, REG_FRF_LSB));
+		dbprintf("REG_OSC1: 0x%x\n", rfm69_read_reg(inst, REG_OSC1));
+		dbprintf("REG_AFC_CTRL: 0x%x\n", rfm69_read_reg(inst, REG_AFC_CTRL));
+		dbprintf("REG_LISTEN1: 0x%x\n", rfm69_read_reg(inst, REG_LISTEN1));
+		dbprintf("REG_LISTEN2: 0x%x\n", rfm69_read_reg(inst, REG_LISTEN2));
+		dbprintf("REG_LISTEN3: 0x%x\n", rfm69_read_reg(inst, REG_LISTEN3));
+		dbprintf("REG_VERSION: 0x%x\n", rfm69_read_reg(inst, REG_VERSION));
+		dbprintf("REG_PA_LEVEL: 0x%x\n", rfm69_read_reg(inst, REG_PA_LEVEL));
+		dbprintf("REG_PA_RAMP: 0x%x\n", rfm69_read_reg(inst, REG_PA_RAMP));
+		dbprintf("REG_OCP: 0x%x\n", rfm69_read_reg(inst, REG_OCP));
+		dbprintf("REG_LNA: 0x%x\n", rfm69_read_reg(inst, REG_LNA));
+		dbprintf("REG_RX_BW: 0x%x\n", rfm69_read_reg(inst, REG_RX_BW));
+		dbprintf("REG_RSSI_CONFIG: 0x%x\n", rfm69_read_reg(inst, REG_RSSI_CONFIG));
+		dbprintf("REG_RSSI_VALUE: 0x%x\n", rfm69_read_reg(inst, REG_RSSI_VALUE));
+		dbprintf("REG_DIO_MAPPING_1: 0x%x\n", rfm69_read_reg(inst, REG_DIO_MAPPING_1));
+		dbprintf("REG_DIO_MAPPING_2: 0x%x\n", rfm69_read_reg(inst, REG_DIO_MAPPING_2));
+		dbprintf("REG_IRQ_FLAGS_1: 0x%x\n", rfm69_read_reg(inst, REG_IRQ_FLAGS_1));
+		dbprintf("REG_IRQ_FLAGS_2: 0x%x\n", rfm69_read_reg(inst, REG_IRQ_FLAGS_2));
+		dbprintf("REG_RSSI_THRESH: 0x%x\n", rfm69_read_reg(inst, REG_RSSI_THRESH));
+		dbprintf("REG_TIMEOUT_RX_START: 0x%x\n", rfm69_read_reg(inst, REG_TIMEOUT_RX_START));
+		dbprintf("REG_TIMEOUT_RSSI_THRESH: 0x%x\n", rfm69_read_reg(inst, REG_TIMEOUT_RSSI_THRESH));
+		dbprintf("REG_PREAMBLE_MSB: 0x%x\n", rfm69_read_reg(inst, REG_PREAMBLE_MSB));
+		dbprintf("REG_PREAMBLE_LSB: 0x%x\n", rfm69_read_reg(inst, REG_PREAMBLE_LSB));
+		dbprintf("REG_SYNC_CONFIG: 0x%x\n", rfm69_read_reg(inst, REG_SYNC_CONFIG));
+		dbprintf("REG_SYNC_VALUE_1: 0x%x\n", rfm69_read_reg(inst, REG_SYNC_VALUE_1));
+		dbprintf("REG_SYNC_VALUE_2: 0x%x\n", rfm69_read_reg(inst, REG_SYNC_VALUE_2));
+		dbprintf("REG_SYNC_VALUE_3: 0x%x\n", rfm69_read_reg(inst, REG_SYNC_VALUE_3));
+		dbprintf("REG_SYNC_VALUE_4: 0x%x\n", rfm69_read_reg(inst, REG_SYNC_VALUE_4));
+		dbprintf("REG_SYNC_VALUE_5: 0x%x\n", rfm69_read_reg(inst, REG_SYNC_VALUE_5));
+		dbprintf("REG_SYNC_VALUE_6: 0x%x\n", rfm69_read_reg(inst, REG_SYNC_VALUE_6));
+		dbprintf("REG_SYNC_VALUE_7: 0x%x\n", rfm69_read_reg(inst, REG_SYNC_VALUE_7));
+		dbprintf("REG_SYNC_VALUE_8: 0x%x\n", rfm69_read_reg(inst, REG_SYNC_VALUE_8));
+		dbprintf("REG_PACKET_CONFIG_1: 0x%x\n", rfm69_read_reg(inst, REG_PACKET_CONFIG_1));
+		dbprintf("REG_PAYLOAD_LENGTH: 0x%x\n", rfm69_read_reg(inst, REG_PAYLOAD_LENGTH));
+		dbprintf("REG_NODE_ADRS: 0x%x\n", rfm69_read_reg(inst, REG_NODE_ADRS));
+		dbprintf("REG_BROADCAST_ADRS: 0x%x\n", rfm69_read_reg(inst, REG_BROADCAST_ADRS));
+		dbprintf("REG_AUTO_MODES: 0x%x\n", rfm69_read_reg(inst, REG_AUTO_MODES));
+		dbprintf("REG_FIFO_THRESH: 0x%x\n", rfm69_read_reg(inst, REG_FIFO_THRESH));
+		dbprintf("REG_PACKET_CONFIG_2: 0x%x\n", rfm69_read_reg(inst, REG_PACKET_CONFIG_2));
+		dbprintf("REG_TEST_LNA: 0x%x\n", rfm69_read_reg(inst, REG_TEST_LNA));
+		dbprintf("REG_TEST_PA_1: 0x%x\n", rfm69_read_reg(inst, REG_TEST_PA_1));
+		dbprintf("REG_TEST_PA_2: 0x%x\n", rfm69_read_reg(inst, REG_TEST_PA_2));
+		dbprintf("REG_TEST_DAGC: 0x%x\n", rfm69_read_reg(inst, REG_TEST_DAGC));
+	}
 }
