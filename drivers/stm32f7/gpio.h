@@ -288,15 +288,15 @@ typedef enum {
 #define GPIO_PA10 GPIOA, PA10
 #define GPIO_PA11 GPIOA, PA11
 #define GPIO_PA12 GPIOA, PA12
-#define GPIO_PA13 GPIOA, PA13
-#define GPIO_PA14 GPIOA, PA14
-#define GPIO_PA15 GPIOA, PA15
+#define GPIO_PA13 GPIOA, PA13 /* Defaults to Alternate Function on Reset. */
+#define GPIO_PA14 GPIOA, PA14 /* Defaults to Alternate Function on Reset. */
+#define GPIO_PA15 GPIOA, PA15 /* Defaults to Alternate Function on Reset. */
 
 #define GPIO_PB0  GPIOB, PB0
 #define GPIO_PB1  GPIOB, PB1
 #define GPIO_PB2  GPIOB, PB2
-#define GPIO_PB3  GPIOB, PB3
-#define GPIO_PB4  GPIOB, PB4
+#define GPIO_PB3  GPIOB, PB3 /* Defaults to Alternate Function on Reset. */
+#define GPIO_PB4  GPIOB, PB4 /* Defaults to Alternate Function on Reset. */
 #define GPIO_PB5  GPIOB, PB5
 #define GPIO_PB6  GPIOB, PB6
 #define GPIO_PB7  GPIOB, PB7
