@@ -1,11 +1,11 @@
 /* Entry Point */
 ENTRY(Reset_Handler)
 
-/* Highest address of the user mode stack */
-_estack = 0x20050000;    /* end of RAM */
-/* Generate a link error if heap and stack don't fit into RAM */
-_Min_Heap_Size = 0x200;   /* required amount of heap  */
-_Min_Stack_Size = 0x400;  /* required amount of stack */
+/**
+ * Highest address of the Main stack (the stack grows downwards). This will be
+ * used by the kernel. User stacks will be allocated separately.
+ */
+_kern_stack_top = 0x20050000; /* end of RAM */
 
 /* Specify the memory areas */
 MEMORY

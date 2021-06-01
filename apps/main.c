@@ -2,6 +2,7 @@
 #include "debug.h"
 #include "gpio.h"
 #include "stm32f7_tests.h"
+#include "os_tests.h"
 #include "system.h"
 
 #include <string.h>
@@ -11,7 +12,7 @@ int main(void)
 	system_init();
 	dbprintf("System Initialized\n");
 
-	rfm69_test();
+	mem_alloc_test();
 
 	gpio_request_input(GPIO_BTN_USER, GPIO_NO_PULL);
 	gpio_request_output(GPIO_LED_USER, GPIO_LOW);

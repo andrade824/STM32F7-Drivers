@@ -506,7 +506,7 @@ void rfm69_test(void)
 	}
 #else
 	dbprintf("Receiver\n");
-	uint8_t num_read = 0;
+	__assert_only uint8_t num_read = 0;
 	uint8_t data[DATA_SIZE] = { 0 };
 	while(1) {
 		uint8_t start_data = data[0];

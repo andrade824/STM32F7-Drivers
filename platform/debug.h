@@ -9,6 +9,7 @@
 #include "system_timer.h"
 
 #include <stdio.h>
+#include <sys/cdefs.h> /* For "__unused" */
 
 #ifdef DEBUG_ON
 	#define dbputs(s)               puts(s)
@@ -16,6 +17,16 @@
 #else
 	#define dbputs(s)
 	#define dbprintf(szFormat, ...)
+#endif
+
+/**
+ * Mark a variable with this modifier if it's only going to be used in an
+ * assert statement that will get compiled out on RELEASE builds.
+ */
+#ifndef DEBUG_ON
+#define __assert_only __unused
+#else
+#define __assert_only
 #endif
 
 /**

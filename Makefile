@@ -17,6 +17,7 @@ SRCS += drivers/*.c
 SRCS += drivers/spi/*.c
 SRCS += drivers/$(PLATFORM)/*.c
 SRCS += apps/*.c
+SRCS += os/*.c
 
 # Binaries will be generated with this name (.elf, .bin, .hex, etc)
 PROJ_NAME ?= hello_world
@@ -38,7 +39,7 @@ OBJCOPY=arm-none-eabi-objcopy
 CFLAGS  = -Wall -Wextra -Werror -Tplatform/$(PLATFORM)/linker-$(CONFIG).ld
 CFLAGS += -mlittle-endian -mthumb -mcpu=cortex-m7 -mthumb-interwork
 CFLAGS += -mfloat-abi=hard -mfpu=fpv5-sp-d16
-CFLAGS += -Iconfigs/ -Iplatform/ -Iplatform/$(PLATFORM)/ -Idrivers/$(PLATFORM)/ -Idrivers/ -Iapps/
+CFLAGS += -I. -Iconfigs/ -Iplatform/ -Iplatform/$(PLATFORM)/ -Idrivers/$(PLATFORM)/ -Idrivers/
 
 # Both Release/Debug builds should have debug information in the ELF file and
 # use the nano version of newlib (removes features but saves space).
