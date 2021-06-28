@@ -11,10 +11,12 @@
  */
 void mem_alloc_test(void)
 {
+#ifdef DEBUG_ON
 	extern void *_sdata;
 	extern void *_edata;
 	extern void *_sbss;
 	extern void *_ebss;
+#endif /* DEBUG_ON */
 
 	dbprintf("DATA: %p through %p\n", &_sdata, &_edata);
 	dbprintf("BSS: %p through %p\n", &_sbss, &_ebss);
