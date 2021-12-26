@@ -3,9 +3,9 @@ ENTRY(Reset_Handler)
 
 /**
  * Highest address of the Main stack (the stack grows downwards). This will be
- * used by the kernel. User stacks will be allocated separately.
+ * used by interrupts. User stacks will be allocated separately.
  */
-_kern_stack_top = 0x20050000; /* end of RAM */
+_interrupt_stack_top = 0x20050000; /* end of RAM */
 
 /* Specify the memory areas */
 MEMORY

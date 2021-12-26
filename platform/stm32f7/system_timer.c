@@ -53,7 +53,7 @@ static volatile uint64_t total_cycles = 0;
  */
 void system_timer_init(void)
 {
-	interrupt_request(SysTick_IRQn, systick_interrupt);
+	intr_register_systick(systick_interrupt, LOWEST_INTR_PRIORITY);
 
 	/**
 	 * Disable the timer, use processor clock, and enable SysTick interrupt.

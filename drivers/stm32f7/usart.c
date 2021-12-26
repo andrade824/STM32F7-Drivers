@@ -6,6 +6,7 @@
  */
 #include "debug.h"
 #include "usart.h"
+#include "system.h"
 
 #include "registers/rcc_reg.h"
 #include "registers/usart_reg.h"
@@ -62,8 +63,7 @@ void usart_init(
 
 	/* The USART clock selection fields are contiguous in RCC->DCKCFGR2[15:0]. */
 	RCC->DCKCFGR2 |= (RCC_USARTSEL_SYSCLK) << (usart_num * 2);
-
-	__asm("dsb");
+	DSB();
 
 	SET_FIELD(usart->BRR, SET_USART_BRR_BRR(CPU_HZ / baud));
 	SET_FIELD(usart->CR3, SET_USART_CR3_OVRDIS(1));

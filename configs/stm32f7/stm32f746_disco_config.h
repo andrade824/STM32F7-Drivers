@@ -215,7 +215,7 @@
  * The start address of the vector table. This is located in tightly coupled
  * instruction RAM.
  */
-#define VECTOR_TABLE_ADDR 0x0
+#define VECTOR_TABLE_ADDR 0x0U
 
 /**
  * Interrupt Request Numbers.
@@ -229,19 +229,6 @@
  */
 typedef enum
 {
-	IRQ_START                   = -15,
-
-	/******  Cortex-M7 Processor Exceptions Numbers **************************************************************/
-	NonMaskableInt_IRQn         = -14,    /* 2 Non Maskable Interrupt                                          */
-	HardFault_IRQn              = -13,    /* 3 Cortex-M7 Hard Fault Interrupt                                  */
-	MemoryManagement_IRQn       = -12,    /* 4 Cortex-M7 Memory Management Interrupt                           */
-	BusFault_IRQn               = -11,    /* 5 Cortex-M7 Bus Fault Interrupt                                   */
-	UsageFault_IRQn             = -10,    /* 6 Cortex-M7 Usage Fault Interrupt                                 */
-	SVCall_IRQn                 = -5,     /* 11 Cortex-M7 SV Call Interrupt                                    */
-	DebugMonitor_IRQn           = -4,     /* 12 Cortex-M7 Debug Monitor Interrupt                              */
-	PendSV_IRQn                 = -2,     /* 14 Cortex-M7 Pend SV Interrupt                                    */
-	SysTick_IRQn                = -1,     /* 15 Cortex-M7 System Tick Interrupt                                */
-	/******  STM32 specific Interrupt Numbers ********************************************************************/
 	WWDG_IRQn                   = 0,      /* Window WatchDog Interrupt                                         */
 	PVD_IRQn                    = 1,      /* PVD through EXTI Line detection Interrupt                         */
 	TAMP_STAMP_IRQn             = 2,      /* Tamper and TimeStamp interrupts through the EXTI line             */
@@ -341,7 +328,7 @@ typedef enum
 	SPDIF_RX_IRQn               = 97,     /* SPDIF-RX global Interrupt                                         */
 
 	IRQ_END
-} IRQn_Type;
+} irq_num_t;
 
 /***** SDRAM CONFIGURATION *****/
 
@@ -451,7 +438,7 @@ typedef uint16_t pixel_t;
 /***** INCLUDE GENERIC STM32F7 CONFIGURATION *****/
 
 /**
- * This needs to be included after IRQn_Type is defined as that is needed by
+ * This needs to be included after irq_num_t is defined as that is needed by
  * the included CMSIS header file.
  */
 #include "stm32f7_generic.h"

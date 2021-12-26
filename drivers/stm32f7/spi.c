@@ -7,6 +7,7 @@
  */
 #include "debug.h"
 #include "spi.h"
+#include "system.h"
 
 #include "registers/rcc_reg.h"
 #include "registers/spi_reg.h"
@@ -64,7 +65,7 @@ void spi_init(
 		default: { ABORT("Invalid SPI module passed to %s\n", __FUNCTION__); }
 	}
 
-	__asm("dsb");
+	DSB();
 
 	inst->spi = spi;
 	inst->cpha = cpha;

@@ -10,14 +10,39 @@
  */
 #pragma once
 
+/* Whether the RTOS features are enabled. */
+#define OS_ENABLED 1
+
 /**
- * Minimum kernel stack size is 512 bytes. This value is used to ensure the heap
- * doesn't grow into the kernel stack. This check isn't entirely accurate since
- * the kernel stack could be larger than this value, but it does provide at
- * least a minimum size the kernel stack can be without needing to worry that
- * the heap will grow into it.
+ * Init/Idle thread stack size. The initial thread that runs main() will turn
+ * into the idle thread once the scheduler begins. The bottom (zeroth) byte will
+ * be used as a stack guard byte.
  */
-#define MIN_KERN_STACK_SIZE 512U
+#define INIT_THREAD_STACK_SIZE 512U
+
+/**
+ * Minimum interrupt stack size is 512 bytes. This value is used to ensure the
+ * heap doesn't grow into the interrupt stack. This check isn't entirely
+ * accurate since the interrupt stack could be larger than this value, but it
+ * does provide at least a minimum size the interupt stack can be without
+ * needing to worry that the heap will grow into it.
+ */
+#define MIN_INTR_STACK_SIZE 512U
+
+/**
+ * Set to 1 to enable inserting and checking the stack guard byte value. One
+ * byte at the bottom of every stack will be used as a guard value.
+ */
+#define ENABLE_STACK_GUARD 1
+
+#if ENABLE_STACK_GUARD
+/**
+ * The magic value used as a stack guard. If the stack guard value (located at
+ * the end of the stack) is ever changed from this value, then the stack will
+ * have overflowed.
+ */
+#define STACK_GUARD_MAGIC 0xD5
+#endif /* ENABLE_STACK_GUARD */
 
 /**
  * System timer tick granularity (in CPU_HZ cycles).

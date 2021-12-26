@@ -41,10 +41,10 @@ void * _sbrk(int incr) {
 	extern uint8_t _end;
 
 	/**
-	 * Symbol created by the linker script to represent the top of the kernel
+	 * Symbol created by the linker script to represent the top of the interrupt
 	 * stack (it grows downward). Generally this represents the top of RAM.
 	 */
-	extern const void *_kern_stack_top;
+	extern const void *_interrupt_stack_top;
 
 	/* Static variable to keep track of the current heap pointer. */
 	static uint8_t *heap_current = 0;
@@ -56,12 +56,12 @@ void * _sbrk(int incr) {
 	uint8_t *prev_heap = heap_current;
 
 	/**
-	 * Ensure the heap isn't growing into the kernel stack. This isn't entirely
-	 * accurate since the kernel stack could be larger than this value, but it
-	 * does provide at least a minimum size the kernel stack can be without
-	 * needing to worry that the heap will grow into it.
+	 * Ensure the heap isn't growing into the interrupt stack. This isn't
+	 * entirely accurate since the interrupt stack could be larger than this
+	 * value, but it does provide at least a minimum size the interrupt stack
+	 * can be without needing to worry that the heap will grow into it.
 	 */
-	if(((uintptr_t)heap_current + incr) >= ((uintptr_t)&_kern_stack_top - MIN_KERN_STACK_SIZE)) {
+	if(((uintptr_t)heap_current + incr) >= ((uintptr_t)&_interrupt_stack_top - MIN_INTR_STACK_SIZE)) {
 		return ALLOC_FAILURE;
 	}
 

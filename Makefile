@@ -11,7 +11,7 @@ JLINK_PORT ?= 2331
 
 # Put your source files here (or *.c, etc)
 SRCS += platform/*.c
-SRCS += platform/$(PLATFORM)/*.s
+SRCS += platform/$(PLATFORM)/*.S
 SRCS += platform/$(PLATFORM)/*.c
 SRCS += drivers/*.c
 SRCS += drivers/spi/*.c
@@ -33,7 +33,7 @@ SEMIHOSTING_SUPPORT = yes
 
 ###############################################################################
 CC=arm-none-eabi-gcc
-DBG=arm-none-eabi-gdb
+DBG=arm-none-eabi-gdb-py
 OBJCOPY=arm-none-eabi-objcopy
 
 CFLAGS  = -Wall -Wextra -Werror -Tplatform/$(PLATFORM)/linker-$(CONFIG).ld
@@ -69,7 +69,10 @@ endif
 
 # Potentially use semihosting and enable debug features when in debug mode. Only
 # perform optimizations that don't disturb debugging.
-CFLAGS_DEBUG = -Og $(CFLAGS_SEMIHOSTING) -Wl,-Map,$(PROJ_PATH)-dbg.map -DDEBUG_ON
+#
+# Keeping the frame pointer is needed to properly construct a backtrace when
+# exceptions occur (due to the handwritten assembly for dumping registers).
+CFLAGS_DEBUG = -Og -fno-omit-frame-pointer $(CFLAGS_SEMIHOSTING) -Wl,-Map,$(PROJ_PATH)-dbg.map -DDEBUG_ON
 
 # No semihosting or debug features in release mode. Use better optimizations.
 CFLAGS_RELEASE = -O2 --specs=nosys.specs -Wl,-Map,$(PROJ_PATH).map

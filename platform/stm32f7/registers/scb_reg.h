@@ -12,12 +12,6 @@
 #include <stdint.h>
 
 /**
- * These definitions are provided by CMSIS, so no need to redefine them.
- *
- * If I eventually get rid of CMSIS, then enable this.
- */
-#if 0
-/**
  * Type defining the System Control Block module register map.
  */
 typedef struct {
@@ -35,6 +29,7 @@ typedef struct {
 	volatile uint32_t MMFAR;         /* Offset: 0x034 (R/W)  MemManage Fault Address Register */
 	volatile uint32_t BFAR;          /* Offset: 0x038 (R/W)  BusFault Address Register */
 	volatile uint32_t AFSR;          /* Offset: 0x03C (R/W)  Auxiliary Fault Status Register */
+
 	volatile uint32_t ID_PFR[2U];    /* Offset: 0x040 (R/ )  Processor Feature Register */
 	volatile uint32_t ID_DFR;        /* Offset: 0x048 (R/ )  Debug Feature Register */
 	volatile uint32_t ID_AFR;        /* Offset: 0x04C (R/ )  Auxiliary Feature Register */
@@ -77,7 +72,31 @@ typedef struct {
  * Define the SCB register map accessor.
  */
 #define SCB ((ScbReg *) SCB_BASE)
-#endif
+
+/* Interrupt Control and State Register. */
+BIT_FIELD2(SCB_ICSR_VECTACTIVE,   0, 8);
+BIT_FIELD2(SCB_ICSR_RETTOBASE,   11, 11);
+BIT_FIELD2(SCB_ICSR_VECTPENDING, 12, 20);
+BIT_FIELD2(SCB_ICSR_ISRPENDING,  22, 22);
+BIT_FIELD2(SCB_ICSR_PENDSTCLR,   25, 25);
+BIT_FIELD2(SCB_ICSR_PENDSTSET,   26, 26);
+BIT_FIELD2(SCB_ICSR_PENDSVCLR,   27, 27);
+BIT_FIELD2(SCB_ICSR_PENDSVSET,   28, 28);
+BIT_FIELD2(SCB_ICSR_NMIPENDSET,  31, 31);
+
+/* Configuration and Control Register. */
+BIT_FIELD(SCB_CCR_NONBASETHRDENA, 0, 0x00000001);
+BIT_FIELD(SCB_CCR_USERSETMPEND,   1, 0x00000002);
+BIT_FIELD(SCB_CCR_UNALIGN_TRP,    3, 0x00000008);
+BIT_FIELD(SCB_CCR_DIV_0_TRP,      4, 0x00000010);
+BIT_FIELD(SCB_CCR_BFHFNMIGN,      8, 0x00000100);
+BIT_FIELD(SCB_CCR_STKALIGN,       9, 0x00000200);
+BIT_FIELD(SCB_CCR_DC,            16, 0x00010000);
+BIT_FIELD(SCB_CCR_IC,            17, 0x00020000);
+BIT_FIELD(SCB_CCR_BP,            18, 0x00040000);
+
+/* System Handlers Priority Registers. */
+BIT_FIELD2(SCB_SHPR_PRI, 0, 7);
 
 /* System Handler Control and State Register. */
 BIT_FIELD(SCB_SHCSR_MEMFAULTACT,     0, 0x00000001);
@@ -94,17 +113,6 @@ BIT_FIELD(SCB_SHCSR_SVCALLPENDED,   15, 0x00008000);
 BIT_FIELD(SCB_SHCSR_MEMFAULTENA,    16, 0x00010000);
 BIT_FIELD(SCB_SHCSR_BUSFAULTENA,    17, 0x00020000);
 BIT_FIELD(SCB_SHCSR_USGFAULTENA,    18, 0x00040000);
-
-/* Configuration and Control Register. */
-BIT_FIELD(SCB_CCR_NONBASETHRDENA, 0, 0x00000001);
-BIT_FIELD(SCB_CCR_USERSETMPEND,   1, 0x00000002);
-BIT_FIELD(SCB_CCR_UNALIGN_TRP,    3, 0x00000008);
-BIT_FIELD(SCB_CCR_DIV_0_TRP,      4, 0x00000010);
-BIT_FIELD(SCB_CCR_BFHFNMIGN,      8, 0x00000100);
-BIT_FIELD(SCB_CCR_STKALIGN,       9, 0x00000200);
-BIT_FIELD(SCB_CCR_DC,            16, 0x00010000);
-BIT_FIELD(SCB_CCR_IC,            17, 0x00020000);
-BIT_FIELD(SCB_CCR_BP,            18, 0x00040000);
 
 /* Configurable Fault Status Register. */
 BIT_FIELD(SCB_CFSR_IACCVIOL,     0, 0x00000001);
@@ -131,3 +139,20 @@ BIT_FIELD(SCB_CFSR_DIVBYZERO,   25, 0x02000000);
 BIT_FIELD(SCB_HFSR_VECTTBL,   1, 0x00000002);
 BIT_FIELD(SCB_HFSR_FORCED,   30, 0x40000000);
 BIT_FIELD(SCB_HFSR_DEBUGEVT, 31, 0x80000000);
+
+/* Cache Size ID Register. */
+BIT_FIELD2(SCB_CCSIDR_LINESIZE, 0, 2);
+BIT_FIELD2(SCB_CCSIDR_ASSOC,    3, 12);
+BIT_FIELD2(SCB_CCSIDR_NUMSET,  13, 27);
+BIT_FIELD2(SCB_CCSIDR_WA,      28, 28);
+BIT_FIELD2(SCB_CCSIDR_RA,      29, 29);
+BIT_FIELD2(SCB_CCSIDR_WB,      30, 30);
+BIT_FIELD2(SCB_CCSIDR_WT,      31, 31);
+
+/* Cache Size Selection Register. */
+BIT_FIELD2(SCB_CSSELR_IND,   0, 0);
+BIT_FIELD2(SCB_CSSELR_LEVEL, 1, 3);
+
+/* Data Cache Invalidate By Set-Way Register. */
+BIT_FIELD2(SCB_DCISW_SET,  5, 13);
+BIT_FIELD2(SCB_DCISW_WAY, 30, 31);

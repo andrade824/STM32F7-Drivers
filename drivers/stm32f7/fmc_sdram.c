@@ -8,6 +8,7 @@
 #include "debug.h"
 #include "fmc_sdram.h"
 #include "gpio.h"
+#include "system.h"
 #include "system_timer.h"
 
 #include "registers/fmc_sdram_reg.h"
@@ -75,7 +76,7 @@ void fmc_sdram_init(void)
 
 	/* Enable the FMC clock. */
 	SET_FIELD(RCC->AHB3ENR, RCC_AHB3ENR_FMCEN());
-	__asm("dsb");
+	DSB();
 
 	/* Configure the SDRAM bank (memory features and timing). */
 	SDRAM->SDCR[SDRAM_FMC_BANK] = SET_SDRAM_SDCR_NC(SDCR_NC) |

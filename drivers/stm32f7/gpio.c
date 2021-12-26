@@ -7,6 +7,7 @@
 #include "bitfield.h"
 #include "debug.h"
 #include "gpio.h"
+#include "system.h"
 
 #include "registers/gpio_reg.h"
 #include "registers/rcc_reg.h"
@@ -35,7 +36,7 @@ static inline void gpio_setup_pin(GpioPin pin)
 	 * bit 0 of RCC->AHB1ENR for PORTA and going up to bit 10 for PORTK.
 	 */
 	SET_FIELD(RCC->AHB1ENR, (1 << GPIO_GET_PORT(pin)));
-	__asm("dsb");
+	DSB();
 }
 
 /**

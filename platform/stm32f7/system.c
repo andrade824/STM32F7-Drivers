@@ -8,10 +8,12 @@
 #include "config.h"
 #include "debug.h"
 #include "interrupt.h"
+#include "system.h"
 #include "system_timer.h"
 
 #include "registers/flash_reg.h"
 #include "registers/pwr_reg.h"
+#include "registers/scb_reg.h"
 #include "registers/rcc_reg.h"
 
 #ifdef SEMIHOSTING_ENABLED
@@ -22,13 +24,89 @@
 extern void initialise_monitor_handles(void);
 #endif
 
+#if OS_ENABLED
 /**
- * Enable the caches using the CMSIS-provided methods.
+ * Stack used by the init/idle thread.The ARM Procedure Call Standard requires
+ * 8-byte alignment for stacks.
+ */
+uint8_t init_stack[INIT_THREAD_STACK_SIZE] __attribute__ ((aligned (8))) = { 0 };
+#endif /* OS_ENABLED */
+
+/**
+ * Setup the initial/idle thread's stack and switch to it.
+ *
+ * @note This function is called from the Reset Handler before any C code is
+ *       called.
+ *
+ * @note This function MUST be a "naked" function. Otherwise, the compiler will
+ *       push a stack frame onto the Main stack, but be confused about popping
+ *       that frame off after we switch to the Process stack.
+ */
+__attribute ((__naked__))
+void setup_initial_process_stack(void)
+{
+	/* Value of "Control" register to switch to the Process stack. */
+	#define CONTROL_PROCESS_STACK 0x2U
+
+#if OS_ENABLED
+	asm volatile(
+		/**
+		 * Setup the stack for the init/idle thread. "init_stack" is the bottom of
+		 * the stack, not the top.
+		 */
+	#if ENABLE_STACK_GUARD
+		"str	%[stack_guard_magic], [%[stack_addr]] \n"
+	#endif /* ENABLE_STACK_GUARD */
+		"add	%[stack_addr], %[stack_addr], %[stack_size] \n"
+
+		/* Set the Process Stack Pointer. */
+		"msr	PSP, %[stack_addr] \n"
+
+		/* Switch to the Process stack (the Main stack is used only by interrupts). */
+		"msr	CONTROL, %[control_input] \n"
+		"bx		LR \n"
+	:: [stack_addr]"r" (init_stack),
+	#if ENABLE_STACK_GUARD
+	   [stack_guard_magic]"r" (STACK_GUARD_MAGIC),
+	#endif /* ENABLE_STACK_GUARD */
+	   [stack_size]"r" (INIT_THREAD_STACK_SIZE),
+	   [control_input]"r" (CONTROL_PROCESS_STACK));
+#else /* OS_ENABLED */
+	/* On non-OS systems, just use the default Main stack. */
+#endif /* OS_ENABLED */
+}
+
+/**
+ * Invalidate and enable the caches.
  */
 static void caches_init(void)
 {
-	SCB_EnableICache();
-	SCB_EnableDCache();
+	/* Invalidate the instruction cache. */
+	SCB->ICIALLU = 0;
+
+	/* Select the data cache so its size attributes will appear in CCSIDR. */
+	SCB->CSSELR = SET_SCB_CSSELR_IND(0);
+
+	/* Need a DSB to ensure the CCSIDR access occurs after the CSSELR write. */
+	DSB();
+
+	const unsigned int num_sets = GET_SCB_CCSIDR_NUMSET(SCB->CCSIDR) + 1;
+	const unsigned int num_ways = GET_SCB_CCSIDR_ASSOC(SCB->CCSIDR) + 1;
+
+	/* Invalidate the entire data cache by flushing every set/way. */
+	for (unsigned int set = 0; set < num_sets; ++set) {
+		for(unsigned int way = 0; way < num_ways; ++way) {
+			SET_FIELD(SCB->DCISW, SET_SCB_DCISW_SET(set) | SET_SCB_DCISW_WAY(way));
+		}
+	}
+
+	/* Synchronize the cache invalidations before enabling them. */
+	DSB();
+
+	/* Enable the caches. */
+	SET_FIELD(SCB->CCR, SCB_CCR_DC() | SCB_CCR_IC());
+	DSB();
+	ISB();
 }
 
 /**
@@ -106,7 +184,7 @@ static void clocks_init(void)
 	 * you first need to enable the peripheral clock to the power controller.
 	 */
 	SET_FIELD(RCC->APB1ENR, RCC_APB1ENR_PWREN());
-	__asm("dsb");
+	DSB();
 
 	SET_FIELD(PWR->CR1, PWR_CR1_ODEN());
 	while(GET_PWR_CSR1_ODRDY(PWR->CR1) == 0) { }
@@ -154,6 +232,6 @@ void system_init(void)
 	caches_init();
 	flash_init();
 	clocks_init();
-	interrupt_init();
+	intr_init();
 	system_timer_init();
 }

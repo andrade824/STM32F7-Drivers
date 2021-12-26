@@ -39,7 +39,7 @@
 
 .syntax unified
 .cpu cortex-m7
-.fpu softvfp
+.fpu fpv5-sp-d16
 .thumb
 
 /**
@@ -47,28 +47,36 @@
  * defined in linker script.
  */
 .word _sidata
+
 /* start address for the .data section. defined in linker script */
 .word _sdata
+
 /* end address for the .data section. defined in linker script */
 .word _edata
+
 /* start address for the .bss section. defined in linker script */
 .word _sbss
+
 /* end address for the .bss section. defined in linker script */
 .word _ebss
-/* Top of the main/kernel stack defined in the linker script. */
-.word _kern_stack_top
+
+/* Top of the main/interrupt stack defined in the linker script. */
+.word _interrupt_stack_top
 
 /**
  * Reset vector. This will perform all setup necessary to get the system into a
  * state where C code can operate (setting up the DATA/BSS sections, setting up
- * the Main/kernel stack, etc).
+ * the Main/interrupt stack, etc).
  */
 .section .text.Reset_Handler
 	.weak Reset_Handler
 	.type Reset_Handler, %function
 Reset_Handler:
-	/* Set stack pointer */
-	ldr		sp, =_kern_stack_top
+	/**
+	 * Currently operating on the Main stack. Main stack pointer is set by the
+	 * first word in the vector table, which should be _interrupt_stack_top. The
+	 * main stack is only used by interrupts.
+	 */
 
 	/* Copy the data segment initializers from flash to SRAM */
 	movs	r1, #0
@@ -99,6 +107,15 @@ LoopFillZerobss:
 	cmp		r2, r3
 	bcc		FillZerobss
 
+	/* On OS-enabled systems, setup the init/idle thread's stack and switch to it. */
+	bl		setup_initial_process_stack
+
+	/**
+	 * If on an OS-enabled system, the stack will now point to the init thread's
+	 * Process Stack. On baremetal systems, that function does nothing and the
+	 * CPU will continue to use the Main stack located at the top of RAM.
+	 */
+
 	/* Call static constructors (mostly used by the standard library). */
 	bl		__libc_init_array
 
@@ -111,10 +128,10 @@ LoopFillZerobss:
 
 /**
  * The default exception handler during initialization is just an infinite loop.
- * This is done under the expectation that interrupt_init() will get called
- * shortly after boot and before any code causes exceptions to setup the real
- * default exception handlers.
-*/
+ * This is done under the expectation that intr_init() will get called shortly
+ * after boot and before any code causes exceptions to setup the real default
+ * exception handlers.
+ */
 .section .text.Default_Handler,"ax",%progbits
 Default_Handler:
 Infinite_Loop:
@@ -131,7 +148,7 @@ Infinite_Loop:
 	.type init_vector_table, %object
 
 init_vector_table:
-	.word _kern_stack_top
+	.word _interrupt_stack_top
 	.word Reset_Handler
 
 	.word Default_Handler

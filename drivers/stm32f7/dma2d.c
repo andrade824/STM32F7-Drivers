@@ -10,6 +10,7 @@
 #include "debug.h"
 #include "dma2d.h"
 #include "interrupt.h"
+#include "system.h"
 
 #include "registers/dma2d_reg.h"
 #include "registers/lcd_ctrl_reg.h"
@@ -57,7 +58,7 @@ void dma2d_init(void)
 {
 	/* Enable the DMA2D clock. */
 	SET_FIELD(RCC->AHB1ENR, RCC_AHB1ENR_DMA2DEN());
-	__asm("dsb");
+	DSB();
 
 	/* Setup interrupt service routine. */
 	SET_FIELD(DMA2D->CR, DMA2D_CR_TCIE() |
@@ -65,7 +66,7 @@ void dma2d_init(void)
 	                     DMA2D_ISR_CAEIF() |
 	                     DMA2D_ISR_CEIF());
 
-	interrupt_request(DMA2D_IRQn, dma2d_isr);
+	intr_register(DMA2D_IRQn, dma2d_isr, LOWEST_INTR_PRIORITY);
 }
 
 /**

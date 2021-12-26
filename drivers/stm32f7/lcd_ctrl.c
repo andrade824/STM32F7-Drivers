@@ -11,6 +11,7 @@
 #include "gpio.h"
 #include "interrupt.h"
 #include "lcd_ctrl.h"
+#include "system.h"
 
 #include "registers/lcd_ctrl_reg.h"
 #include "registers/rcc_reg.h"
@@ -72,7 +73,7 @@ void lcd_ctrl_init(uint32_t framebuffer, void (*callback) (void))
 {
 	/* Enable the LCD APB2 clock. */
 	SET_FIELD(RCC->APB2ENR, RCC_APB2ENR_LTDCEN());
-	__asm("dsb");
+	DSB();
 
 	/* Request all of the required GPIOs. */
 	gpio_request_alt(GPIO_LCD_R0, LCD_ALT14_FUNC, GPIO_OSPEED_50MHZ);
@@ -146,12 +147,12 @@ void lcd_ctrl_init(uint32_t framebuffer, void (*callback) (void))
 	/* Setup LCD vblank and error interrupts. */
 	vblank_callback = callback;
 	if(vblank_callback) {
-		interrupt_request(LTDC_IRQn, vblank_isr);
+		intr_register(LTDC_IRQn, vblank_isr, LOWEST_INTR_PRIORITY);
 		SET_FIELD(LTDC->LIPCR, SET_LTDC_LIPCR_LIPOS(LCD_CONFIG_HEIGHT));
 		SET_FIELD(LTDC->IER, LTDC_IER_LIE());
 	}
 
-	interrupt_request(LTDC_ER_IRQn, lcd_ctrl_error_isr);
+	intr_register(LTDC_ER_IRQn, lcd_ctrl_error_isr, LOWEST_INTR_PRIORITY);
 	SET_FIELD(LTDC->IER, LTDC_IER_FUIE() | LTDC_IER_TERRIE());
 
 	/**

@@ -7,6 +7,7 @@
 #include "config.h"
 #include "debug.h"
 #include "sdmmc.h"
+#include "system.h"
 #include "system_timer.h"
 
 #include "registers/rcc_reg.h"
@@ -520,7 +521,7 @@ SdStatus sdmmc_init() {
 	}
 
 	SET_FIELD(RCC->APB2ENR, rcc_config);
-	__asm("dsb");
+	DSB();
 
 	/* Enable the 400KHz SD clock. */
 	SET_FIELD(SDMMC->POWER, SET_SDMMC_POWER_PWRCTL(SD_POWER_ON));
