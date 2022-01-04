@@ -13,6 +13,15 @@
 /* Whether the RTOS features are enabled. */
 #define OS_ENABLED 1
 
+/* Enable the FPU and saving/restoring of FPU context when switching tasks. */
+#define FPU_ENABLED 1
+
+/**
+ * The smallest possible stack size contains just enough space to store the
+ * registers needed for context switching and nothing else.
+ */
+#define MIN_STACK_SIZE 72U
+
 /**
  * Init/Idle thread stack size. The initial thread that runs main() will turn
  * into the idle thread once the scheduler begins. The bottom (zeroth) byte will

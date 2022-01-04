@@ -3,25 +3,34 @@
 #include "gpio.h"
 #include "stm32f7_tests.h"
 #include "os_tests.h"
+#include "os/task.h"
 #include "system.h"
 #include "interrupt.h"
 
 #include <string.h>
 
-void pendsv_handler(void)
+#define STACK_SIZE 512U
+STATIC_TASK_ALLOC(task1, STACK_SIZE);
+STATIC_TASK_ALLOC(task2, STACK_SIZE);
+
+void task1_func(uint32_t param)
 {
-	dbprintf("PENDSV WAS TRIGGERED\n");
+	while(1) {
+		dbprintf("Task 1 called! %#lx\n", param);
+		sleep(MSECS(500));
+		set_next_task(&task2_task);
+		intr_trigger_pendsv();
+	}
+}
 
-	/* Trigger a MemManage fault by trying to execute XN memory. */
-	// void (*dummy_func)(int);
-	// dummy_func = (void (*)(int))0xFFFFFF00;
-	// dummy_func(5);
-
-	// /* Trigger a Usage fault by accessing an unaligned address. */
-	*(volatile uint32_t*)0xFFFFFFFF = 0x5;
-
-	/* Trigger a Bus fault by accessing a reserved address. */
-	// *(volatile uint32_t*)0x2004FF00 = 0x5;
+void task2_func(uint32_t param)
+{
+	while(1) {
+		dbprintf("Task 2 called! %#lx\n", param);
+		sleep(MSECS(500));
+		set_next_task(&task1_task);
+		intr_trigger_pendsv();
+	}
 }
 
 int main(void)
@@ -31,8 +40,12 @@ int main(void)
 
 	mem_alloc_test();
 
-	intr_register_pendsv(&pendsv_handler, LOWEST_INTR_PRIORITY);
-	intr_trigger_pendsv();
+	STATIC_TASK_CREATE(task1, STACK_SIZE, task1_func, (void*)(uintptr_t)0x111);
+	STATIC_TASK_CREATE(task2, STACK_SIZE, task2_func, (void*)(uintptr_t)0x222);
+
+	sched_begin();
+
+	dbprintf("Running idle thread!\n");
 
 	gpio_request_input(GPIO_BTN_USER, GPIO_NO_PULL);
 	gpio_request_output(GPIO_LED_USER, GPIO_LOW);
@@ -48,6 +61,8 @@ int main(void)
 			}
 		} else {
 			dbprintf("Button pressed!\n");
+			set_next_task(&task1_task);
+			intr_trigger_pendsv();
 		}
 
 		gpio_set_output(GPIO_LED_USER, led_ctrl);

@@ -8,8 +8,8 @@
 #pragma once
 
 /* Helper macros for issuing barriers. */
-#define DMB() asm volatile("dmb SY" ::: "memory");
-#define DSB() asm volatile("dsb SY" ::: "memory");
-#define ISB() asm volatile("isb SY" ::: "memory");
+#define DMB() asm volatile("dmb SY" ::: "memory")
+#define DSB() asm volatile("dsb SY" ::: "memory")
+#define ISB() asm volatile("isb SY" ::: "memory")
 
 void system_init(void);

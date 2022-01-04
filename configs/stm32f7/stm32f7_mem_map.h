@@ -17,6 +17,7 @@
 #define SysTick_BASE   (SCS_BASE + 0x0010UL) /* SysTick Base Address */
 #define NVIC_BASE      (SCS_BASE + 0x0100UL) /* NVIC Base Address */
 #define SCB_BASE       (SCS_BASE + 0x0D00UL) /* System Control Block Base Address */
+#define FPU_BASE       (SCS_BASE + 0x0F30UL) /* Floating Point Unit */
 
 #define RAMITCM_BASE   0x00000000U /* Base address of : 16KB RAM reserved for CPU execution/instruction accessible over ITCM  */
 #define FLASHITCM_BASE 0x00200000U /* Base address of : (up to 1 MB) embedded FLASH memory  accessible over ITCM              */

@@ -66,7 +66,7 @@ typedef struct {
 	uint32_t serial_num;
 	uint16_t manufacturing_date;
 	uint64_t total_size;         /* Total size in bytes */
-	uint32_t total_blocks;       /* Total blocks availables on device */
+	uint32_t total_blocks;       /* Total blocks available on device */
 	uint16_t block_len;          /* Block length */
 } SdCard;
 

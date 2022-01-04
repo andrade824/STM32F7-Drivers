@@ -64,6 +64,7 @@ void setup_initial_process_stack(void)
 
 		/* Switch to the Process stack (the Main stack is used only by interrupts). */
 		"msr	CONTROL, %[control_input] \n"
+		"isb	sy \n"
 		"bx		LR \n"
 	:: [stack_addr]"r" (init_stack),
 	#if ENABLE_STACK_GUARD
@@ -108,6 +109,34 @@ static void caches_init(void)
 	DSB();
 	ISB();
 }
+
+#if FPU_ENABLED
+static void floating_point_init(void)
+{
+	/**
+	 * Initialize FPU. The weird macro checking is done to ensure that you setup
+	 * the toolchain to utilize the FPU correctly.
+	 *
+	 * Give both privileged and unprivileged code full access to coprocessors
+	 * 10 and 11 (the ones dealing with floating point).
+	 */
+	SET_FIELD(SCB->CPACR, SET_SCB_CPACR_CP10(CP_FULL_ACCESS) |
+	                      SET_SCB_CPACR_CP11(CP_FULL_ACCESS));
+
+	/**
+	 * Enforce that CONTROL.FPCA is automatically set when floating point is
+	 * used, and that lazy FPU state saving is always enabled.
+	 */
+	SET_FIELD(SCB->FPCCR, FPU_FPCCR_LSPEN() | FPU_FPCCR_ASPEN());
+
+	/**
+	 * Ensure that any followin floating point instructons occur after the
+	 * coprocessor has been enabled.
+	 */
+	DSB();
+	ISB();
+}
+#endif /* FPU_ENABLED */
 
 /**
  * Enable prefetch unit and flash accelerator (ART) with the correct number
@@ -214,20 +243,13 @@ static void clocks_init(void)
  */
 void system_init(void)
 {
-	/**
-	 * Initialize FPU. The weird macro checking is done to ensure that you setup
-	 * the toolchain to utilize the FPU correctly.
-	 *
-	 * Give both privileged and unprivileged code full access to coprocessors
-	 * 10 and 11 (the ones dealing with floating point).
-	 */
-#if (__FPU_PRESENT == 1) && (__FPU_USED == 1)
-	SCB->CPACR |= ((3UL << 10*2)|(3UL << 11*2));
-#endif
-
 #ifdef SEMIHOSTING_ENABLED
 	initialise_monitor_handles();
 #endif
+
+#if FPU_ENABLED
+	floating_point_init();
+#endif /* FPU_ENABLED */
 
 	caches_init();
 	flash_init();

@@ -4,7 +4,6 @@
 
 #include <stdint.h>
 
-
 /**
  * Perform some very simple tests on the "init only, no free" dynamic memory
  * allocator.

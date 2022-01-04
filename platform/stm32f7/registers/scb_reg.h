@@ -153,6 +153,16 @@ BIT_FIELD2(SCB_CCSIDR_WT,      31, 31);
 BIT_FIELD2(SCB_CSSELR_IND,   0, 0);
 BIT_FIELD2(SCB_CSSELR_LEVEL, 1, 3);
 
+/* Coprocessor Access Control Register. */
+BIT_FIELD2(SCB_CPACR_CP10, 20, 21);
+BIT_FIELD2(SCB_CPACR_CP11, 22, 23);
+
+typedef enum {
+	CP_ACCESS_DENIED = 0,
+	CP_PRIVILEGED_ONLY = 1,
+	CP_FULL_ACCESS = 2
+} coproc_access_t;
+
 /* Data Cache Invalidate By Set-Way Register. */
 BIT_FIELD2(SCB_DCISW_SET,  5, 13);
 BIT_FIELD2(SCB_DCISW_WAY, 30, 31);
