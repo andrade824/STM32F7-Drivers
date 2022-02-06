@@ -12,6 +12,7 @@
 #include "system_timer.h"
 
 #include "registers/flash_reg.h"
+#include "registers/fpu_reg.h"
 #include "registers/pwr_reg.h"
 #include "registers/scb_reg.h"
 #include "registers/rcc_reg.h"
@@ -49,7 +50,7 @@ void setup_initial_process_stack(void)
 	#define CONTROL_PROCESS_STACK 0x2U
 
 #if OS_ENABLED
-	asm volatile(
+	asm volatile (
 		/**
 		 * Setup the stack for the init/idle thread. "init_stack" is the bottom of
 		 * the stack, not the top.
@@ -127,7 +128,7 @@ static void floating_point_init(void)
 	 * Enforce that CONTROL.FPCA is automatically set when floating point is
 	 * used, and that lazy FPU state saving is always enabled.
 	 */
-	SET_FIELD(SCB->FPCCR, FPU_FPCCR_LSPEN() | FPU_FPCCR_ASPEN());
+	SET_FIELD(FPU->FPCCR, FPU_FPCCR_LSPEN() | FPU_FPCCR_ASPEN());
 
 	/**
 	 * Ensure that any followin floating point instructons occur after the

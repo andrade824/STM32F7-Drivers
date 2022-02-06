@@ -45,10 +45,10 @@ typedef struct {
  */
 static void dump_exc_context(__unused arm_exception_context_t *context)
 {
-	dbprintf("\nr0:  %#08lx, r1:  %#08lx, r2:  %#08lx, r3:   %#08lx,\n"
-	         "r4:  %#08lx, r5:  %#08lx, r6:  %#08lx, r7:   %#08lx,\n"
-	         "r8:  %#08lx, r9:  %#08lx, r10: %#08lx, r11:  %#08lx,\n"
-	         "r12: %#08lx, LR:  %#08lx, PC:  %#08lx, xPSR: %#lx\n\n",
+	dbprintf("\n r0: 0x%08lx, r1: 0x%08lx,  r2: 0x%08lx,   r3: 0x%08lx,\n"
+	         " r4: 0x%08lx, r5: 0x%08lx,  r6: 0x%08lx,   r7: 0x%08lx,\n"
+	         " r8: 0x%08lx, r9: 0x%08lx, r10: 0x%08lx,  r11: 0x%08lx,\n"
+	         "r12: 0x%08lx, LR: 0x%08lx,  PC: 0x%08lx, xPSR: 0x%lx\n\n",
 	         context->r[0], context->r[1], context->r[2], context->r[3],
 	         context->r[4], context->r[5], context->r[6], context->r[7],
 	         context->r[8], context->r[9], context->r[10], context->r[11],

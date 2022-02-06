@@ -49,7 +49,7 @@ void task_create(
  */
 #define STATIC_TASK_ALLOC(task_name, stack_size) \
 	task_t task_name ##_task; \
-	uint8_t task_name ## _stack[(stack_size)] __attribute__ ((aligned (8))) = { 0 };
+	uint8_t task_name ## _stack[(stack_size)] __attribute__ ((aligned (8))) = { 0 }
 
 /**
  * Wrapper around task_create() that is meant to be used with an associated call
@@ -68,3 +68,5 @@ void task_create(
 void sched_begin(void);
 task_t * sched_get_next_task(void);
 void set_next_task(task_t *task);
+
+void sched_yield(void);

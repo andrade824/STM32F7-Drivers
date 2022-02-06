@@ -7,12 +7,12 @@ Need to build:
 --- Going to need to re-write dbprintf to use a fixed size buffer (since printf
     uses malloc, it'll corrupt the heap). So snprintf into a buffer, and then
     call puts() on that buffer.
-- Task creation code
-- Context switching and round-robin cooperative scheduler code
+- Round-robin cooperative scheduler code.
+- Implement preemptive scheduler based on timer ticks.
 - Implement wait queues. Needed for mutexes and timer sleep events.
 - Implement spinlocks and mutexes
 - Implement queues for cross-task communication
-- Expand interrupt handling code  have context data for each ISR.
+- Expand interrupt handling code to have context data for each ISR.
 - Update every driver to be interrupt driven where it makes sense
 --- SD card driver can be DMA driven in both reading/writing sectors
 --- RFM69 radio driver can put thread to sleep while waiting for receiving packet

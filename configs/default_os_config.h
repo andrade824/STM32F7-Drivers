@@ -13,7 +13,11 @@
 /* Whether the RTOS features are enabled. */
 #define OS_ENABLED 1
 
-/* Enable the FPU and saving/restoring of FPU context when switching tasks. */
+/**
+ * Enable the FPU and saving/restoring of FPU context when switching tasks.
+ *
+ * TODO: Actually save/restore the FPU context on context switch.
+ */
 #define FPU_ENABLED 1
 
 /**
@@ -41,6 +45,8 @@
 /**
  * Set to 1 to enable inserting and checking the stack guard byte value. One
  * byte at the bottom of every stack will be used as a guard value.
+ *
+ * TODO: Implement stack guard checking.
  */
 #define ENABLE_STACK_GUARD 1
 

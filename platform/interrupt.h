@@ -37,5 +37,3 @@ void intr_disable_irq(irq_num_t irq);
 
 void intr_set_base_priority(uint8_t priority);
 void intr_trigger_pendsv(void);
-
-/* TODO: Add methods for setting priorities and enabling/disabling ISRs */

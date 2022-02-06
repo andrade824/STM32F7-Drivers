@@ -19,7 +19,7 @@ void task1_func(uint32_t param)
 		dbprintf("Task 1 called! %#lx\n", param);
 		sleep(MSECS(500));
 		set_next_task(&task2_task);
-		intr_trigger_pendsv();
+		sched_yield();
 	}
 }
 
@@ -29,7 +29,7 @@ void task2_func(uint32_t param)
 		dbprintf("Task 2 called! %#lx\n", param);
 		sleep(MSECS(500));
 		set_next_task(&task1_task);
-		intr_trigger_pendsv();
+		sched_yield();
 	}
 }
 
@@ -62,7 +62,7 @@ int main(void)
 		} else {
 			dbprintf("Button pressed!\n");
 			set_next_task(&task1_task);
-			intr_trigger_pendsv();
+			sched_yield();
 		}
 
 		gpio_set_output(GPIO_LED_USER, led_ctrl);
