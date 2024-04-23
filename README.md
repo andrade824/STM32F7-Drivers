@@ -13,6 +13,7 @@ The current driverset includes drivers for the following hardware modules:
 * FMC SDRAM Controller
 * LCD Controller
 * SDMMC Controller
+* Nokia 5110 Display Controller
 * RFM69 Radio Module
 
 The following simple RTOS features are also supported:
