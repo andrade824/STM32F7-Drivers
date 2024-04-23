@@ -1,4 +1,4 @@
-# STM32F7 Hardware Abstraction Library and Simple RTOS
+# STM32F7 HAL and Simple RTOS
 This repository contains a set of drivers for the STM32F7 platform that can be used for building other projects.
 
 The code is designed for the <a href="http://www.st.com/en/evaluation-tools/32f746gdiscovery.html">32F746GDISCOVERY board</a> as well as my own custom development board, but should work with most STM32F7 devices with minimal changes.
